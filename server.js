@@ -68,7 +68,7 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const check = await db.execute({
-            sql: "SELECT id FROM usuarios WHERE LOWER(usuario) = ?",
+            sql: "SELECT id FROM usuarios WHERE usuario = ?",
             args: [userClean]
         });
 
@@ -110,36 +110,32 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const result = await db.execute({
-            sql: "SELECT id, nombre, usuario, rango, rol, comision_porcentaje FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?",
-            args: [userClean, String(password)]
-        });
-
-        const rows = result && result.rows ? result.rows : [];
+        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Director (Admin)') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(comision_porcentaje, 30) as comision_porcentaje FROM usuarios WHERE usuario = ? AND password = ?`;
+        const result = await db.execute({ sql, args: [userClean, String(password)] });
         
-        if (rows.length === 0) {
+        if (!result.rows || result.rows.length === 0) {
             return res.status(401).json({ error: "Usuario o contraseña incorrectos." });
         }
 
-        const user = rows[0];
+        const user = result.rows[0];
         res.json({
             id: Number(user.id),
             nombre: user.nombre,
             usuario: user.usuario,
-            rango: user.rango || 'Supervisor',
-            rol: user.rol || 'empleado',
-            comision_porcentaje: Number(user.comision_porcentaje) || 30
+            rango: user.rango,
+            rol: user.rol,
+            comision_porcentaje: Number(user.comision_porcentaje)
         });
     } catch (e) {
         console.error("[LOGIN ERROR]:", e.message);
-        res.status(500).json({ error: "Error al validar credenciales en la base de datos." });
+        res.status(500).json({ error: e.message });
     }
 });
 
 // 2. GESTIÓN DE USUARIOS Y RANGOS (ADMIN)
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const result = await db.execute("SELECT id, nombre, usuario, rango, rol, comision_porcentaje, created_at FROM usuarios ORDER BY id ASC");
+        const result = await db.execute("SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(comision_porcentaje, 30) as comision_porcentaje, created_at FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
         res.status(500).json({ error: e.message });

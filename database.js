@@ -4,12 +4,9 @@ const { createClient } = require('@libsql/client');
 let url = (process.env.TURSO_DATABASE_URL || '').trim();
 const authToken = (process.env.TURSO_AUTH_TOKEN || '').trim();
 
-// Convertir libsql:// a https:// para evitar errores de migración 400
 if (url.startsWith('libsql://')) {
   url = url.replace('libsql://', 'https://');
 }
-
-console.log("[DB] Conectando a Turso mediante:", url ? url.substring(0, 30) + '...' : 'URL NO DEFINIDA');
 
 const db = createClient({
   url,
@@ -30,6 +27,11 @@ const db = createClient({
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Asegurar que la columna 'rango' exista sin romper esquemas previos
+    try {
+      await db.execute("ALTER TABLE usuarios ADD COLUMN rango TEXT DEFAULT 'Supervisor'");
+    } catch (ignore) {}
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_ascensos (
@@ -63,7 +65,7 @@ const db = createClient({
 
     console.log("[DB] Tablas verificadas y listas en Turso.");
   } catch (err) {
-    console.error("[DB ERROR] Error inicializando tablas en Turso:", err.message);
+    console.error("[DB ERROR]:", err.message);
   }
 })();
 
