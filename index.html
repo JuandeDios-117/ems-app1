@@ -59,7 +59,7 @@
         </div>
 
         <!-- NAVEGACIÓN -->
-        <div class="flex flex-wrap items-center card-dark p-2 rounded-xl gap-2">
+        <div class="flex flex-wrap items-center card-dark p-2 rounded-xl gap-2 hidden" id="navBar">
             <button onclick="cambiarPestana('calculadora')" id="tab-calc" class="px-4 py-2 rounded-lg font-bold text-xs btn-ems">🩺 FACTURACIÓN MÉDICA</button>
             <button onclick="cambiarPestana('jefaturas')" id="tab-jefaturas" class="px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-sky-400 hover:bg-zinc-800">📋 JEFATURAS & ASCENSOS</button>
             <button onclick="cambiarPestana('historial')" id="tab-hist" class="px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-zinc-300 hover:bg-zinc-800">📊 MI EXPEDIENTE</button>
@@ -67,7 +67,7 @@
         </div>
 
         <!-- AUTH -->
-        <div id="seccion-auth" class="max-w-md mx-auto card-dark p-8 rounded-2xl space-y-4">
+        <div id="seccion-auth" class="max-w-md mx-auto card-dark p-8 rounded-2xl space-y-4 mt-10">
             <h2 class="text-xl font-black text-center text-white uppercase" id="authTitle">Acceso Médico San Andreas</h2>
             <div id="campoNombre" class="hidden">
                 <label class="block text-xs font-bold text-zinc-400 mb-1">Nombre Completo</label>
@@ -122,7 +122,6 @@
                     <h2 class="text-xl font-black text-white uppercase">📋 Control de Jefaturas & Evaluación de Ascensos</h2>
                     <p class="text-xs text-zinc-400 mt-1">Supervisión directa de horas de servicio, ID de Discord y propuestas de rango.</p>
                 </div>
-                <!-- SELECTOR DE JEFATURA -->
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-bold text-sky-400 uppercase">Jefatura:</label>
                     <select id="selJefatura" onchange="cargarTablaAscensos()" class="input-dark p-2 rounded-xl text-xs font-bold text-sky-300">
@@ -239,7 +238,7 @@
         function renderCatalogo() {
             const cont = document.getElementById('catalogoProcedimientos');
             cont.innerHTML = procedimientos.map(p => `
-                <div class="flex justify-between items-center bg-black/60 p-3 rounded-xl border border-zinc-800">
+                <div class="flex justify-between items-center bg-black/60 p-3 rounded-xl border border-zinc-800 hover:border-sky-500/50 transition">
                     <div>
                         <div class="font-bold text-white text-xs">${p.nombre}</div>
                         <div class="text-emerald-400 font-black text-sm">$${p.precio.toLocaleString()}</div>
@@ -276,7 +275,7 @@
                         <span>${proc.nombre} (x${cant})</span>
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-emerald-400">$${(proc.precio * cant).toLocaleString()}</span>
-                            <button onclick="restarProcedimiento(${id})" class="text-rose-400 font-bold px-1">✕</button>
+                            <button onclick="restarProcedimiento(${id})" class="text-rose-400 font-bold px-1 hover:text-rose-300">✕</button>
                         </div>
                     </div>
                 `;
@@ -306,19 +305,29 @@
 
             if (!paciente || items.length === 0) return alert("Completa el nombre del paciente y selecciona al menos un procedimiento.");
 
+            const btn = document.querySelector('button[onclick="completarFactura()"]');
+            btn.disabled = true;
+            btn.innerText = "Procesando...";
+
             const res = await fetch('/api/facturas', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ usuario_id: usuarioActual.id, paciente, dni, items })
             });
 
+            btn.disabled = false;
+            btn.innerText = "Finalizar Factura";
+
             if (res.ok) {
-                confetti({ particleCount: 70, spread: 60 });
+                if(typeof confetti === 'function') confetti({ particleCount: 70, spread: 60 });
                 carrito = {};
                 document.getElementById('pacienteNombre').value = '';
                 document.getElementById('pacienteDNI').value = '';
                 renderCarrito();
                 alert("Factura médica asentada correctamente.");
+            } else {
+                const data = await res.json();
+                alert(data.error || "Error al procesar la factura.");
             }
         }
 
@@ -343,7 +352,7 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert("Cuenta creada con éxito.");
+                    alert("Cuenta creada con éxito. Ahora puedes iniciar sesión.");
                     toggleAuth();
                 } else alert(data.error);
             } else {
@@ -363,13 +372,14 @@
         function actualizarUIUsuario() {
             if (!usuarioActual) return;
             document.getElementById('seccion-auth').classList.add('hidden');
+            document.getElementById('navBar').classList.remove('hidden');
             document.getElementById('userInfo').innerHTML = `
                 <span>👨‍⚕️ <strong class="text-sky-400">${usuarioActual.nombre}</strong></span>
-                <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${usuarioActual.rango}</span>
-                <button onclick="location.reload()" class="text-rose-400 hover:underline ml-2">Salir</button>
+                <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-sky-500/30">${usuarioActual.rango}</span>
+                <button onclick="location.reload()" class="text-rose-400 hover:underline ml-2 font-bold">Salir</button>
             `;
 
-            if (usuarioActual.rol === 'admin' || usuarioActual.rango.includes('Director')) {
+            if (usuarioActual.rol === 'admin' || (usuarioActual.rango && usuarioActual.rango.includes('Director'))) {
                 document.getElementById('tab-admin').classList.remove('hidden');
             }
 
@@ -382,6 +392,20 @@
                 const el = document.getElementById(`seccion-${p}`);
                 if (el) el.classList.toggle('hidden', p !== pestana);
             });
+
+            ['calc', 'jefaturas', 'hist', 'admin'].forEach(p => {
+                const btn = document.getElementById(`tab-${p}`);
+                if(btn) {
+                    btn.classList.remove('btn-ems');
+                    btn.classList.add('bg-zinc-900', 'text-sky-400');
+                }
+            });
+
+            const activeBtn = document.getElementById(`tab-${pestana === 'calculadora' ? 'calc' : pestana === 'historial' ? 'hist' : pestana}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-zinc-900', 'text-sky-400');
+                activeBtn.classList.add('btn-ems');
+            }
 
             if (pestana === 'jefaturas') cargarTablaAscensos();
             if (pestana === 'admin') cargarGestionAdmin();
@@ -409,7 +433,7 @@
                     <td class="p-3 text-center font-bold text-yellow-400">${item.horas_hechas} hrs</td>
                     <td class="p-3 text-zinc-500 text-[11px]">${item.actualizado_por}</td>
                     <td class="p-3 text-right">
-                        <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:underline">Eliminar</button>
+                        <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded">Retirar</button>
                     </td>
                 </tr>
             `).join('');
@@ -446,6 +470,9 @@
                 document.getElementById('ascPropuesto').value = '';
                 document.getElementById('ascHoras').value = '';
                 cargarTablaAscensos();
+            } else {
+                const data = await res.json();
+                alert(data.error);
             }
         }
 
@@ -462,7 +489,7 @@
             const cuerpo = document.getElementById('cuerpoTablaAdmin');
 
             cuerpo.innerHTML = usuarios.map(u => `
-                <tr class="hover:bg-zinc-900/40">
+                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
                     <td class="p-3 font-bold text-white">${u.nombre} <span class="text-zinc-500 font-normal">(@${u.usuario})</span></td>
                     <td class="p-3">
                         <select id="selRangoAdmin-${u.id}" class="input-dark p-1.5 rounded-lg text-xs font-bold text-sky-300">
@@ -476,7 +503,7 @@
                         </select>
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-ems px-3 py-1 rounded-lg text-xs">Guardar</button>
+                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-ems px-3 py-1.5 rounded-lg text-xs">Guardar</button>
                     </td>
                 </tr>
             `).join('');
@@ -490,7 +517,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rango, rol, comision_porcentaje: 30 })
             });
-            alert("Rango y permisos actualizados.");
+            alert("Rango y permisos actualizados correctamente.");
         }
 
         async function cargarMisFacturas() {
@@ -499,22 +526,27 @@
             const data = await res.json();
             const cont = document.getElementById('listaMisFacturas');
 
+            if (data.length === 0) {
+                cont.innerHTML = `<span class="text-zinc-500 italic">No tienes facturas registradas.</span>`;
+                return;
+            }
+
             cont.innerHTML = data.map(f => `
-                <div class="bg-black/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center text-xs">
+                <div class="bg-black/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center text-xs hover:border-sky-500/30 transition">
                     <div>
                         <div class="font-bold text-white text-sm">Paciente: ${f.paciente}</div>
-                        <div class="text-zinc-400">DNI: ${f.dni} · ${new Date(f.fecha).toLocaleString()}</div>
+                        <div class="text-zinc-400 mt-0.5">DNI: ${f.dni} · ${new Date(f.fecha).toLocaleString()}</div>
                     </div>
                     <div class="text-right">
                         <div class="font-black text-emerald-400 text-sm">$${f.total_cobrado.toLocaleString()}</div>
-                        <div class="text-sky-400 font-bold">Comisión: +$${f.comision_medico.toLocaleString()}</div>
+                        <div class="text-sky-400 font-bold">Comisión Médica: +$${f.comision_medico.toLocaleString()}</div>
                     </div>
                 </div>
             `).join('');
         }
 
         socket.on('db_update', (d) => {
-            if (d.evento === 'ascensos_actualizados') cargarTablaAscensos();
+            if (d.evento === 'ascensos_actualizados' && pestanaActiva === 'jefaturas') cargarTablaAscensos();
         });
 
         renderCatalogo();

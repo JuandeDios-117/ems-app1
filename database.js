@@ -1,15 +1,8 @@
 require('dotenv').config();
 const { createClient } = require('@libsql/client');
 
-let url = (process.env.TURSO_DATABASE_URL || '').trim();
+const url = (process.env.TURSO_DATABASE_URL || '').trim();
 const authToken = (process.env.TURSO_AUTH_TOKEN || '').trim();
-
-// FORZAR HTTPS: Esto soluciona el error 400 de migration jobs en Render
-if (url.startsWith('libsql://')) {
-  url = url.replace('libsql://', 'https://');
-}
-
-console.log("[DB] Iniciando conexión con Turso en:", url ? url.substring(0, 30) + '...' : 'URL NO CONFIGURADA');
 
 const db = createClient({
   url,
@@ -66,7 +59,7 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Tablas inicializadas y listas en Turso (Modo HTTP Seguro).");
+    console.log("[DB] Tablas inicializadas y listas en Turso.");
   } catch (err) {
     console.error("[DB ERROR] Fallo al inicializar tablas:", err.message);
   }
