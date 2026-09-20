@@ -1,8 +1,15 @@
 require('dotenv').config();
 const { createClient } = require('@libsql/client');
 
-const url = (process.env.TURSO_DATABASE_URL || '').trim();
+let url = (process.env.TURSO_DATABASE_URL || '').trim();
 const authToken = (process.env.TURSO_AUTH_TOKEN || '').trim();
+
+// Si la URL inicia con libsql://, la convertimos a https:// para evitar el error de migration jobs (400)
+if (url.startsWith('libsql://')) {
+  url = url.replace('libsql://', 'https://');
+}
+
+console.log("[DB] Conectando a Turso mediante:", url ? url.substring(0, 25) + '...' : 'URL VACIA');
 
 const db = createClient({
   url,
@@ -54,9 +61,9 @@ const db = createClient({
       )
     `);
 
-    console.log("Conexión con Turso lista y tablas inicializadas.");
+    console.log("[DB] Tablas verificadas y listas en Turso.");
   } catch (err) {
-    console.error("Error al inicializar tablas en Turso:", err.message);
+    console.error("[DB ERROR] Error al conectar con Turso:", err);
   }
 })();
 
