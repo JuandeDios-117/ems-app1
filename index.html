@@ -3,112 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMS - San Andreas Medical Services</title>
+    <title>EMS Origen Roleplay - Sistema de Gestión y Ascensos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #05080e;
-            background-image: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 60%);
-            color: #f1f5f9;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #06070a;
+            background-image: 
+                radial-gradient(circle at 50% -10%, rgba(244, 114, 182, 0.15) 0%, transparent 55%),
+                radial-gradient(circle at 10% 30%, rgba(236, 72, 153, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 70%, rgba(219, 39, 119, 0.04) 0%, transparent 40%);
+            color: #f3f4f6;
+            font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
         }
-        .card-dark {
-            background: #090e17;
-            border: 1px solid #162234;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
         }
-        .input-dark {
-            background-color: #04060a;
-            border: 1px solid #1e2d42;
+        .card-ems {
+            background: linear-gradient(180deg, rgba(17, 18, 26, 0.92) 0%, rgba(10, 11, 16, 0.96) 100%);
+            border: 1px solid rgba(244, 114, 182, 0.16);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75), 0 0 20px rgba(244, 114, 182, 0.04);
+            backdrop-filter: blur(10px);
+        }
+        .input-ems {
+            background-color: #040508;
+            border: 1px solid rgba(244, 114, 182, 0.22);
             color: #ffffff;
-        }
-        .input-dark:focus {
-            border-color: #0ea5e9;
-            outline: none;
-            box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
-        }
-        .btn-ems {
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-            color: white;
-            font-weight: 800;
-        }
-        .btn-ems:hover {
-            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
-        }
-        .tab-btn {
             transition: all 0.2s ease;
+        }
+        .input-ems:focus {
+            border-color: #f472b6;
+            outline: none;
+            box-shadow: 0 0 14px rgba(244, 114, 182, 0.35);
+        }
+        .btn-origen {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 4px 18px rgba(236, 72, 153, 0.35);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-origen:hover {
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(244, 114, 182, 0.5);
+        }
+        .btn-tab-inactive {
+            background: rgba(14, 16, 24, 0.85);
+            color: #9ca3af;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s ease;
+        }
+        .btn-tab-inactive:hover {
+            background: rgba(24, 27, 40, 0.95);
+            color: #f472b6;
+            border-color: rgba(244, 114, 182, 0.3);
+        }
+        .text-glow {
+            text-shadow: 0 0 16px rgba(244, 114, 182, 0.45);
         }
     </style>
 </head>
-<body class="p-4 md:p-6 min-h-screen">
-    <div class="max-w-7xl mx-auto space-y-4">
+<body class="p-4 md:p-6 text-sm">
+    <div class="max-w-7xl mx-auto space-y-5">
         
-        <!-- HEADER EMS -->
-        <div class="card-dark p-5 rounded-2xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-sky-500">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-sky-500/10 border border-sky-400/30 flex items-center justify-center text-2xl">
-                    🚑
+        <!-- ENCABEZADO OFICIAL EMS ORIGEN ROLEPLAY -->
+        <header class="card-ems p-5 md:p-6 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500 relative overflow-hidden">
+            <div class="flex items-center gap-4 z-10">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-pink-500/20 to-black/80 border border-pink-500/40 flex items-center justify-center p-2 shadow-inner shrink-0">
+                    <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]" fill="none">
+                        <path d="M50 8L82 22V52C82 72 50 92 50 92C50 92 18 72 18 52V22L50 8Z" stroke="#f472b6" stroke-width="4" fill="#13141f"/>
+                        <path d="M50 24V70M32 46H68" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+                        <circle cx="50" cy="46" r="14" stroke="#f472b6" stroke-width="3"/>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-black uppercase tracking-wider text-white">
-                        SAN ANDREAS <span class="text-sky-400">EMS</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black tracking-widest text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-md border border-pink-500/30 uppercase">Sistema Departamental</span>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl font-black uppercase tracking-wider text-white mt-0.5">
+                        EMS <span class="text-pink-400 text-glow">ORIGEN</span> <span class="text-xs font-bold text-zinc-400 tracking-normal block md:inline md:ml-1">ROLEPLAY</span>
                     </h1>
-                    <p class="text-xs text-sky-200/60 font-semibold tracking-wider uppercase">Emergencias Médicas · Tablas de Evaluación</p>
+                    <p class="text-xs text-zinc-400 font-medium tracking-wide">Control de Evaluaciones · Registro de Servicio · San Andreas</p>
                 </div>
             </div>
-            <div id="userInfo" class="text-xs text-zinc-400 flex items-center gap-3"></div>
-        </div>
+            
+            <div id="userInfo" class="z-10 text-xs text-zinc-400 flex items-center gap-3"></div>
+        </header>
 
-        <!-- NAVEGACIÓN DINÁMICA (Generada por JS según Rango) -->
-        <div class="flex flex-wrap items-center card-dark p-2 rounded-xl gap-2 hidden" id="navBarContenedor"></div>
+        <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+        <nav class="flex flex-wrap items-center card-ems p-2 rounded-2xl gap-2 hidden" id="navBarContenedor"></nav>
 
-        <!-- AUTH -->
-        <div id="seccion-auth" class="max-w-md mx-auto card-dark p-8 rounded-2xl space-y-4 mt-10">
-            <h2 class="text-xl font-black text-center text-white uppercase" id="authTitle">Acceso Médico San Andreas</h2>
+        <!-- ACCESO / REGISTRO -->
+        <div id="seccion-auth" class="max-w-md mx-auto card-ems p-8 rounded-3xl space-y-5 mt-10 border border-pink-500/30">
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 mx-auto rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-xl">
+                    🏥
+                </div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider pt-2" id="authTitle">Acceso San Andreas EMS</h2>
+                <p class="text-xs text-zinc-400">Autenticación de personal médico y de supervisión.</p>
+            </div>
+
             <div id="campoNombre" class="hidden">
-                <label class="block text-xs font-bold text-zinc-400 mb-1">Nombre Completo</label>
-                <input type="text" id="regNombre" placeholder="Dr. John Watson" class="w-full input-dark p-2.5 rounded-xl text-sm">
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">Nombre Completo (IC)</label>
+                <input type="text" id="regNombre" placeholder="Dr. John Watson" class="w-full input-ems px-4 py-2.5 rounded-xl text-sm font-semibold placeholder:text-zinc-600">
             </div>
+
             <div>
-                <label class="block text-xs font-bold text-zinc-400 mb-1">Usuario</label>
-                <input type="text" id="authUsuario" placeholder="watson" class="w-full input-dark p-2.5 rounded-xl text-sm">
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">Usuario</label>
+                <input type="text" id="authUsuario" placeholder="watson" class="w-full input-ems px-4 py-2.5 rounded-xl text-sm font-semibold placeholder:text-zinc-600">
             </div>
+
             <div>
-                <label class="block text-xs font-bold text-zinc-400 mb-1">Contraseña</label>
-                <input type="password" id="authPassword" placeholder="••••••••" class="w-full input-dark p-2.5 rounded-xl text-sm">
+                <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">Contraseña</label>
+                <input type="password" id="authPassword" placeholder="••••••••" class="w-full input-ems px-4 py-2.5 rounded-xl text-sm font-semibold placeholder:text-zinc-600">
             </div>
-            <button onclick="procesarAuth()" class="w-full btn-ems py-3 rounded-xl uppercase text-xs tracking-wider" id="btnAuth">Ingresar</button>
-            <p class="text-center text-xs text-zinc-400 cursor-pointer hover:underline" onclick="toggleAuth()" id="toggleAuthTxt">¿No tienes cuenta? Regístrate</p>
+
+            <button onclick="procesarAuth()" class="w-full btn-origen py-3 rounded-xl uppercase text-xs tracking-wider" id="btnAuth">Ingresar</button>
+
+            <p class="text-center text-xs text-zinc-400 cursor-pointer hover:text-pink-300 transition pt-1" onclick="toggleAuth()" id="toggleAuthTxt">
+                ¿No tienes cuenta? Regístrate
+            </p>
         </div>
 
-        <!-- SECCIONES GENERADAS DINÁMICAMENTE -->
-        <div id="contenedor-secciones"></div>
+        <!-- SECCIONES DE LAS 4 JEFATURAS -->
+        <main id="contenedor-secciones"></main>
 
-        <!-- PANEL DE DIRECCIÓN (ADMIN) -->
-        <div id="seccion-admin" class="card-dark p-6 rounded-2xl space-y-6 hidden">
-            <div>
-                <h2 class="text-xl font-black text-white uppercase">👑 Panel de Dirección General (Admin)</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Asignación oficial de los rangos jerárquicos de gestión (Director, Jefes, Supervisor).</p>
+        <!-- PANEL DE DIRECCIÓN (ADMINISTRACIÓN GENERAL) -->
+        <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-pink-500">
+            <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800/80 pb-4">
+                <div>
+                    <h2 class="text-xl font-black text-white uppercase flex items-center gap-2">
+                        👑 PANEL DE DIRECCIÓN GENERAL (ADMIN)
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Asignación de rangos jerárquicos y control de accesos a las jefaturas departamentales.</p>
+                </div>
             </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-zinc-800 text-zinc-400 uppercase">
-                            <th class="p-3">Miembro</th>
-                            <th class="p-3">Rango Jerárquico Oficial</th>
-                            <th class="p-3">Permisos</th>
-                            <th class="p-3 text-right">Acción</th>
+                        <tr class="border-b border-zinc-800 text-zinc-400 uppercase text-[11px] tracking-wider">
+                            <th class="p-3.5">Personal</th>
+                            <th class="p-3.5">Rango Asignado</th>
+                            <th class="p-3.5">Permisos del Sistema</th>
+                            <th class="p-3.5 text-right">Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="cuerpoTablaAdmin" class="divide-y divide-zinc-800/60"></tbody>
+                    <tbody id="cuerpoTablaAdmin" class="divide-y divide-zinc-800/50"></tbody>
                 </table>
             </div>
         </div>
 
     </div>
 
-    <!-- DATALIST PARA AUTOCOMPLETAR LOS RANGOS OFICIALES AL EVALUAR -->
+    <!-- DATALIST CON LOS RANGOS OFICIALES DE EMS ORIGEN ROLEPLAY -->
     <datalist id="lista-rangos-discord">
         <option value="Especialista">
         <option value="Subespecialista">
@@ -127,7 +178,6 @@
         let usuarioActual = null;
         let esRegistro = false;
 
-        // Rangos para el panel de Control Admin
         const RANGOS_EMS = [
             "Director (Admin)",
             "Subdirectora",
@@ -139,101 +189,125 @@
             "Supervisor"
         ];
 
-        // Definición de las 4 Tablas Principales con sus reglas de visualización
         const DEPARTAMENTOS = [
             { 
                 id: 'cirugia', 
-                tituloNav: '🏥 CIRUGÍA',
-                titulo: '🏥 Jefatura de Cirugía', 
-                colorClases: 'border-sky-500', 
-                textClases: 'text-sky-400', 
-                bgClases: 'border-sky-500/20', 
-                btnClases: 'bg-sky-600 hover:bg-sky-500',
+                tituloNav: '🏥 JEFATURA CIRUGÍA',
+                titulo: '🏥 Jefatura de Cirugía · Evaluación de Personal', 
+                descripcion: 'Supervisión de cirujanos, especialistas y personal quirúrgico en servicio.',
+                colorBorde: 'border-pink-500', 
+                colorTexto: 'text-pink-400', 
+                colorBadge: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
                 rangosPermitidos: ["Jefa de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'medicina', 
-                tituloNav: '💊 MEDICINA',
-                titulo: '💊 Jefatura de Medicina', 
-                colorClases: 'border-emerald-500', 
-                textClases: 'text-emerald-400', 
-                bgClases: 'border-emerald-500/20', 
-                btnClases: 'bg-emerald-600 hover:bg-emerald-500',
+                tituloNav: '💊 JEFATURA MEDICINA',
+                titulo: '💊 Jefatura de Medicina · Evaluación de Personal', 
+                descripcion: 'Control clínico de consultas, tratamientos hospitalarios e ingresos.',
+                colorBorde: 'border-rose-500', 
+                colorTexto: 'text-rose-400', 
+                colorBadge: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
                 rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'enfermeria', 
-                tituloNav: '💉 ENFERMERÍA',
-                titulo: '💉 Dirección de Enfermería', 
-                colorClases: 'border-rose-500', 
-                textClases: 'text-rose-400', 
-                bgClases: 'border-rose-500/20', 
-                btnClases: 'bg-rose-600 hover:bg-rose-500',
+                tituloNav: '💉 DIR. ENFERMERÍA',
+                titulo: '💉 Dirección de Enfermería · Evaluación de Personal', 
+                descripcion: 'Supervisión de enfermeros especialistas, generales, auxiliares y celadores.',
+                colorBorde: 'border-fuchsia-500', 
+                colorTexto: 'text-fuchsia-400', 
+                colorBadge: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
                 rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'formaciones', 
-                tituloNav: '📚 FORMACIONES',
-                titulo: '📚 Jefatura de Formaciones', 
-                colorClases: 'border-amber-500', 
-                textClases: 'text-amber-400', 
-                bgClases: 'border-amber-500/20', 
-                btnClases: 'bg-amber-600 hover:bg-amber-500',
+                tituloNav: '📚 JEFATURA FORMACIONES',
+                titulo: '📚 Jefatura de Formaciones · Evaluación de Personal', 
+                descripcion: 'Seguimiento de aspirantes, estudiantes, protocolos teóricos y pruebas de aptitud.',
+                colorBorde: 'border-purple-500', 
+                colorTexto: 'text-purple-400', 
+                colorBadge: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
                 rangosPermitidos: ["Jefe de Formaciones", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             }
         ];
 
+        function obtenerInsigniaRango(rango) {
+            const r = (rango || '').toLowerCase();
+            if (r.includes('director')) return `<span class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/40 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">👑 ${rango}</span>`;
+            if (r.includes('subdirector')) return `<span class="bg-pink-500/15 text-pink-300 border border-pink-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">🛡️ ${rango}</span>`;
+            if (r.includes('jef') || r.includes('jefe')) return `<span class="bg-rose-500/15 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">⭐ ${rango}</span>`;
+            if (r.includes('coordinador')) return `<span class="bg-purple-500/15 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">👔 ${rango}</span>`;
+            if (r.includes('supervisor')) return `<span class="bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">📋 ${rango}</span>`;
+            
+            // Rangos de las escalas de evaluación
+            if (r.includes('especialista') || r.includes('subespecialista')) return `<span class="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">🩺 ${rango}</span>`;
+            if (r.includes('residente') || r.includes('interno') || r.includes('estudiante')) return `<span class="bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">📑 ${rango}</span>`;
+            if (r.includes('enfermer')) return `<span class="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">💉 ${rango}</span>`;
+            if (r.includes('auxiliar') || r.includes('celador')) return `<span class="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">🛡️ ${rango}</span>`;
+
+            return `<span class="bg-zinc-800 text-zinc-300 border border-zinc-700 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold">${rango}</span>`;
+        }
+
         function inicializarEstructuraHtml() {
             const container = document.getElementById('contenedor-secciones');
             container.innerHTML = DEPARTAMENTOS.map(d => `
-                <div id="seccion-${d.id}" class="hidden space-y-4">
-                    <div class="card-dark p-6 rounded-2xl space-y-4 border-l-4 ${d.colorClases}">
-                        <h2 class="text-lg font-black text-white uppercase border-b border-zinc-800 pb-3">${d.titulo}</h2>
+                <section id="seccion-${d.id}" class="hidden space-y-4">
+                    <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 ${d.colorBorde}">
+                        <div class="flex flex-wrap justify-between items-start gap-3 border-b border-zinc-800/80 pb-4">
+                            <div>
+                                <h2 class="text-lg font-black text-white uppercase tracking-wider">${d.titulo}</h2>
+                                <p class="text-xs text-zinc-400 mt-0.5">${d.descripcion}</p>
+                            </div>
+                            <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${d.colorBadge}">Control Departamental</span>
+                        </div>
                         
-                        <div class="bg-black/60 p-4 rounded-xl border ${d.bgClases} grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                        <!-- Formulario de Ingreso -->
+                        <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1">Discord ID</label>
-                                <input type="text" id="ascDiscord_${d.id}" placeholder="Ej. 4239841" class="w-full input-dark p-2 rounded-lg font-mono">
+                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Discord ID</label>
+                                <input type="text" id="ascDiscord_${d.id}" placeholder="423984124..." class="w-full input-ems px-3 py-2.5 rounded-xl font-mono-code font-medium text-pink-200">
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1">Nombre Evaluado</label>
-                                <input type="text" id="ascNombre_${d.id}" placeholder="Ej. Juan Pérez" class="w-full input-dark p-2 rounded-lg font-bold">
+                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Nombre Completo (IC)</label>
+                                <input type="text" id="ascNombre_${d.id}" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold">
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1">Rango Actual</label>
-                                <input type="text" id="ascActual_${d.id}" list="lista-rangos-discord" placeholder="Ej. Celador/a" class="w-full input-dark p-2 rounded-lg">
+                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Rango Actual</label>
+                                <input type="text" id="ascActual_${d.id}" list="lista-rangos-discord" placeholder="Celador/a..." class="w-full input-ems px-3 py-2.5 rounded-xl">
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1">Rango Propuesto</label>
-                                <input type="text" id="ascPropuesto_${d.id}" list="lista-rangos-discord" placeholder="Ej. Residente" class="w-full input-dark p-2 rounded-lg font-bold ${d.textClases}">
+                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Rango Propuesto</label>
+                                <input type="text" id="ascPropuesto_${d.id}" list="lista-rangos-discord" placeholder="Residente..." class="w-full input-ems px-3 py-2.5 rounded-xl font-bold ${d.colorTexto}">
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1">Horas Hechas</label>
-                                <input type="number" id="ascHoras_${d.id}" placeholder="42" class="w-full input-dark p-2 rounded-lg text-center font-bold text-yellow-400">
+                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Horas Registradas</label>
+                                <input type="number" id="ascHoras_${d.id}" placeholder="40" class="w-full input-ems px-3 py-2.5 rounded-xl text-center font-bold text-yellow-400 font-mono-code">
                             </div>
                             <div class="flex items-end">
-                                <button onclick="guardarRegistroAscenso('${d.id}')" class="w-full ${d.btnClases} text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition shadow">+ Agregar</button>
+                                <button onclick="guardarRegistroAscenso('${d.id}')" class="w-full btn-origen py-2.5 rounded-xl text-xs uppercase tracking-wider">+ Agregar</button>
                             </div>
                         </div>
 
+                        <!-- Tabla del Departamento -->
                         <div class="overflow-x-auto pt-2">
                             <table class="w-full text-left text-xs border-collapse">
                                 <thead>
-                                    <tr class="border-b border-zinc-800 text-zinc-400 uppercase">
-                                        <th class="p-3">Discord ID</th>
-                                        <th class="p-3">Personal a Cargo</th>
-                                        <th class="p-3">Rango Actual</th>
-                                        <th class="p-3">Rango Propuesto</th>
-                                        <th class="p-3 text-center">Horas Hechas</th>
-                                        <th class="p-3">Evaluado Por</th>
-                                        <th class="p-3 text-right">Acciones</th>
+                                    <tr class="border-b border-zinc-800 text-zinc-400 uppercase text-[11px] tracking-wider">
+                                        <th class="p-3.5">Discord ID</th>
+                                        <th class="p-3.5">Personal Evaluado</th>
+                                        <th class="p-3.5">Rango Actual</th>
+                                        <th class="p-3.5">Rango Propuesto</th>
+                                        <th class="p-3.5 text-center">Horas de Guardia</th>
+                                        <th class="p-3.5">Evaluado Por</th>
+                                        <th class="p-3.5 text-right">Acción</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cuerpoTabla_${d.id}" class="divide-y divide-zinc-800/60"></tbody>
+                                <tbody id="cuerpoTabla_${d.id}" class="divide-y divide-zinc-800/40"></tbody>
                             </table>
                         </div>
                     </div>
-                </div>
+                </section>
             `).join('');
         }
 
@@ -242,7 +316,7 @@
         function toggleAuth() {
             esRegistro = !esRegistro;
             document.getElementById('campoNombre').classList.toggle('hidden', !esRegistro);
-            document.getElementById('authTitle').innerText = esRegistro ? 'Registro Personal EMS' : 'Acceso Médico San Andreas';
+            document.getElementById('authTitle').innerText = esRegistro ? 'Registro Personal EMS' : 'Acceso San Andreas EMS';
             document.getElementById('btnAuth').innerText = esRegistro ? 'Crear Cuenta' : 'Ingresar';
             document.getElementById('toggleAuthTxt').innerText = esRegistro ? '¿Ya tienes cuenta? Ingresa' : '¿No tienes cuenta? Regístrate';
         }
@@ -260,7 +334,7 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert("Cuenta creada con éxito. Ahora puedes iniciar sesión.");
+                    alert("Cuenta creada con éxito. Ahora puedes ingresar.");
                     toggleAuth();
                 } else alert(data.error);
             } else {
@@ -285,31 +359,39 @@
             nav.classList.remove('hidden');
 
             document.getElementById('userInfo').innerHTML = `
-                <span>👨‍⚕️ <strong class="text-sky-400">${usuarioActual.nombre}</strong></span>
-                <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-sky-500/30">${usuarioActual.rango}</span>
-                <button onclick="location.reload()" class="text-rose-400 hover:underline ml-2 font-bold">Salir</button>
+                <div class="flex items-center gap-2">
+                    <span class="text-white font-bold">${usuarioActual.nombre}</span>
+                    ${obtenerInsigniaRango(usuarioActual.rango)}
+                </div>
+                <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2 transition">Salir</button>
             `;
 
             const esAdmin = usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)';
             let pestanaAInicializar = null;
             let navBotonesHTML = '';
 
-            // Construcción Dinámica de Pestañas permitidas para el rango del usuario
             DEPARTAMENTOS.forEach(d => {
                 const tieneAcceso = esAdmin || d.rangosPermitidos.includes(usuarioActual.rango);
                 if (tieneAcceso) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('${d.id}')" id="tab-${d.id}" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 ${d.textClases}">${d.tituloNav}</button>`;
+                    navBotonesHTML += `
+                        <button onclick="cambiarPestana('${d.id}')" id="tab-${d.id}" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">
+                            ${d.tituloNav}
+                        </button>
+                    `;
                     if (!pestanaAInicializar) pestanaAInicializar = d.id;
                 }
             });
 
             if (esAdmin) {
-                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-rose-400">👑 PANEL ADMIN</button>`;
+                navBotonesHTML += `
+                    <button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-400">
+                        👑 PANEL DIRECCIÓN
+                    </button>
+                `;
             }
 
             nav.innerHTML = navBotonesHTML;
 
-            // Cargar datos y forzar la vista de la primera pestaña que el usuario tenga permitida
             cargarTablasVisibles();
             if (pestanaAInicializar) {
                 cambiarPestana(pestanaAInicializar);
@@ -329,8 +411,7 @@
                 
                 const btn = document.getElementById(`tab-${p}`);
                 if(btn) {
-                    btn.classList.remove('btn-ems');
-                    btn.classList.add('bg-zinc-900');
+                    btn.className = 'tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive';
                 }
             });
 
@@ -339,8 +420,7 @@
 
             const btnActivo = document.getElementById(`tab-${pestana}`);
             if(btnActivo) {
-                btnActivo.classList.remove('bg-zinc-900');
-                btnActivo.classList.add('btn-ems');
+                btnActivo.className = 'tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-origen text-white';
             }
 
             if (pestana === 'admin') cargarGestionAdmin();
@@ -355,20 +435,22 @@
                 const cuerpo = document.getElementById(`cuerpoTabla_${d.id}`);
                 
                 if (filtrados.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay registros en esta jefatura.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay personal registrado en esta jefatura.</td></tr>`;
                     return;
                 }
 
                 cuerpo.innerHTML = filtrados.map(item => `
-                    <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
-                        <td class="p-3 font-mono text-zinc-400">${item.discord_id}</td>
-                        <td class="p-3 font-bold text-white">${item.nombre_ems}</td>
-                        <td class="p-3 text-zinc-300">${item.rango_actual}</td>
-                        <td class="p-3 font-bold ${d.textClases}">${item.rango_propuesto}</td>
-                        <td class="p-3 text-center font-bold text-yellow-400">${item.horas_hechas} hrs</td>
-                        <td class="p-3 text-zinc-500 text-[11px]">${item.actualizado_por}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">Retirar</button>
+                    <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40 transition">
+                        <td class="p-3.5 font-mono-code text-zinc-400 font-semibold">${item.discord_id}</td>
+                        <td class="p-3.5 font-bold text-white">${item.nombre_ems}</td>
+                        <td class="p-3.5">${obtenerInsigniaRango(item.rango_actual)}</td>
+                        <td class="p-3.5">${obtenerInsigniaRango(item.rango_propuesto)}</td>
+                        <td class="p-3.5 text-center font-bold text-yellow-400 font-mono-code bg-black/30 rounded-lg">${item.horas_hechas} hrs</td>
+                        <td class="p-3.5 text-zinc-400 text-[11px] font-medium">${item.actualizado_por}</td>
+                        <td class="p-3.5 text-right">
+                            <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-lg border border-rose-500/30 transition">
+                                Retirar
+                            </button>
                         </td>
                     </tr>
                 `).join('');
@@ -382,7 +464,7 @@
             const rango_propuesto = document.getElementById(`ascPropuesto_${jefaturaId}`).value.trim();
             const horas_hechas = document.getElementById(`ascHoras_${jefaturaId}`).value;
 
-            if (!discord_id || !nombre_ems) return alert("Ingresa ID de Discord y Nombre.");
+            if (!discord_id || !nombre_ems) return alert("Completa el Discord ID y el Nombre.");
 
             const res = await fetch('/api/ascensos', {
                 method: 'POST',
@@ -412,33 +494,35 @@
         }
 
         async function eliminarAscenso(id) {
-            if (!confirm("¿Eliminar este registro de evaluación?")) return;
+            if (!confirm("¿Deseas retirar a este miembro del registro de ascensos?")) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
             cargarTablasVisibles();
         }
 
-        // PANEL ADMIN
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
             const usuarios = await res.json();
             const cuerpo = document.getElementById('cuerpoTablaAdmin');
 
             cuerpo.innerHTML = usuarios.map(u => `
-                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
-                    <td class="p-3 font-bold text-white">${u.nombre} <span class="text-zinc-500 font-normal">(@${u.usuario})</span></td>
-                    <td class="p-3">
-                        <select id="selRangoAdmin-${u.id}" class="input-dark p-1.5 rounded-lg text-xs font-bold text-sky-300">
+                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40 transition">
+                    <td class="p-3.5 font-bold text-white">
+                        ${u.nombre} 
+                        <span class="text-zinc-500 font-normal font-mono-code text-[11px] block">@${u.usuario}</span>
+                    </td>
+                    <td class="p-3.5">
+                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300">
                             ${RANGOS_EMS.map(r => `<option value="${r}" ${u.rango === r ? 'selected' : ''}>${r}</option>`).join('')}
                         </select>
                     </td>
-                    <td class="p-3">
-                        <select id="selRolAdmin-${u.id}" class="input-dark p-1.5 rounded-lg text-xs">
+                    <td class="p-3.5">
+                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-semibold">
                             <option value="empleado" ${u.rol === 'empleado' ? 'selected' : ''}>Personal</option>
                             <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
                         </select>
                     </td>
-                    <td class="p-3 text-right">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-ems px-3 py-1.5 rounded-lg text-xs shadow">Guardar</button>
+                    <td class="p-3.5 text-right">
+                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-3.5 py-1.5 rounded-xl text-xs">Guardar</button>
                     </td>
                 </tr>
             `).join('');
