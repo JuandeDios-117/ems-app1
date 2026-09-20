@@ -6,7 +6,6 @@
     <title>EMS - San Andreas Medical Services</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
             background-color: #05080e;
@@ -60,9 +59,7 @@
 
         <!-- NAVEGACIÓN -->
         <div class="flex flex-wrap items-center card-dark p-2 rounded-xl gap-2 hidden" id="navBar">
-            <button onclick="cambiarPestana('calculadora')" id="tab-calc" class="px-4 py-2 rounded-lg font-bold text-xs btn-ems">🩺 FACTURACIÓN MÉDICA</button>
-            <button onclick="cambiarPestana('jefaturas')" id="tab-jefaturas" class="px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-sky-400 hover:bg-zinc-800">📋 JEFATURAS & ASCENSOS</button>
-            <button onclick="cambiarPestana('historial')" id="tab-hist" class="px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-zinc-300 hover:bg-zinc-800">📊 MI EXPEDIENTE</button>
+            <button onclick="cambiarPestana('jefaturas')" id="tab-jefaturas" class="px-4 py-2 rounded-lg font-bold text-xs btn-ems">📋 TABLAS DE JEFATURAS & ASCENSOS</button>
             <button onclick="cambiarPestana('admin')" id="tab-admin" class="px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-rose-400 hover:bg-zinc-800 hidden">👑 PANEL DIRECCIÓN (ADMIN)</button>
         </div>
 
@@ -85,99 +82,15 @@
             <p class="text-center text-xs text-zinc-400 cursor-pointer hover:underline" onclick="toggleAuth()" id="toggleAuthTxt">¿No tienes cuenta? Regístrate</p>
         </div>
 
-        <!-- SECCIÓN FACTURACIÓN -->
-        <div id="seccion-calculadora" class="grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
-            <div class="lg:col-span-2 space-y-4">
-                <div class="card-dark p-5 rounded-2xl space-y-3">
-                    <h3 class="text-xs font-black text-sky-400 uppercase">Datos del Paciente</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" id="pacienteNombre" placeholder="Nombre del Paciente" class="input-dark p-2.5 rounded-xl text-sm">
-                        <input type="text" id="pacienteDNI" placeholder="DNI / Pasaporte" class="input-dark p-2.5 rounded-xl text-sm">
-                    </div>
-                </div>
-
-                <div class="card-dark p-5 rounded-2xl space-y-3">
-                    <h3 class="text-xs font-black text-sky-400 uppercase">Tratamientos y Procedimientos</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="catalogoProcedimientos"></div>
-                </div>
+        <!-- SECCIÓN DE JEFATURAS Y ASCENSOS (MÚLTIPLES TABLAS) -->
+        <div id="seccion-jefaturas" class="space-y-6 hidden">
+            <div class="card-dark p-5 rounded-xl border-l-4 border-sky-500 bg-sky-950/10">
+                <h2 class="text-xl font-black text-white uppercase">📋 Control de Jefaturas & Evaluación de Ascensos</h2>
+                <p class="text-xs text-zinc-400 mt-1">Supervisión directa de horas de servicio, ID de Discord y propuestas de rango separados por departamentos.</p>
             </div>
-
-            <!-- RESUMEN FACTURA -->
-            <div class="card-dark p-5 rounded-2xl space-y-4 h-fit sticky top-4">
-                <h3 class="text-xs font-black text-white uppercase border-b border-zinc-800 pb-2">Resumen de Atención</h3>
-                <div id="itemsSeleccionados" class="space-y-2 text-xs"></div>
-                <div class="border-t border-zinc-800 pt-3 space-y-1 text-xs">
-                    <div class="flex justify-between font-bold"><span>Total Cobrado:</span><span class="text-emerald-400" id="txtTotalCobrado">$0</span></div>
-                    <div class="flex justify-between text-zinc-400"><span>Fondo Hospital:</span><span id="txtFondoHospital">$0</span></div>
-                    <div class="flex justify-between text-sky-400 font-bold"><span>Tu Comisión Médica:</span><span id="txtComisionMedico">$0</span></div>
-                </div>
-                <button onclick="completarFactura()" class="w-full btn-ems py-3 rounded-xl text-xs uppercase tracking-wider">Finalizar Factura</button>
-            </div>
-        </div>
-
-        <!-- SECCIÓN DE JEFATURAS Y ASCENSOS -->
-        <div id="seccion-jefaturas" class="card-dark p-6 rounded-2xl space-y-6 hidden">
-            <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
-                <div>
-                    <h2 class="text-xl font-black text-white uppercase">📋 Control de Jefaturas & Evaluación de Ascensos</h2>
-                    <p class="text-xs text-zinc-400 mt-1">Supervisión directa de horas de servicio, ID de Discord y propuestas de rango.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <label class="text-xs font-bold text-sky-400 uppercase">Jefatura:</label>
-                    <select id="selJefatura" onchange="cargarTablaAscensos()" class="input-dark p-2 rounded-xl text-xs font-bold text-sky-300">
-                        <option value="cirugia">🏥 Jefatura de Cirugía</option>
-                        <option value="medicina">💊 Jefatura de Medicina</option>
-                        <option value="enfermeria">💉 Dirección de Enfermería</option>
-                        <option value="formaciones">📚 Jefatura de Formaciones</option>
-                        <option value="supervision">🛡️ Coordinación y Supervisión</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- FORMULARIO AGREGAR PERSONAL -->
-            <div class="bg-black/60 p-4 rounded-xl border border-sky-500/20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-                <div>
-                    <label class="block font-bold text-zinc-400 mb-1">Discord ID</label>
-                    <input type="text" id="ascDiscord" placeholder="Ej. 42398412498" class="w-full input-dark p-2 rounded-lg font-mono">
-                </div>
-                <div>
-                    <label class="block font-bold text-zinc-400 mb-1">Nombre EMS</label>
-                    <input type="text" id="ascNombre" placeholder="Dr. Mark Sloan" class="w-full input-dark p-2 rounded-lg font-bold">
-                </div>
-                <div>
-                    <label class="block font-bold text-zinc-400 mb-1">Rango Actual</label>
-                    <input type="text" id="ascActual" placeholder="Cirujano Jr." class="w-full input-dark p-2 rounded-lg">
-                </div>
-                <div>
-                    <label class="block font-bold text-zinc-400 mb-1">Rango Propuesto</label>
-                    <input type="text" id="ascPropuesto" placeholder="Cirujano Titular" class="w-full input-dark p-2 rounded-lg font-bold text-emerald-400">
-                </div>
-                <div>
-                    <label class="block font-bold text-zinc-400 mb-1">Horas Hechas</label>
-                    <input type="number" id="ascHoras" placeholder="42" class="w-full input-dark p-2 rounded-lg text-center font-bold text-yellow-400">
-                </div>
-                <div class="flex items-end">
-                    <button onclick="guardarRegistroAscenso()" class="w-full btn-ems py-2 rounded-lg text-xs uppercase tracking-wider">+ Agregar</button>
-                </div>
-            </div>
-
-            <!-- TABLA DE LA JEFATURA -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
-                    <thead>
-                        <tr class="border-b border-zinc-800 text-zinc-400 uppercase">
-                            <th class="p-3">Discord ID</th>
-                            <th class="p-3">Personal a Cargo</th>
-                            <th class="p-3">Rango Actual</th>
-                            <th class="p-3">Rango Propuesto</th>
-                            <th class="p-3 text-center">Horas Hechas</th>
-                            <th class="p-3">Evaluado Por</th>
-                            <th class="p-3 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoTablaAscensos" class="divide-y divide-zinc-800/60"></tbody>
-                </table>
-            </div>
+            
+            <!-- Contenedor donde se generan automáticamente las 5 tablas -->
+            <div id="contenedor-jefaturas" class="space-y-8"></div>
         </div>
 
         <!-- PANEL DE DIRECCIÓN (ADMIN) -->
@@ -201,19 +114,12 @@
             </div>
         </div>
 
-        <!-- EXPEDIENTE PERSONAL -->
-        <div id="seccion-historial" class="card-dark p-6 rounded-2xl space-y-4 hidden">
-            <h2 class="text-xl font-black text-white uppercase">📊 Mis Facturaciones y Comisiones Médicas</h2>
-            <div id="listaMisFacturas" class="space-y-3"></div>
-        </div>
-
     </div>
 
     <script>
         const socket = io();
         let usuarioActual = null;
         let esRegistro = false;
-        let carrito = {};
 
         const RANGOS_EMS = [
             "Director (Admin)",
@@ -226,109 +132,67 @@
             "Supervisor"
         ];
 
-        const procedimientos = [
-            { id: 1, nombre: "Herida de Bala (GSW) - Cirugía", precio: 25000, costo: 5000 },
-            { id: 2, nombre: "Reanimación RCP + Desfibrilador", precio: 15000, costo: 3000 },
-            { id: 3, nombre: "Tratamiento de Fractura Múltiple", precio: 18000, costo: 4000 },
-            { id: 4, nombre: "Sutura de Laceraciones Profundas", precio: 8000, costo: 1500 },
-            { id: 5, nombre: "Suministro de Botiquín & Calmantes", precio: 5000, costo: 1000 },
-            { id: 6, nombre: "Desintoxicación & Lavado Gástrico", precio: 12000, costo: 2500 }
+        // Configuración de las 5 jefaturas con sus colores para generarlas automáticamente
+        const JEFATURAS = [
+            { id: 'cirugia', titulo: '🏥 Jefatura de Cirugía', colorClases: 'border-sky-500', btnClases: 'bg-sky-600 hover:bg-sky-500', textClases: 'text-sky-400', bgClases: 'border-sky-500/20' },
+            { id: 'medicina', titulo: '💊 Jefatura de Medicina', colorClases: 'border-emerald-500', btnClases: 'bg-emerald-600 hover:bg-emerald-500', textClases: 'text-emerald-400', bgClases: 'border-emerald-500/20' },
+            { id: 'enfermeria', titulo: '💉 Dirección de Enfermería', colorClases: 'border-rose-500', btnClases: 'bg-rose-600 hover:bg-rose-500', textClases: 'text-rose-400', bgClases: 'border-rose-500/20' },
+            { id: 'formaciones', titulo: '📚 Jefatura de Formaciones', colorClases: 'border-amber-500', btnClases: 'bg-amber-600 hover:bg-amber-500', textClases: 'text-amber-400', bgClases: 'border-amber-500/20' },
+            { id: 'supervision', titulo: '🛡️ Coordinación y Supervisión', colorClases: 'border-purple-500', btnClases: 'bg-purple-600 hover:bg-purple-500', textClases: 'text-purple-400', bgClases: 'border-purple-500/20' }
         ];
 
-        function renderCatalogo() {
-            const cont = document.getElementById('catalogoProcedimientos');
-            cont.innerHTML = procedimientos.map(p => `
-                <div class="flex justify-between items-center bg-black/60 p-3 rounded-xl border border-zinc-800 hover:border-sky-500/50 transition">
-                    <div>
-                        <div class="font-bold text-white text-xs">${p.nombre}</div>
-                        <div class="text-emerald-400 font-black text-sm">$${p.precio.toLocaleString()}</div>
-                    </div>
-                    <button onclick="agregarProcedimiento(${p.id})" class="btn-ems px-3 py-1.5 rounded-lg text-xs uppercase">+ Cobrar</button>
-                </div>
-            `).join('');
-        }
-
-        function agregarProcedimiento(id) {
-            carrito[id] = (carrito[id] || 0) + 1;
-            renderCarrito();
-        }
-
-        function renderCarrito() {
-            const cont = document.getElementById('itemsSeleccionados');
-            const items = Object.entries(carrito);
-            if (items.length === 0) {
-                cont.innerHTML = `<span class="text-zinc-500 italic">Sin tratamientos añadidos.</span>`;
-                document.getElementById('txtTotalCobrado').innerText = "$0";
-                document.getElementById('txtFondoHospital').innerText = "$0";
-                document.getElementById('txtComisionMedico').innerText = "$0";
-                return;
-            }
-
-            let total = 0;
-            let totalCosto = 0;
-            cont.innerHTML = items.map(([id, cant]) => {
-                const proc = procedimientos.find(p => p.id === Number(id));
-                total += proc.precio * cant;
-                totalCosto += proc.costo * cant;
-                return `
-                    <div class="flex justify-between items-center bg-zinc-950 p-2 rounded-lg border border-zinc-800">
-                        <span>${proc.nombre} (x${cant})</span>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-emerald-400">$${(proc.precio * cant).toLocaleString()}</span>
-                            <button onclick="restarProcedimiento(${id})" class="text-rose-400 font-bold px-1 hover:text-rose-300">✕</button>
+        function inicializarEstructuraJefaturas() {
+            const container = document.getElementById('contenedor-jefaturas');
+            container.innerHTML = JEFATURAS.map(j => `
+                <div class="card-dark p-6 rounded-2xl space-y-4 border-l-4 ${j.colorClases}">
+                    <h2 class="text-lg font-black text-white uppercase border-b border-zinc-800 pb-3">${j.titulo}</h2>
+                    
+                    <!-- Formulario Independiente -->
+                    <div class="bg-black/60 p-4 rounded-xl border ${j.bgClases} grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-zinc-400 mb-1">Discord ID</label>
+                            <input type="text" id="ascDiscord_${j.id}" placeholder="Ej. 4239841" class="w-full input-dark p-2 rounded-lg font-mono">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-zinc-400 mb-1">Nombre EMS</label>
+                            <input type="text" id="ascNombre_${j.id}" placeholder="Dr. Mark Sloan" class="w-full input-dark p-2 rounded-lg font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-zinc-400 mb-1">Rango Actual</label>
+                            <input type="text" id="ascActual_${j.id}" placeholder="Cirujano Jr." class="w-full input-dark p-2 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-zinc-400 mb-1">Rango Propuesto</label>
+                            <input type="text" id="ascPropuesto_${j.id}" placeholder="Cirujano Titular" class="w-full input-dark p-2 rounded-lg font-bold ${j.textClases}">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-zinc-400 mb-1">Horas Hechas</label>
+                            <input type="number" id="ascHoras_${j.id}" placeholder="42" class="w-full input-dark p-2 rounded-lg text-center font-bold text-yellow-400">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="guardarRegistroAscenso('${j.id}')" class="w-full ${j.btnClases} text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition shadow">+ Agregar</button>
                         </div>
                     </div>
-                `;
-            }).join('');
 
-            const pctComision = usuarioActual ? (usuarioActual.comision_porcentaje || 30) : 30;
-            const comision = (total - totalCosto) * (pctComision / 100);
-            const hospital = total - comision;
-
-            document.getElementById('txtTotalCobrado').innerText = `$${total.toLocaleString()}`;
-            document.getElementById('txtFondoHospital').innerText = `$${hospital.toLocaleString()}`;
-            document.getElementById('txtComisionMedico').innerText = `$${comision.toLocaleString()}`;
-        }
-
-        function restarProcedimiento(id) {
-            delete carrito[id];
-            renderCarrito();
-        }
-
-        async function completarFactura() {
-            const paciente = document.getElementById('pacienteNombre').value.trim();
-            const dni = document.getElementById('pacienteDNI').value.trim();
-            const items = Object.entries(carrito).map(([id, cant]) => {
-                const proc = procedimientos.find(p => p.id === Number(id));
-                return { id: proc.id, nombre: proc.nombre, precio: proc.precio, costo: proc.costo, cantidad: cant };
-            });
-
-            if (!paciente || items.length === 0) return alert("Completa el nombre del paciente y selecciona al menos un procedimiento.");
-
-            const btn = document.querySelector('button[onclick="completarFactura()"]');
-            btn.disabled = true;
-            btn.innerText = "Procesando...";
-
-            const res = await fetch('/api/facturas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario_id: usuarioActual.id, paciente, dni, items })
-            });
-
-            btn.disabled = false;
-            btn.innerText = "Finalizar Factura";
-
-            if (res.ok) {
-                if(typeof confetti === 'function') confetti({ particleCount: 70, spread: 60 });
-                carrito = {};
-                document.getElementById('pacienteNombre').value = '';
-                document.getElementById('pacienteDNI').value = '';
-                renderCarrito();
-                alert("Factura médica asentada correctamente.");
-            } else {
-                const data = await res.json();
-                alert(data.error || "Error al procesar la factura.");
-            }
+                    <!-- Tabla Independiente -->
+                    <div class="overflow-x-auto pt-2">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="border-b border-zinc-800 text-zinc-400 uppercase">
+                                    <th class="p-3">Discord ID</th>
+                                    <th class="p-3">Personal a Cargo</th>
+                                    <th class="p-3">Rango Actual</th>
+                                    <th class="p-3">Rango Propuesto</th>
+                                    <th class="p-3 text-center">Horas Hechas</th>
+                                    <th class="p-3">Evaluado Por</th>
+                                    <th class="p-3 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTabla_${j.id}" class="divide-y divide-zinc-800/60"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function toggleAuth() {
@@ -383,17 +247,18 @@
                 document.getElementById('tab-admin').classList.remove('hidden');
             }
 
-            cambiarPestana('calculadora');
+            inicializarEstructuraJefaturas();
+            cambiarPestana('jefaturas');
             socket.emit('user_connected', usuarioActual);
         }
 
         function cambiarPestana(pestana) {
-            ['calculadora', 'jefaturas', 'historial', 'admin'].forEach(p => {
+            ['jefaturas', 'admin'].forEach(p => {
                 const el = document.getElementById(`seccion-${p}`);
                 if (el) el.classList.toggle('hidden', p !== pestana);
             });
 
-            ['calc', 'jefaturas', 'hist', 'admin'].forEach(p => {
+            ['jefaturas', 'admin'].forEach(p => {
                 const btn = document.getElementById(`tab-${p}`);
                 if(btn) {
                     btn.classList.remove('btn-ems');
@@ -401,51 +266,52 @@
                 }
             });
 
-            const activeBtn = document.getElementById(`tab-${pestana === 'calculadora' ? 'calc' : pestana === 'historial' ? 'hist' : pestana}`);
+            const activeBtn = document.getElementById(`tab-${pestana}`);
             if(activeBtn) {
                 activeBtn.classList.remove('bg-zinc-900', 'text-sky-400');
                 activeBtn.classList.add('btn-ems');
             }
 
-            if (pestana === 'jefaturas') cargarTablaAscensos();
+            if (pestana === 'jefaturas') cargarTodasLasTablas();
             if (pestana === 'admin') cargarGestionAdmin();
-            if (pestana === 'historial') cargarMisFacturas();
         }
 
-        // CONTROL DE JEFATURAS Y ASCENSOS
-        async function cargarTablaAscensos() {
-            const jefatura = document.getElementById('selJefatura').value;
-            const res = await fetch(`/api/ascensos/${jefatura}`);
-            const lista = await res.json();
+        // CARGAR TODAS LAS TABLAS AL MISMO TIEMPO
+        async function cargarTodasLasTablas() {
+            const res = await fetch('/api/ascensos');
+            const listaCompleta = await res.json();
 
-            const cuerpo = document.getElementById('cuerpoTablaAscensos');
-            if (lista.length === 0) {
-                cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay miembros registrados en esta jefatura.</td></tr>`;
-                return;
-            }
+            JEFATURAS.forEach(j => {
+                const filtrados = listaCompleta.filter(item => item.jefatura === j.id);
+                const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
+                
+                if (filtrados.length === 0) {
+                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay miembros en evaluación para esta jefatura.</td></tr>`;
+                    return;
+                }
 
-            cuerpo.innerHTML = lista.map(item => `
-                <tr class="hover:bg-zinc-900/40">
-                    <td class="p-3 font-mono text-zinc-400">${item.discord_id}</td>
-                    <td class="p-3 font-bold text-white">${item.nombre_ems}</td>
-                    <td class="p-3 text-zinc-300">${item.rango_actual}</td>
-                    <td class="p-3 font-bold text-emerald-400">${item.rango_propuesto}</td>
-                    <td class="p-3 text-center font-bold text-yellow-400">${item.horas_hechas} hrs</td>
-                    <td class="p-3 text-zinc-500 text-[11px]">${item.actualizado_por}</td>
-                    <td class="p-3 text-right">
-                        <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded">Retirar</button>
-                    </td>
-                </tr>
-            `).join('');
+                cuerpo.innerHTML = filtrados.map(item => `
+                    <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
+                        <td class="p-3 font-mono text-zinc-400">${item.discord_id}</td>
+                        <td class="p-3 font-bold text-white">${item.nombre_ems}</td>
+                        <td class="p-3 text-zinc-300">${item.rango_actual}</td>
+                        <td class="p-3 font-bold ${j.textClases}">${item.rango_propuesto}</td>
+                        <td class="p-3 text-center font-bold text-yellow-400">${item.horas_hechas} hrs</td>
+                        <td class="p-3 text-zinc-500 text-[11px]">${item.actualizado_por}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">Retirar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            });
         }
 
-        async function guardarRegistroAscenso() {
-            const jefatura = document.getElementById('selJefatura').value;
-            const discord_id = document.getElementById('ascDiscord').value.trim();
-            const nombre_ems = document.getElementById('ascNombre').value.trim();
-            const rango_actual = document.getElementById('ascActual').value.trim();
-            const rango_propuesto = document.getElementById('ascPropuesto').value.trim();
-            const horas_hechas = document.getElementById('ascHoras').value;
+        async function guardarRegistroAscenso(jefaturaId) {
+            const discord_id = document.getElementById(`ascDiscord_${jefaturaId}`).value.trim();
+            const nombre_ems = document.getElementById(`ascNombre_${jefaturaId}`).value.trim();
+            const rango_actual = document.getElementById(`ascActual_${jefaturaId}`).value.trim();
+            const rango_propuesto = document.getElementById(`ascPropuesto_${jefaturaId}`).value.trim();
+            const horas_hechas = document.getElementById(`ascHoras_${jefaturaId}`).value;
 
             if (!discord_id || !nombre_ems) return alert("Ingresa ID de Discord y Nombre.");
 
@@ -453,7 +319,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    jefatura,
+                    jefatura: jefaturaId,
                     discord_id,
                     nombre_ems,
                     rango_actual,
@@ -464,12 +330,12 @@
             });
 
             if (res.ok) {
-                document.getElementById('ascDiscord').value = '';
-                document.getElementById('ascNombre').value = '';
-                document.getElementById('ascActual').value = '';
-                document.getElementById('ascPropuesto').value = '';
-                document.getElementById('ascHoras').value = '';
-                cargarTablaAscensos();
+                document.getElementById(`ascDiscord_${jefaturaId}`).value = '';
+                document.getElementById(`ascNombre_${jefaturaId}`).value = '';
+                document.getElementById(`ascActual_${jefaturaId}`).value = '';
+                document.getElementById(`ascPropuesto_${jefaturaId}`).value = '';
+                document.getElementById(`ascHoras_${jefaturaId}`).value = '';
+                cargarTodasLasTablas();
             } else {
                 const data = await res.json();
                 alert(data.error);
@@ -479,10 +345,10 @@
         async function eliminarAscenso(id) {
             if (!confirm("¿Eliminar este registro de evaluación?")) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
-            cargarTablaAscensos();
+            cargarTodasLasTablas();
         }
 
-        // PANEL ADMIN (LOS 8 RANGOS)
+        // PANEL ADMIN
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
             const usuarios = await res.json();
@@ -503,7 +369,7 @@
                         </select>
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-ems px-3 py-1.5 rounded-lg text-xs">Guardar</button>
+                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-ems px-3 py-1.5 rounded-lg text-xs shadow">Guardar</button>
                     </td>
                 </tr>
             `).join('');
@@ -515,41 +381,15 @@
             await fetch(`/api/usuarios/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rango, rol, comision_porcentaje: 30 })
+                body: JSON.stringify({ rango, rol, comision_porcentaje: 30 }) // Comisión enviada por compatibilidad db
             });
             alert("Rango y permisos actualizados correctamente.");
         }
 
-        async function cargarMisFacturas() {
-            if (!usuarioActual) return;
-            const res = await fetch(`/api/mis-facturas/${usuarioActual.id}`);
-            const data = await res.json();
-            const cont = document.getElementById('listaMisFacturas');
-
-            if (data.length === 0) {
-                cont.innerHTML = `<span class="text-zinc-500 italic">No tienes facturas registradas.</span>`;
-                return;
-            }
-
-            cont.innerHTML = data.map(f => `
-                <div class="bg-black/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center text-xs hover:border-sky-500/30 transition">
-                    <div>
-                        <div class="font-bold text-white text-sm">Paciente: ${f.paciente}</div>
-                        <div class="text-zinc-400 mt-0.5">DNI: ${f.dni} · ${new Date(f.fecha).toLocaleString()}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-black text-emerald-400 text-sm">$${f.total_cobrado.toLocaleString()}</div>
-                        <div class="text-sky-400 font-bold">Comisión Médica: +$${f.comision_medico.toLocaleString()}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
         socket.on('db_update', (d) => {
-            if (d.evento === 'ascensos_actualizados' && pestanaActiva === 'jefaturas') cargarTablaAscensos();
+            if (d.evento === 'ascensos_actualizados') cargarTodasLasTablas();
         });
 
-        renderCatalogo();
     </script>
 </body>
 </html>
