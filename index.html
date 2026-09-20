@@ -36,6 +36,9 @@
         .btn-ems:hover {
             background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
         }
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
     </style>
 </head>
 <body class="p-4 md:p-6 min-h-screen">
@@ -51,17 +54,14 @@
                     <h1 class="text-xl md:text-2xl font-black uppercase tracking-wider text-white">
                         SAN ANDREAS <span class="text-sky-400">EMS</span>
                     </h1>
-                    <p class="text-xs text-sky-200/60 font-semibold tracking-wider uppercase">Emergencias Médicas · Control de Ascensos</p>
+                    <p class="text-xs text-sky-200/60 font-semibold tracking-wider uppercase">Emergencias Médicas · Tablas de Evaluación</p>
                 </div>
             </div>
             <div id="userInfo" class="text-xs text-zinc-400 flex items-center gap-3"></div>
         </div>
 
-        <!-- NAVEGACIÓN -->
-        <div class="flex flex-wrap items-center card-dark p-2 rounded-xl gap-2 hidden" id="navBar">
-            <button onclick="cambiarPestana('jefaturas')" id="tab-jefaturas" class="px-4 py-2 rounded-lg font-bold text-xs btn-ems">📋 TABLAS DE JEFATURAS & ASCENSOS</button>
-            <button onclick="cambiarPestana('admin')" id="tab-admin" class="px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-rose-400 hover:bg-zinc-800 hidden">👑 PANEL DIRECCIÓN (ADMIN)</button>
-        </div>
+        <!-- NAVEGACIÓN DINÁMICA (Generada por JS según Rango) -->
+        <div class="flex flex-wrap items-center card-dark p-2 rounded-xl gap-2 hidden" id="navBarContenedor"></div>
 
         <!-- AUTH -->
         <div id="seccion-auth" class="max-w-md mx-auto card-dark p-8 rounded-2xl space-y-4 mt-10">
@@ -82,22 +82,14 @@
             <p class="text-center text-xs text-zinc-400 cursor-pointer hover:underline" onclick="toggleAuth()" id="toggleAuthTxt">¿No tienes cuenta? Regístrate</p>
         </div>
 
-        <!-- SECCIÓN DE JEFATURAS Y ASCENSOS (MÚLTIPLES TABLAS) -->
-        <div id="seccion-jefaturas" class="space-y-6 hidden">
-            <div class="card-dark p-5 rounded-xl border-l-4 border-sky-500 bg-sky-950/10">
-                <h2 class="text-xl font-black text-white uppercase">📋 Control de Jefaturas & Evaluación de Ascensos</h2>
-                <p class="text-xs text-zinc-400 mt-1">Supervisión directa de horas de servicio, ID de Discord y propuestas de rango separados por departamentos.</p>
-            </div>
-            
-            <!-- Contenedor donde se generan automáticamente las 5 tablas -->
-            <div id="contenedor-jefaturas" class="space-y-8"></div>
-        </div>
+        <!-- SECCIONES GENERADAS DINÁMICAMENTE -->
+        <div id="contenedor-secciones"></div>
 
         <!-- PANEL DE DIRECCIÓN (ADMIN) -->
         <div id="seccion-admin" class="card-dark p-6 rounded-2xl space-y-6 hidden">
             <div>
                 <h2 class="text-xl font-black text-white uppercase">👑 Panel de Dirección General (Admin)</h2>
-                <p class="text-xs text-zinc-400 mt-0.5">Asignación oficial de los 8 rangos del San Andreas Medical Services.</p>
+                <p class="text-xs text-zinc-400 mt-0.5">Asignación oficial de los rangos jerárquicos de gestión (Director, Jefes, Supervisor).</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
@@ -116,11 +108,26 @@
 
     </div>
 
+    <!-- DATALIST PARA AUTOCOMPLETAR LOS RANGOS OFICIALES AL EVALUAR -->
+    <datalist id="lista-rangos-discord">
+        <option value="Especialista">
+        <option value="Subespecialista">
+        <option value="Residente">
+        <option value="Interno/a">
+        <option value="Estudiante">
+        <option value="Enfermero/a Especialista">
+        <option value="Enfermero/a General">
+        <option value="Enfermero">
+        <option value="Auxiliar de Enfermería">
+        <option value="Celador/a">
+    </datalist>
+
     <script>
         const socket = io();
         let usuarioActual = null;
         let esRegistro = false;
 
+        // Rangos para el panel de Control Admin
         const RANGOS_EMS = [
             "Director (Admin)",
             "Subdirectora",
@@ -132,68 +139,105 @@
             "Supervisor"
         ];
 
-        // Configuración de las 5 jefaturas con sus colores para generarlas automáticamente
-        const JEFATURAS = [
-            { id: 'cirugia', titulo: '🏥 Jefatura de Cirugía', colorClases: 'border-sky-500', btnClases: 'bg-sky-600 hover:bg-sky-500', textClases: 'text-sky-400', bgClases: 'border-sky-500/20' },
-            { id: 'medicina', titulo: '💊 Jefatura de Medicina', colorClases: 'border-emerald-500', btnClases: 'bg-emerald-600 hover:bg-emerald-500', textClases: 'text-emerald-400', bgClases: 'border-emerald-500/20' },
-            { id: 'enfermeria', titulo: '💉 Dirección de Enfermería', colorClases: 'border-rose-500', btnClases: 'bg-rose-600 hover:bg-rose-500', textClases: 'text-rose-400', bgClases: 'border-rose-500/20' },
-            { id: 'formaciones', titulo: '📚 Jefatura de Formaciones', colorClases: 'border-amber-500', btnClases: 'bg-amber-600 hover:bg-amber-500', textClases: 'text-amber-400', bgClases: 'border-amber-500/20' },
-            { id: 'supervision', titulo: '🛡️ Coordinación y Supervisión', colorClases: 'border-purple-500', btnClases: 'bg-purple-600 hover:bg-purple-500', textClases: 'text-purple-400', bgClases: 'border-purple-500/20' }
+        // Definición de las 4 Tablas Principales con sus reglas de visualización
+        const DEPARTAMENTOS = [
+            { 
+                id: 'cirugia', 
+                tituloNav: '🏥 CIRUGÍA',
+                titulo: '🏥 Jefatura de Cirugía', 
+                colorClases: 'border-sky-500', 
+                textClases: 'text-sky-400', 
+                bgClases: 'border-sky-500/20', 
+                btnClases: 'bg-sky-600 hover:bg-sky-500',
+                rangosPermitidos: ["Jefa de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
+            },
+            { 
+                id: 'medicina', 
+                tituloNav: '💊 MEDICINA',
+                titulo: '💊 Jefatura de Medicina', 
+                colorClases: 'border-emerald-500', 
+                textClases: 'text-emerald-400', 
+                bgClases: 'border-emerald-500/20', 
+                btnClases: 'bg-emerald-600 hover:bg-emerald-500',
+                rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
+            },
+            { 
+                id: 'enfermeria', 
+                tituloNav: '💉 ENFERMERÍA',
+                titulo: '💉 Dirección de Enfermería', 
+                colorClases: 'border-rose-500', 
+                textClases: 'text-rose-400', 
+                bgClases: 'border-rose-500/20', 
+                btnClases: 'bg-rose-600 hover:bg-rose-500',
+                rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
+            },
+            { 
+                id: 'formaciones', 
+                tituloNav: '📚 FORMACIONES',
+                titulo: '📚 Jefatura de Formaciones', 
+                colorClases: 'border-amber-500', 
+                textClases: 'text-amber-400', 
+                bgClases: 'border-amber-500/20', 
+                btnClases: 'bg-amber-600 hover:bg-amber-500',
+                rangosPermitidos: ["Jefe de Formaciones", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
+            }
         ];
 
-        function inicializarEstructuraJefaturas() {
-            const container = document.getElementById('contenedor-jefaturas');
-            container.innerHTML = JEFATURAS.map(j => `
-                <div class="card-dark p-6 rounded-2xl space-y-4 border-l-4 ${j.colorClases}">
-                    <h2 class="text-lg font-black text-white uppercase border-b border-zinc-800 pb-3">${j.titulo}</h2>
-                    
-                    <!-- Formulario Independiente -->
-                    <div class="bg-black/60 p-4 rounded-xl border ${j.bgClases} grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-                        <div>
-                            <label class="block font-bold text-zinc-400 mb-1">Discord ID</label>
-                            <input type="text" id="ascDiscord_${j.id}" placeholder="Ej. 4239841" class="w-full input-dark p-2 rounded-lg font-mono">
+        function inicializarEstructuraHtml() {
+            const container = document.getElementById('contenedor-secciones');
+            container.innerHTML = DEPARTAMENTOS.map(d => `
+                <div id="seccion-${d.id}" class="hidden space-y-4">
+                    <div class="card-dark p-6 rounded-2xl space-y-4 border-l-4 ${d.colorClases}">
+                        <h2 class="text-lg font-black text-white uppercase border-b border-zinc-800 pb-3">${d.titulo}</h2>
+                        
+                        <div class="bg-black/60 p-4 rounded-xl border ${d.bgClases} grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                            <div>
+                                <label class="block font-bold text-zinc-400 mb-1">Discord ID</label>
+                                <input type="text" id="ascDiscord_${d.id}" placeholder="Ej. 4239841" class="w-full input-dark p-2 rounded-lg font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-zinc-400 mb-1">Nombre Evaluado</label>
+                                <input type="text" id="ascNombre_${d.id}" placeholder="Ej. Juan Pérez" class="w-full input-dark p-2 rounded-lg font-bold">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-zinc-400 mb-1">Rango Actual</label>
+                                <input type="text" id="ascActual_${d.id}" list="lista-rangos-discord" placeholder="Ej. Celador/a" class="w-full input-dark p-2 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-zinc-400 mb-1">Rango Propuesto</label>
+                                <input type="text" id="ascPropuesto_${d.id}" list="lista-rangos-discord" placeholder="Ej. Residente" class="w-full input-dark p-2 rounded-lg font-bold ${d.textClases}">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-zinc-400 mb-1">Horas Hechas</label>
+                                <input type="number" id="ascHoras_${d.id}" placeholder="42" class="w-full input-dark p-2 rounded-lg text-center font-bold text-yellow-400">
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="guardarRegistroAscenso('${d.id}')" class="w-full ${d.btnClases} text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition shadow">+ Agregar</button>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block font-bold text-zinc-400 mb-1">Nombre EMS</label>
-                            <input type="text" id="ascNombre_${j.id}" placeholder="Dr. Mark Sloan" class="w-full input-dark p-2 rounded-lg font-bold">
-                        </div>
-                        <div>
-                            <label class="block font-bold text-zinc-400 mb-1">Rango Actual</label>
-                            <input type="text" id="ascActual_${j.id}" placeholder="Cirujano Jr." class="w-full input-dark p-2 rounded-lg">
-                        </div>
-                        <div>
-                            <label class="block font-bold text-zinc-400 mb-1">Rango Propuesto</label>
-                            <input type="text" id="ascPropuesto_${j.id}" placeholder="Cirujano Titular" class="w-full input-dark p-2 rounded-lg font-bold ${j.textClases}">
-                        </div>
-                        <div>
-                            <label class="block font-bold text-zinc-400 mb-1">Horas Hechas</label>
-                            <input type="number" id="ascHoras_${j.id}" placeholder="42" class="w-full input-dark p-2 rounded-lg text-center font-bold text-yellow-400">
-                        </div>
-                        <div class="flex items-end">
-                            <button onclick="guardarRegistroAscenso('${j.id}')" class="w-full ${j.btnClases} text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition shadow">+ Agregar</button>
-                        </div>
-                    </div>
 
-                    <!-- Tabla Independiente -->
-                    <div class="overflow-x-auto pt-2">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="border-b border-zinc-800 text-zinc-400 uppercase">
-                                    <th class="p-3">Discord ID</th>
-                                    <th class="p-3">Personal a Cargo</th>
-                                    <th class="p-3">Rango Actual</th>
-                                    <th class="p-3">Rango Propuesto</th>
-                                    <th class="p-3 text-center">Horas Hechas</th>
-                                    <th class="p-3">Evaluado Por</th>
-                                    <th class="p-3 text-right">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpoTabla_${j.id}" class="divide-y divide-zinc-800/60"></tbody>
-                        </table>
+                        <div class="overflow-x-auto pt-2">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-zinc-800 text-zinc-400 uppercase">
+                                        <th class="p-3">Discord ID</th>
+                                        <th class="p-3">Personal a Cargo</th>
+                                        <th class="p-3">Rango Actual</th>
+                                        <th class="p-3">Rango Propuesto</th>
+                                        <th class="p-3 text-center">Horas Hechas</th>
+                                        <th class="p-3">Evaluado Por</th>
+                                        <th class="p-3 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cuerpoTabla_${d.id}" class="divide-y divide-zinc-800/60"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
+
+        inicializarEstructuraHtml();
 
         function toggleAuth() {
             esRegistro = !esRegistro;
@@ -235,58 +279,83 @@
 
         function actualizarUIUsuario() {
             if (!usuarioActual) return;
+            
             document.getElementById('seccion-auth').classList.add('hidden');
-            document.getElementById('navBar').classList.remove('hidden');
+            const nav = document.getElementById('navBarContenedor');
+            nav.classList.remove('hidden');
+
             document.getElementById('userInfo').innerHTML = `
                 <span>👨‍⚕️ <strong class="text-sky-400">${usuarioActual.nombre}</strong></span>
                 <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase border border-sky-500/30">${usuarioActual.rango}</span>
                 <button onclick="location.reload()" class="text-rose-400 hover:underline ml-2 font-bold">Salir</button>
             `;
 
-            if (usuarioActual.rol === 'admin' || (usuarioActual.rango && usuarioActual.rango.includes('Director'))) {
-                document.getElementById('tab-admin').classList.remove('hidden');
+            const esAdmin = usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)';
+            let pestanaAInicializar = null;
+            let navBotonesHTML = '';
+
+            // Construcción Dinámica de Pestañas permitidas para el rango del usuario
+            DEPARTAMENTOS.forEach(d => {
+                const tieneAcceso = esAdmin || d.rangosPermitidos.includes(usuarioActual.rango);
+                if (tieneAcceso) {
+                    navBotonesHTML += `<button onclick="cambiarPestana('${d.id}')" id="tab-${d.id}" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 ${d.textClases}">${d.tituloNav}</button>`;
+                    if (!pestanaAInicializar) pestanaAInicializar = d.id;
+                }
+            });
+
+            if (esAdmin) {
+                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-4 py-2 rounded-lg font-bold text-xs bg-zinc-900 text-rose-400">👑 PANEL ADMIN</button>`;
             }
 
-            inicializarEstructuraJefaturas();
-            cambiarPestana('jefaturas');
+            nav.innerHTML = navBotonesHTML;
+
+            // Cargar datos y forzar la vista de la primera pestaña que el usuario tenga permitida
+            cargarTablasVisibles();
+            if (pestanaAInicializar) {
+                cambiarPestana(pestanaAInicializar);
+            } else if (esAdmin) {
+                cambiarPestana('admin');
+            }
+
             socket.emit('user_connected', usuarioActual);
         }
 
         function cambiarPestana(pestana) {
-            ['jefaturas', 'admin'].forEach(p => {
-                const el = document.getElementById(`seccion-${p}`);
-                if (el) el.classList.toggle('hidden', p !== pestana);
-            });
-
-            ['jefaturas', 'admin'].forEach(p => {
+            const todas = [...DEPARTAMENTOS.map(d => d.id), 'admin'];
+            
+            todas.forEach(p => {
+                const sec = document.getElementById(`seccion-${p}`);
+                if(sec) sec.classList.add('hidden');
+                
                 const btn = document.getElementById(`tab-${p}`);
                 if(btn) {
                     btn.classList.remove('btn-ems');
-                    btn.classList.add('bg-zinc-900', 'text-sky-400');
+                    btn.classList.add('bg-zinc-900');
                 }
             });
 
-            const activeBtn = document.getElementById(`tab-${pestana}`);
-            if(activeBtn) {
-                activeBtn.classList.remove('bg-zinc-900', 'text-sky-400');
-                activeBtn.classList.add('btn-ems');
+            const sectionActiva = document.getElementById(`seccion-${pestana}`);
+            if(sectionActiva) sectionActiva.classList.remove('hidden');
+
+            const btnActivo = document.getElementById(`tab-${pestana}`);
+            if(btnActivo) {
+                btnActivo.classList.remove('bg-zinc-900');
+                btnActivo.classList.add('btn-ems');
             }
 
-            if (pestana === 'jefaturas') cargarTodasLasTablas();
             if (pestana === 'admin') cargarGestionAdmin();
         }
 
-        // CARGAR TODAS LAS TABLAS AL MISMO TIEMPO
-        async function cargarTodasLasTablas() {
+        async function cargarTablasVisibles() {
             const res = await fetch('/api/ascensos');
             const listaCompleta = await res.json();
 
-            JEFATURAS.forEach(j => {
-                const filtrados = listaCompleta.filter(item => item.jefatura === j.id);
-                const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
+            DEPARTAMENTOS.forEach(d => {
+                const filtrados = listaCompleta.filter(item => item.jefatura === d.id);
+                const cuerpo = document.getElementById(`cuerpoTabla_${d.id}`);
                 
                 if (filtrados.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay miembros en evaluación para esta jefatura.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay registros en esta jefatura.</td></tr>`;
                     return;
                 }
 
@@ -295,7 +364,7 @@
                         <td class="p-3 font-mono text-zinc-400">${item.discord_id}</td>
                         <td class="p-3 font-bold text-white">${item.nombre_ems}</td>
                         <td class="p-3 text-zinc-300">${item.rango_actual}</td>
-                        <td class="p-3 font-bold ${j.textClases}">${item.rango_propuesto}</td>
+                        <td class="p-3 font-bold ${d.textClases}">${item.rango_propuesto}</td>
                         <td class="p-3 text-center font-bold text-yellow-400">${item.horas_hechas} hrs</td>
                         <td class="p-3 text-zinc-500 text-[11px]">${item.actualizado_por}</td>
                         <td class="p-3 text-right">
@@ -335,7 +404,7 @@
                 document.getElementById(`ascActual_${jefaturaId}`).value = '';
                 document.getElementById(`ascPropuesto_${jefaturaId}`).value = '';
                 document.getElementById(`ascHoras_${jefaturaId}`).value = '';
-                cargarTodasLasTablas();
+                cargarTablasVisibles();
             } else {
                 const data = await res.json();
                 alert(data.error);
@@ -345,7 +414,7 @@
         async function eliminarAscenso(id) {
             if (!confirm("¿Eliminar este registro de evaluación?")) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
-            cargarTodasLasTablas();
+            cargarTablasVisibles();
         }
 
         // PANEL ADMIN
@@ -381,13 +450,13 @@
             await fetch(`/api/usuarios/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rango, rol, comision_porcentaje: 30 }) // Comisión enviada por compatibilidad db
+                body: JSON.stringify({ rango, rol }) 
             });
             alert("Rango y permisos actualizados correctamente.");
         }
 
         socket.on('db_update', (d) => {
-            if (d.evento === 'ascensos_actualizados') cargarTodasLasTablas();
+            if (d.evento === 'ascensos_actualizados') cargarTablasVisibles();
         });
 
     </script>
