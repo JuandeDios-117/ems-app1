@@ -1,0 +1,15 @@
+{
+  "name": "ems-sistema-gestion",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión, Facturación y Control de Ascensos EMS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "better-sqlite3": "^9.4.3"
+  }
+}
