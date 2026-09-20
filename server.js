@@ -68,7 +68,7 @@ app.post('/api/register', async (req, res) => {
 
     try {
         const check = await db.execute({
-            sql: "SELECT id FROM usuarios WHERE usuario = ?",
+            sql: "SELECT id FROM usuarios WHERE LOWER(usuario) = ?",
             args: [userClean]
         });
 
@@ -110,7 +110,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Director (Admin)') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(comision_porcentaje, 30) as comision_porcentaje FROM usuarios WHERE usuario = ? AND password = ?`;
+        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(comision_porcentaje, 30) as comision_porcentaje FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
         const result = await db.execute({ sql, args: [userClean, String(password)] });
         
         if (!result.rows || result.rows.length === 0) {
@@ -128,7 +128,7 @@ app.post('/api/login', async (req, res) => {
         });
     } catch (e) {
         console.error("[LOGIN ERROR]:", e.message);
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ error: "Error al validar credenciales." });
     }
 });
 

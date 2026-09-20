@@ -1,7 +1,7 @@
 {
   "name": "ems-sistema-gestion",
   "version": "1.0.0",
-  "description": "Sistema de Gestión, Facturación y Control de Ascensos EMS",
+  "description": "Sistema de Gestion, Facturacion y Control de Ascensos EMS",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
