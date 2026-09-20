@@ -1,15 +1,18 @@
 require('dotenv').config();
 const { createClient } = require('@libsql/client');
 
+const url = process.env.TURSO_DATABASE_URL ? process.env.TURSO_DATABASE_URL.trim() : '';
+const authToken = process.env.TURSO_AUTH_TOKEN ? process.env.TURSO_AUTH_TOKEN.trim() : '';
+
 const db = createClient({
-  url: process.env.TURSO_DATABASE_URL,
-  authToken: process.env.TURSO_AUTH_TOKEN
+  url,
+  authToken
 });
 
-// Inicializar las tablas de la EMS en la nube
 (async function initDB() {
   try {
-    await db.execute(`
+    // Usar executeMultiple para evitar conflictos de migración por lotes
+    await db.executeMultiple(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
@@ -19,10 +22,8 @@ const db = createClient({
         rol TEXT DEFAULT 'empleado',
         comision_porcentaje INTEGER DEFAULT 30,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+      );
 
-    await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_ascensos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         jefatura TEXT NOT NULL,
@@ -34,10 +35,8 @@ const db = createClient({
         notas TEXT,
         actualizado_por TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+      );
 
-    await db.execute(`
       CREATE TABLE IF NOT EXISTS facturas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
@@ -49,11 +48,11 @@ const db = createClient({
         comision_medico REAL NOT NULL,
         items_json TEXT,
         fecha DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
+      );
     `);
-    console.log("Tablas EMS sincronizadas con Turso.");
+    console.log("Tablas EMS sincronizadas correctamente con Turso.");
   } catch (err) {
-    console.error("Error iniciando base de datos Turso:", err.message);
+    console.error("Error conectando con Turso:", err.message);
   }
 })();
 
