@@ -149,7 +149,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     }
 });
 
-// 3. REGISTROS DE EVALUACIÓN (CIRUGÍA, MEDICINA, ENFERMERÍA, BÁSICA)
+// 3. REGISTROS DE EVALUACIÓN
 app.get('/api/ascensos', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_ascensos ORDER BY id DESC");
@@ -184,6 +184,7 @@ app.post('/api/ascensos', async (req, res) => {
         notificar('ascensos_actualizados', { jefatura });
         res.json({ message: "Registro guardado." });
     } catch (e) {
+        console.error("[ERROR GUARDAR ASCENSO]:", e.message);
         res.status(500).json({ error: e.message });
     }
 });

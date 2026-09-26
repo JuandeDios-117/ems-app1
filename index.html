@@ -59,7 +59,6 @@
             border-color: rgba(244, 114, 182, 0.3);
         }
 
-        /* Estilo Sheet de Google Sheets oficial */
         .sheet-table { border-collapse: collapse; width: 100%; font-size: 11px; }
         .sheet-th {
             background: #e5c5d3;
@@ -221,7 +220,6 @@
             "Supervisor"
         ];
 
-        // RANGOS VISUALES CON FORMATO OFICIAL DISCORD
         const RANGOS_EVALUACION = [
             { id: "Especialista", label: "『🥼』Especialista", color: "bg-sky-500/20 text-sky-300 border-sky-500/40" },
             { id: "Subespecialista", label: "『🔬』Subespecialista", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" },
@@ -290,7 +288,6 @@
                     <div class="card-ems p-5 rounded-3xl space-y-4 border-l-4 border-pink-500">
                         <h2 class="text-lg font-black text-white uppercase tracking-wider">${j.titulo}</h2>
                         
-                        <!-- Formulario de Evaluación Sheet -->
                         <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2.5 text-xs">
                             <div class="md:col-span-2">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Nombre Completo (IC)</label>
@@ -333,7 +330,6 @@
                             </div>
                         </div>
 
-                        <!-- Hoja de Cálculo / Tabla Oficial -->
                         <div class="overflow-x-auto rounded-xl border border-zinc-800">
                             <table class="sheet-table">
                                 <thead>
@@ -424,7 +420,6 @@
                 }
             });
 
-            // Formaciones
             const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones' || usuarioActual.rango === 'Director de Enfermería' || usuarioActual.rango === 'Subdirectora';
             if (esFormador) {
                 navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
@@ -463,33 +458,37 @@
         }
 
         async function cargarTablas() {
-            const res = await fetch('/api/ascensos');
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/ascensos');
+                const data = await res.json();
 
-            JEFATURAS.forEach(j => {
-                const filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
-                const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
+                JEFATURAS.forEach(j => {
+                    const filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
+                    const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
 
-                if (filtrados.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500 italic bg-black/60">No hay registros en esta escala.</td></tr>`;
-                    return;
-                }
+                    if (filtrados.length === 0) {
+                        cuerpo.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500 italic bg-black/60">No hay registros en esta escala.</td></tr>`;
+                        return;
+                    }
 
-                cuerpo.innerHTML = filtrados.map(r => `
-                    <tr class="sheet-row hover:bg-zinc-900/60 transition">
-                        <td class="sheet-td font-bold text-white">${r.nombre}</td>
-                        <td class="sheet-td">${obtenerPlacaRango(r.rango_actual)}</td>
-                        <td class="sheet-td">${obtenerPlacaRango(r.rango_postular)}</td>
-                        <td class="sheet-td text-center">${obtenerBadgeFaltas(r.faltas)}</td>
-                        <td class="sheet-td text-center font-mono-code font-bold text-yellow-400 bg-black/40">${r.horas_semana}</td>
-                        <td class="sheet-td text-center">${obtenerBadgeExamen(r.examen)}</td>
-                        <td class="sheet-td text-zinc-300 text-xs">${r.descripcion || '—'}</td>
-                        <td class="sheet-td text-right">
-                            <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-[11px]">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('');
-            });
+                    cuerpo.innerHTML = filtrados.map(r => `
+                        <tr class="sheet-row hover:bg-zinc-900/60 transition">
+                            <td class="sheet-td font-bold text-white">${r.nombre}</td>
+                            <td class="sheet-td">${obtenerPlacaRango(r.rango_actual)}</td>
+                            <td class="sheet-td">${obtenerPlacaRango(r.rango_postular)}</td>
+                            <td class="sheet-td text-center">${obtenerBadgeFaltas(r.faltas)}</td>
+                            <td class="sheet-td text-center font-mono-code font-bold text-yellow-400 bg-black/40">${r.horas_semana}</td>
+                            <td class="sheet-td text-center">${obtenerBadgeExamen(r.examen)}</td>
+                            <td class="sheet-td text-zinc-300 text-xs">${r.descripcion || '—'}</td>
+                            <td class="sheet-td text-right">
+                                <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-[11px]">Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                });
+            } catch (e) {
+                console.error("Error al cargar ascensos:", e);
+            }
         }
 
         async function guardarRegistroSheet(jefaturaId) {
@@ -503,29 +502,35 @@
 
             if (!nombre) return alert("Ingresa el Nombre Completo.");
 
-            const res = await fetch('/api/ascensos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    jefatura: jefaturaId,
-                    nombre,
-                    rango_actual,
-                    rango_postular,
-                    faltas,
-                    horas_semana,
-                    examen,
-                    descripcion,
-                    actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
-                })
-            });
+            try {
+                const res = await fetch('/api/ascensos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jefatura: jefaturaId,
+                        nombre,
+                        rango_actual,
+                        rango_postular,
+                        faltas,
+                        horas_semana,
+                        examen,
+                        descripcion,
+                        actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
+                    })
+                });
 
-            if (res.ok) {
-                document.getElementById(`nombre_${jefaturaId}`).value = '';
-                document.getElementById(`horas_${jefaturaId}`).value = '';
-                document.getElementById(`desc_${jefaturaId}`).value = '';
-                cargarTablas();
-            } else {
-                alert("Error al registrar.");
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById(`nombre_${jefaturaId}`).value = '';
+                    document.getElementById(`horas_${jefaturaId}`).value = '';
+                    document.getElementById(`desc_${jefaturaId}`).value = '';
+                    await cargarTablas();
+                } else {
+                    alert("Error: " + (data.error || "No se pudo guardar"));
+                }
+            } catch (err) {
+                alert("Error de conexión al guardar el registro.");
             }
         }
 
@@ -535,7 +540,6 @@
             cargarTablas();
         }
 
-        // SECCIÓN FORMACIONES
         function calcularTotalPreview() {
             const cant = parseInt(document.getElementById('formCant').value) || 0;
             const total = cant * 20000;
@@ -549,47 +553,58 @@
 
             if (!instructor) return alert("Ingresa el nombre del instructor.");
 
-            const res = await fetch('/api/formaciones', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    instructor,
-                    rango,
-                    instrucciones_hechas,
-                    actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefe de Formaciones'
-                })
-            });
+            try {
+                const res = await fetch('/api/formaciones', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instructor,
+                        rango,
+                        instrucciones_hechas,
+                        actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefe de Formaciones'
+                    })
+                });
 
-            if (res.ok) {
-                document.getElementById('formInstructor').value = '';
-                document.getElementById('formCant').value = '';
-                document.getElementById('formPreviewPago').innerText = '$0';
-                cargarFormaciones();
+                if (res.ok) {
+                    document.getElementById('formInstructor').value = '';
+                    document.getElementById('formCant').value = '';
+                    document.getElementById('formPreviewPago').innerText = '$0';
+                    await cargarFormaciones();
+                } else {
+                    const data = await res.json();
+                    alert("Error: " + (data.error || "No se pudo guardar"));
+                }
+            } catch (e) {
+                alert("Error de conexión al guardar formación.");
             }
         }
 
         async function cargarFormaciones() {
-            const res = await fetch('/api/formaciones');
-            const data = await res.json();
-            const cuerpo = document.getElementById('cuerpoTablaFormaciones');
+            try {
+                const res = await fetch('/api/formaciones');
+                const data = await res.json();
+                const cuerpo = document.getElementById('cuerpoTablaFormaciones');
 
-            if (!Array.isArray(data) || data.length === 0) {
-                cuerpo.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-zinc-500 italic">No hay liquidaciones de instrucción registradas.</td></tr>`;
-                return;
+                if (!Array.isArray(data) || data.length === 0) {
+                    cuerpo.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-zinc-500 italic">No hay liquidaciones de instrucción registradas.</td></tr>`;
+                    return;
+                }
+
+                cuerpo.innerHTML = data.map(f => `
+                    <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
+                        <td class="p-3 font-bold text-white">${f.instructor}</td>
+                        <td class="p-3">${obtenerPlacaRango(f.rango)}</td>
+                        <td class="p-3 text-center font-mono-code font-bold text-yellow-400">${f.instrucciones_hechas}</td>
+                        <td class="p-3 font-mono-code font-black text-emerald-400 text-sm">$${f.total_pago.toLocaleString()}</td>
+                        <td class="p-3 text-zinc-400 text-[11px]">${f.actualizado_por}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="eliminarFormacion(${f.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded">Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error("Error al cargar formaciones:", e);
             }
-
-            cuerpo.innerHTML = data.map(f => `
-                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
-                    <td class="p-3 font-bold text-white">${f.instructor}</td>
-                    <td class="p-3">${obtenerPlacaRango(f.rango)}</td>
-                    <td class="p-3 text-center font-mono-code font-bold text-yellow-400">${f.instrucciones_hechas}</td>
-                    <td class="p-3 font-mono-code font-black text-emerald-400 text-sm">$${f.total_pago.toLocaleString()}</td>
-                    <td class="p-3 text-zinc-400 text-[11px]">${f.actualizado_por}</td>
-                    <td class="p-3 text-right">
-                        <button onclick="eliminarFormacion(${f.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded">Eliminar</button>
-                    </td>
-                </tr>
-            `).join('');
         }
 
         async function eliminarFormacion(id) {
@@ -598,7 +613,6 @@
             cargarFormaciones();
         }
 
-        // PANEL ADMIN
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
             const data = await res.json();
