@@ -38,13 +38,19 @@ const db = createClient({
         rango_propuesto TEXT DEFAULT '',
         rango_postular TEXT DEFAULT '',
         faltas TEXT DEFAULT 'NINGUNA',
-        horas_semana TEXT DEFAULT '00 HRS 00:00',
+        horas_semana TEXT DEFAULT '',
         examen TEXT DEFAULT 'NO APLICA',
         descripcion TEXT DEFAULT '',
+        fecha_ingreso TEXT DEFAULT '',
         actualizado_por TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Migración por si la columna fecha_ingreso no existía
+    try {
+      await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''");
+    } catch (e) {}
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_formaciones (
@@ -72,7 +78,7 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Tablas de EMS Origen Roleplay operativas en Turso.");
+    console.log("[DB] Base de datos EMS Origen Roleplay actualizada en Turso.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

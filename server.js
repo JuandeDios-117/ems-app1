@@ -160,10 +160,12 @@ app.get('/api/ascensos', async (req, res) => {
 });
 
 app.post('/api/ascensos', async (req, res) => {
-    const { jefatura, discord_id, nombre, actualizado_por } = req.body;
+    const { jefatura, discord_id, nombre, fecha_ingreso, actualizado_por } = req.body;
     if (!jefatura || !nombre) {
         return res.status(400).json({ error: "Ingresa el nombre del personal." });
     }
+
+    const fechaHoy = fecha_ingreso || new Date().toISOString().split('T')[0];
 
     try {
         await db.execute({
@@ -179,8 +181,9 @@ app.post('/api/ascensos', async (req, res) => {
                     horas_semana, 
                     examen, 
                     descripcion, 
+                    fecha_ingreso,
                     actualizado_por
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 jefatura,
                 (discord_id || 'N/A').trim(),
@@ -190,9 +193,10 @@ app.post('/api/ascensos', async (req, res) => {
                 'Celador/a',
                 'Celador/a',
                 'NINGUNA',
-                '00 HRS 00:00',
+                '',
                 'NO APLICA',
                 '',
+                fechaHoy,
                 actualizado_por || 'Jefatura'
             ]
         });
@@ -205,11 +209,12 @@ app.post('/api/ascensos', async (req, res) => {
 });
 
 app.put('/api/ascensos/:id', async (req, res) => {
-    const { jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion } = req.body;
+    const { jefatura, discord_id, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion, fecha_ingreso } = req.body;
     try {
         await db.execute({
             sql: `UPDATE registro_ascensos SET 
                     jefatura = COALESCE(?, jefatura),
+                    discord_id = COALESCE(?, discord_id),
                     nombre = COALESCE(?, nombre),
                     nombre_ems = COALESCE(?, nombre_ems),
                     rango_actual = COALESCE(?, rango_actual),
@@ -218,19 +223,22 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     faltas = COALESCE(?, faltas),
                     horas_semana = COALESCE(?, horas_semana),
                     examen = COALESCE(?, examen),
-                    descripcion = COALESCE(?, descripcion)
+                    descripcion = COALESCE(?, descripcion),
+                    fecha_ingreso = COALESCE(?, fecha_ingreso)
                   WHERE id = ?`,
             args: [
                 jefatura || null,
+                discord_id ? discord_id.trim() : null,
                 nombre ? nombre.trim() : null,
                 nombre ? nombre.trim() : null,
                 rango_actual || null,
                 rango_postular || null,
                 rango_postular || null,
                 faltas || null,
-                horas_semana ? horas_semana.trim() : null,
+                horas_semana !== undefined ? horas_semana.trim() : null,
                 examen || null,
                 descripcion !== undefined ? descripcion.trim() : null,
+                fecha_ingreso !== undefined ? fecha_ingreso.trim() : null,
                 req.params.id
             ]
         });
@@ -252,7 +260,7 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// 4. JEFATURA DE FORMACIONES ($20,000 POR INSTRUCCIÓN + CORTE SEMANAL)
+// 4. JEFATURA DE FORMACIONES
 app.get('/api/formaciones', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
