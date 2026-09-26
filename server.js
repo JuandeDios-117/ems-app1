@@ -204,7 +204,6 @@ app.post('/api/ascensos', async (req, res) => {
     }
 });
 
-// ACTUALIZACIÓN DE CELDAS Y CAMBIO DE JEFATURA
 app.put('/api/ascensos/:id', async (req, res) => {
     const { jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion } = req.body;
     try {
@@ -253,7 +252,7 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// 4. JEFATURA DE FORMACIONES ($20,000 POR INSTRUCCIÓN)
+// 4. JEFATURA DE FORMACIONES ($20,000 POR INSTRUCCIÓN + CORTE SEMANAL)
 app.get('/api/formaciones', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
@@ -264,22 +263,57 @@ app.get('/api/formaciones', async (req, res) => {
 });
 
 app.post('/api/formaciones', async (req, res) => {
-    const { instructor, rango, instrucciones_hechas, notas, actualizado_por } = req.body;
-    const cant = parseInt(instrucciones_hechas) || 0;
-    if (!instructor || !rango) {
-        return res.status(400).json({ error: "Ingresa el nombre del instructor y su rango." });
+    const { instructor, rango, actualizado_por } = req.body;
+    if (!instructor) {
+        return res.status(400).json({ error: "Ingresa el nombre del instructor." });
     }
-
-    const totalPago = cant * 20000;
 
     try {
         await db.execute({
             sql: `INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, total_pago, notas, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?)`,
-            args: [instructor.trim(), rango, cant, totalPago, notas || '', actualizado_por || 'Jefe de Formaciones']
+                  VALUES (?, ?, 0, 0, '', ?)`,
+            args: [instructor.trim(), rango || 'Celador/a', actualizado_por || 'Jefe de Formaciones']
         });
         notificar('formaciones_actualizadas');
         res.json({ message: "Instructor registrado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/formaciones/:id', async (req, res) => {
+    const { instrucciones_hechas, notas, rango } = req.body;
+    const cant = parseInt(instrucciones_hechas) || 0;
+    const totalPago = cant * 20000;
+
+    try {
+        await db.execute({
+            sql: `UPDATE registro_formaciones SET 
+                    instrucciones_hechas = COALESCE(?, instrucciones_hechas),
+                    total_pago = ?,
+                    notas = COALESCE(?, notas),
+                    rango = COALESCE(?, rango)
+                  WHERE id = ?`,
+            args: [
+                instrucciones_hechas !== undefined ? cant : null,
+                totalPago,
+                notas !== undefined ? notas.trim() : null,
+                rango || null,
+                req.params.id
+            ]
+        });
+        notificar('formaciones_actualizadas');
+        res.json({ message: "Formación actualizada." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/formaciones/corte-semanal', async (req, res) => {
+    try {
+        await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
+        notificar('formaciones_actualizadas');
+        res.json({ message: "Corte semanal procesado. Nómina reiniciada a $0." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -290,6 +324,68 @@ app.delete('/api/formaciones/:id', async (req, res) => {
         await db.execute({ sql: "DELETE FROM registro_formaciones WHERE id = ?", args: [req.params.id] });
         notificar('formaciones_actualizadas');
         res.json({ message: "Registro eliminado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 5. COORDINACIÓN Y SUPERVISIÓN
+app.get('/api/coordinacion', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT * FROM registro_coordinacion ORDER BY id DESC");
+        res.json(result.rows || []);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/coordinacion', async (req, res) => {
+    const { discord_id, supervisor, rango, estado, feedback_semanal, actualizado_por } = req.body;
+    if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
+
+    try {
+        await db.execute({
+            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, estado, feedback_semanal, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?)`,
+            args: [
+                discord_id || 'N/A',
+                supervisor.trim(),
+                rango || 'Supervisor',
+                estado || 'Activo',
+                feedback_semanal || '',
+                actualizado_por || 'Coordinación'
+            ]
+        });
+        notificar('coordinacion_actualizada');
+        res.json({ message: "Supervisor registrado en Coordinación." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/coordinacion/:id', async (req, res) => {
+    const { estado, feedback_semanal, rango } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE registro_coordinacion SET 
+                    estado = COALESCE(?, estado),
+                    feedback_semanal = COALESCE(?, feedback_semanal),
+                    rango = COALESCE(?, rango)
+                  WHERE id = ?`,
+            args: [estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null, req.params.id]
+        });
+        notificar('coordinacion_actualizada');
+        res.json({ message: "Coordinación actualizada." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/coordinacion/:id', async (req, res) => {
+    try {
+        await db.execute({ sql: "DELETE FROM registro_coordinacion WHERE id = ?", args: [req.params.id] });
+        notificar('coordinacion_actualizada');
+        res.json({ message: "Registro retirado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

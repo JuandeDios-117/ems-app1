@@ -46,23 +46,6 @@ const db = createClient({
       )
     `);
 
-    const migraciones = [
-      "ALTER TABLE registro_ascensos ADD COLUMN nombre TEXT DEFAULT ''",
-      "ALTER TABLE registro_ascensos ADD COLUMN rango_postular TEXT DEFAULT ''",
-      "ALTER TABLE registro_ascensos ADD COLUMN faltas TEXT DEFAULT 'NINGUNA'",
-      "ALTER TABLE registro_ascensos ADD COLUMN horas_semana TEXT DEFAULT '00 HRS 00:00'",
-      "ALTER TABLE registro_ascensos ADD COLUMN examen TEXT DEFAULT 'NO APLICA'",
-      "ALTER TABLE registro_ascensos ADD COLUMN descripcion TEXT DEFAULT ''"
-    ];
-
-    for (const sql of migraciones) {
-      try {
-        await db.execute(sql);
-      } catch (e) {
-        // Ignorar si la columna ya existe
-      }
-    }
-
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_formaciones (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +59,20 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Tablas y columnas verificadas en Turso.");
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS registro_coordinacion (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        discord_id TEXT DEFAULT 'N/A',
+        supervisor TEXT NOT NULL,
+        rango TEXT DEFAULT 'Supervisor',
+        estado TEXT DEFAULT 'Activo',
+        feedback_semanal TEXT DEFAULT '',
+        actualizado_por TEXT,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log("[DB] Tablas de EMS Origen Roleplay operativas en Turso.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }
