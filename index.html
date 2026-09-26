@@ -59,19 +59,25 @@
             border-color: rgba(244, 114, 182, 0.3);
         }
 
-        .sheet-table { border-collapse: collapse; width: 100%; font-size: 11px; }
+        /* Tabla estilizada más espaciosa y con letra más grande */
+        .sheet-table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            font-size: 13px; 
+        }
         .sheet-th {
-            background: #e5c5d3;
+            background: linear-gradient(180deg, #e8cbd7 0%, #d8b4c3 100%);
             color: #1f1118;
-            border: 1px solid #c99fb1;
+            border: 1px solid #bf96a8;
             font-weight: 900;
             text-transform: uppercase;
-            padding: 8px 6px;
-            letter-spacing: 0.5px;
+            padding: 12px 10px;
+            letter-spacing: 0.6px;
+            font-size: 12px;
         }
         .sheet-td {
             border: 1px solid #232736;
-            padding: 4px 6px;
+            padding: 8px 10px;
             background: #090b10;
         }
         .sheet-row:nth-child(even) .sheet-td {
@@ -83,12 +89,44 @@
             color: inherit;
             border: none;
             outline: none;
-            padding: 4px;
-            border-radius: 4px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 13px;
         }
         .cell-input:focus {
-            background: #141724;
-            box-shadow: 0 0 0 1px #f472b6;
+            background: #151826;
+            box-shadow: 0 0 0 1.5px #f472b6;
+        }
+
+        /* Semáforo elegante con efecto pill glow */
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .pill-red {
+            background: rgba(225, 29, 72, 0.15);
+            color: #fda4af;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
+        }
+        .pill-yellow {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fde68a;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+        .pill-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #a7f3d0;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
         }
     </style>
 </head>
@@ -152,7 +190,7 @@
                         <h2 class="text-lg font-black text-white uppercase">📚 Jefatura de Formaciones · Liquidación de Instrucciones</h2>
                         <p class="text-xs text-zinc-400">Registro de capacitadores y cálculo automático de nómina ($20,000 por instrucción).</p>
                     </div>
-                    <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border bg-amber-500/15 text-amber-300 border-amber-500/30">$20K / Instrucción</span>
+                    <span class="text-[11px] font-black uppercase px-3 py-1 rounded-lg border bg-amber-500/15 text-amber-300 border-amber-500/30">$20K / Instrucción</span>
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
@@ -231,7 +269,6 @@
             "Supervisor"
         ];
 
-        // Todos los rangos ordenados por escalas
         const RANGOS_EVALUACION = [
             { id: "Especialista", label: "『🥼』Especialista", escala: "medica" },
             { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" },
@@ -245,7 +282,6 @@
             { id: "Celador/a", label: "『👀』Celador/a", escala: "basica" }
         ];
 
-        // Rangos para Escala Básica y Enfermería (Celador hasta Enfermero Especialista)
         const RANGOS_ESCALA_ENFERMERIA = [
             { id: "Celador/a", label: "『👀』Celador/a" },
             { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" },
@@ -259,26 +295,23 @@
                 id: 'cirugia', 
                 tituloNav: '🏥 CIRUGÍA',
                 titulo: '🏥 Jefatura de Cirugía · Evaluación de Ascensos',
-                escala: 'cirugia',
                 rangosPermitidos: ["Jefa de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'medicina', 
                 tituloNav: '💊 MEDICINA',
                 titulo: '💊 Jefatura de Medicina · Evaluación de Ascensos',
-                escala: 'medicina',
                 rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'enfermeria', 
                 tituloNav: '💉 ENFERMERÍA & BÁSICA',
                 titulo: '💉 Escala Básica y Dirección de Enfermería',
-                escala: 'enfermeria',
                 rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             }
         ];
 
-        // Parsing y Semáforo de Horas Semanales
+        // Lógica de cálculo numérico de horas
         function parsearHorasNumericas(str) {
             if (!str) return 0;
             const limpio = str.toUpperCase().replace('HRS', '').replace('HR', '').trim();
@@ -288,30 +321,31 @@
             return h + m;
         }
 
-        function obtenerClaseSemaforoHoras(str) {
-            const horas = parsearHorasNumericas(str);
+        // Semáforo estilizado
+        function obtenerBadgeSemaforo(str) {
+            const val = str || '00 HRS 00:00';
+            const horas = parsearHorasNumericas(val);
+
             if (horas < 6) {
-                return 'bg-rose-950/70 text-rose-300 border border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.3)]';
+                return `<div class="pill-badge pill-red font-mono-code"><span class="text-[10px]">🔴</span> ${val}</div>`;
             }
             if (horas < 8) {
-                return 'bg-amber-950/70 text-amber-300 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]';
+                return `<div class="pill-badge pill-yellow font-mono-code"><span class="text-[10px]">🟡</span> ${val}</div>`;
             }
-            return 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.2)]';
+            return `<div class="pill-badge pill-green font-mono-code"><span class="text-[10px]">🟢</span> ${val}</div>`;
         }
 
-        // Generador dinámico de selects para rangos a postular
         function generarOpcionesPostular(rangoActual, examenRealizado, jefaturaActual, postularSeleccionado) {
             let lista = [];
 
             if (jefaturaActual === 'enfermeria') {
                 lista = [...RANGOS_ESCALA_ENFERMERIA];
-                // Si es Enfermero/a Especialista y aprobó su examen, puede postular a Escala Médica
                 if (rangoActual === 'Enfermero/a Especialista' && examenRealizado === 'REALIZADO') {
                     lista.push(
-                        { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía", destinoJefatura: "cirugia", rangoReal: "Interno/a" },
-                        { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina", destinoJefatura: "medicina", rangoReal: "Interno/a" },
-                        { id: "Residente (Cirugía)", label: "『📚』Residente ➔ Cirugía", destinoJefatura: "cirugia", rangoReal: "Residente" },
-                        { id: "Residente (Medicina)", label: "『📚』Residente ➔ Medicina", destinoJefatura: "medicina", rangoReal: "Residente" }
+                        { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía" },
+                        { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina" },
+                        { id: "Residente (Cirugía)", label: "『📚』Residente ➔ Cirugía" },
+                        { id: "Residente (Medicina)", label: "『📚』Residente ➔ Medicina" }
                     );
                 }
             } else {
@@ -319,7 +353,7 @@
             }
 
             return lista.map(r => `
-                <option value="${r.id}" ${r.id === postularSeleccionado || r.rangoReal === postularSeleccionado ? 'selected' : ''}>
+                <option value="${r.id}" ${r.id === postularSeleccionado ? 'selected' : ''}>
                     ${r.label}
                 </option>
             `).join('');
@@ -342,33 +376,28 @@
 
             container.innerHTML = JEFATURAS.map(j => `
                 <section id="seccion-${j.id}" class="hidden space-y-4">
-                    <div class="card-ems p-5 rounded-3xl space-y-4 border-l-4 border-pink-500">
+                    <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-500">
                         <div class="flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-3">
-                            <h2 class="text-lg font-black text-white uppercase tracking-wider">${j.titulo}</h2>
-                            <div class="flex items-center gap-2 text-[10px] font-bold">
-                                <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/40">&lt;6h: Rojo</span>
-                                <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40">6h-8h: Amarillo</span>
-                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">&ge;8h: Verde</span>
-                            </div>
+                            <h2 class="text-xl font-black text-white uppercase tracking-wider">${j.titulo}</h2>
                         </div>
                         
                         <!-- Formulario de Ingreso Rápido -->
                         <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
-                            <div class="flex-1 min-w-[180px]">
+                            <div class="flex-1 min-w-[200px]">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID</label>
-                                <input type="text" id="discord_${j.id}" placeholder="423984124..." class="w-full input-ems px-3 py-2 rounded-xl font-mono-code">
+                                <input type="text" id="discord_${j.id}" placeholder="423984124..." class="w-full input-ems px-3 py-2.5 rounded-xl font-mono-code text-sm">
                             </div>
-                            <div class="flex-2 min-w-[220px]">
+                            <div class="flex-2 min-w-[260px]">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Nombre Completo (IC)</label>
-                                <input type="text" id="nombre_${j.id}" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                                <input type="text" id="nombre_${j.id}" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-sm">
                             </div>
                             <div>
-                                <button onclick="agregarPersonalRapido('${j.id}')" class="btn-origen px-5 py-2 rounded-xl uppercase text-xs tracking-wider font-extrabold">+ AGREGAR</button>
+                                <button onclick="agregarPersonalRapido('${j.id}')" class="btn-origen px-6 py-2.5 rounded-xl uppercase text-xs tracking-wider font-extrabold">+ AGREGAR</button>
                             </div>
                         </div>
 
                         <!-- Hoja de Cálculo Interactiva -->
-                        <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                        <div class="overflow-x-auto rounded-2xl border border-zinc-800 shadow-2xl">
                             <table class="sheet-table">
                                 <thead>
                                     <tr>
@@ -453,19 +482,19 @@
             JEFATURAS.forEach(j => {
                 const tieneAcceso = esAdmin || j.rangosPermitidos.includes(usuarioActual.rango);
                 if (tieneAcceso) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
+                    navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
                     if (!pestanaAInicializar) pestanaAInicializar = j.id;
                 }
             });
 
             const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones' || usuarioActual.rango === 'Director de Enfermería' || usuarioActual.rango === 'Subdirectora';
             if (esFormador) {
-                navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
+                navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
                 if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
             }
 
             if (esAdmin) {
-                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive text-pink-400">👑 PANEL DIRECCIÓN</button>`;
+                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-400">👑 PANEL DIRECCIÓN</button>`;
             }
 
             nav.innerHTML = navBotonesHTML;
@@ -483,14 +512,14 @@
                 const sec = document.getElementById(`seccion-${p}`);
                 if (sec) sec.classList.add('hidden');
                 const btn = document.getElementById(`tab-${p}`);
-                if (btn) btn.className = 'tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive';
+                if (btn) btn.className = 'tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive';
             });
 
             const secActiva = document.getElementById(`seccion-${pestana}`);
             if (secActiva) secActiva.classList.remove('hidden');
 
             const btnActivo = document.getElementById(`tab-${pestana}`);
-            if (btnActivo) btnActivo.className = 'tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-origen text-white';
+            if (btnActivo) btnActivo.className = 'tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-origen text-white';
 
             if (pestana === 'admin') cargarGestionAdmin();
         }
@@ -526,11 +555,10 @@
             }
         }
 
-        // LÓGICA DE EDICIÓN Y MOVIMIENTO AUTOMÁTICO ENTRE TABLAS
+        // Lógica de transferencia completa: Se reasigna jefatura y se elimina de la tabla previa
         async function editarCampo(id, campo, valor, jefaturaActual) {
             let datosAEnviar = { [campo]: valor };
 
-            // Control de transferencia automática de Enfermería a Cirugía o Medicina
             if (campo === 'rango_postular' && jefaturaActual === 'enfermeria') {
                 if (valor.includes('Cirugía')) {
                     const rangoLimpio = valor.replace(' (Cirugía)', '');
@@ -539,7 +567,7 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`✅ ¡Personal ascendido con éxito! Se ha movido automáticamente a la Jefatura de Cirugía con el rango de ${rangoLimpio}.`);
+                    alert(`✅ ¡Personal promovido! Se transfirió automáticamente a la Jefatura de Cirugía.`);
                 } else if (valor.includes('Medicina')) {
                     const rangoLimpio = valor.replace(' (Medicina)', '');
                     datosAEnviar = {
@@ -547,7 +575,7 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`✅ ¡Personal ascendido con éxito! Se ha movido automáticamente a la Jefatura de Medicina con el rango de ${rangoLimpio}.`);
+                    alert(`✅ ¡Personal promovido! Se transfirió automáticamente a la Jefatura de Medicina.`);
                 }
             }
 
@@ -559,7 +587,7 @@
                 });
                 await cargarTablas();
             } catch (e) {
-                console.error("Error al actualizar:", e);
+                console.error("Error al actualizar celda:", e);
             }
         }
 
@@ -573,19 +601,19 @@
                     const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
 
                     if (filtrados.length === 0) {
-                        cuerpo.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500 italic bg-black/60">No hay registros en esta escala.</td></tr>`;
+                        cuerpo.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-zinc-500 italic bg-black/60 text-sm">No hay registros en esta escala.</td></tr>`;
                         return;
                     }
 
                     cuerpo.innerHTML = filtrados.map(r => {
-                        const semaforoClase = obtenerClaseSemaforoHoras(r.horas_semana);
+                        const semaforoBadge = obtenerBadgeSemaforo(r.horas_semana);
                         const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, j.id, r.rango_postular);
                         const opcionesActual = generarOpcionesActual(j.id, r.rango_actual);
 
                         return `
                             <tr class="sheet-row hover:bg-zinc-900/60 transition">
-                                <td class="sheet-td">
-                                    <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${j.id}')" class="cell-input font-bold text-white">
+                                <td class="sheet-td font-semibold text-white">
+                                    <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${j.id}')" class="cell-input font-bold text-white text-sm">
                                 </td>
                                 <td class="sheet-td">
                                     <select onchange="editarCampo(${r.id}, 'rango_actual', this.value, '${j.id}')" class="cell-input font-bold text-sky-300">
@@ -605,10 +633,13 @@
                                     </select>
                                 </td>
                                 <td class="sheet-td text-center">
-                                    <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" 
-                                           onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${j.id}')" 
-                                           class="cell-input font-mono-code font-black text-center rounded-lg px-2 py-1 ${semaforoClase}"
-                                           title="Rojo (<6h) | Amarillo (6h-8h) | Verde (>=8h)">
+                                    <div class="flex items-center justify-center gap-1">
+                                        ${semaforoBadge}
+                                        <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" 
+                                               onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${j.id}')" 
+                                               class="w-24 text-center bg-transparent border-b border-zinc-700 font-mono-code text-xs text-zinc-300 focus:outline-none focus:border-pink-500"
+                                               title="Edita el tiempo aquí (ej. 24 HRS 00:00)">
+                                    </div>
                                 </td>
                                 <td class="sheet-td text-center">
                                     <select onchange="editarCampo(${r.id}, 'examen', this.value, '${j.id}')" class="cell-input font-bold text-center">
@@ -618,10 +649,10 @@
                                     </select>
                                 </td>
                                 <td class="sheet-td">
-                                    <input type="text" value="${r.descripcion || ''}" placeholder="Notas/ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${j.id}')" class="cell-input text-zinc-300">
+                                    <input type="text" value="${r.descripcion || ''}" placeholder="Notas o ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${j.id}')" class="cell-input text-zinc-300 text-xs">
                                 </td>
                                 <td class="sheet-td text-right">
-                                    <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-[11px]">Eliminar</button>
+                                    <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
                                 </td>
                             </tr>
                         `;
@@ -638,7 +669,7 @@
             cargarTablas();
         }
 
-        // SECCIÓN FORMACIONES
+        // Formaciones
         function calcularTotalPreview() {
             const cant = parseInt(document.getElementById('formCant').value) || 0;
             const total = cant * 20000;
@@ -685,19 +716,19 @@
                 const cuerpo = document.getElementById('cuerpoTablaFormaciones');
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-zinc-500 italic">No hay liquidaciones de instrucción registradas.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-zinc-500 italic text-sm">No hay liquidaciones de instrucción registradas.</td></tr>`;
                     return;
                 }
 
                 cuerpo.innerHTML = data.map(f => `
                     <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
-                        <td class="p-3 font-bold text-white">${f.instructor}</td>
-                        <td class="p-3 text-pink-300 font-semibold">${f.rango}</td>
-                        <td class="p-3 text-center font-mono-code font-bold text-yellow-400">${f.instrucciones_hechas}</td>
-                        <td class="p-3 font-mono-code font-black text-emerald-400 text-sm">$${f.total_pago.toLocaleString()}</td>
-                        <td class="p-3 text-zinc-400 text-[11px]">${f.actualizado_por}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="eliminarFormacion(${f.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded">Eliminar</button>
+                        <td class="p-3.5 font-bold text-white text-sm">${f.instructor}</td>
+                        <td class="p-3.5 text-pink-300 font-semibold">${f.rango}</td>
+                        <td class="p-3.5 text-center font-mono-code font-bold text-yellow-400 text-sm">${f.instrucciones_hechas}</td>
+                        <td class="p-3.5 font-mono-code font-black text-emerald-400 text-sm">$${f.total_pago.toLocaleString()}</td>
+                        <td class="p-3.5 text-zinc-400 text-xs">${f.actualizado_por}</td>
+                        <td class="p-3.5 text-right">
+                            <button onclick="eliminarFormacion(${f.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
                         </td>
                     </tr>
                 `).join('');
@@ -712,7 +743,7 @@
             cargarFormaciones();
         }
 
-        // PANEL ADMIN
+        // Panel Admin
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
             const data = await res.json();
@@ -720,20 +751,20 @@
 
             cuerpo.innerHTML = data.map(u => `
                 <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
-                    <td class="p-3 font-bold text-white">${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-[11px]">(@${u.usuario})</span></td>
-                    <td class="p-3">
-                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1 rounded-xl text-xs font-bold text-pink-300">
+                    <td class="p-3.5 font-bold text-white text-sm">${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-xs">(@${u.usuario})</span></td>
+                    <td class="p-3.5">
+                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300">
                             ${RANGOS_EMS.map(r => `<option value="${r}" ${u.rango === r ? 'selected' : ''}>${r}</option>`).join('')}
                         </select>
                     </td>
-                    <td class="p-3">
-                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1 rounded-xl text-xs">
+                    <td class="p-3.5">
+                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs">
                             <option value="empleado" ${u.rol === 'empleado' ? 'selected' : ''}>Personal</option>
                             <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
                         </select>
                     </td>
-                    <td class="p-3 text-right">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-3 py-1 rounded-xl text-xs">Guardar</button>
+                    <td class="p-3.5 text-right">
+                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1.5 rounded-xl text-xs">Guardar</button>
                     </td>
                 </tr>
             `).join('');
@@ -747,7 +778,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rango, rol }) 
             });
-            alert("Rango actualizado.");
+            alert("Rango actualizado con éxito.");
         }
 
         socket.on('db_update', () => {
