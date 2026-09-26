@@ -159,7 +159,6 @@ app.get('/api/ascensos', async (req, res) => {
     }
 });
 
-// CREACIÓN RÁPIDA: Solo pide Discord ID y Nombre IC
 app.post('/api/ascensos', async (req, res) => {
     const { jefatura, discord_id, nombre, actualizado_por } = req.body;
     if (!jefatura || !nombre) {
@@ -205,12 +204,13 @@ app.post('/api/ascensos', async (req, res) => {
     }
 });
 
-// MODIFICACIÓN DIRECTA DESDE LA TABLA
+// ACTUALIZACIÓN DE CELDAS Y CAMBIO DE JEFATURA
 app.put('/api/ascensos/:id', async (req, res) => {
-    const { nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion } = req.body;
+    const { jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion } = req.body;
     try {
         await db.execute({
             sql: `UPDATE registro_ascensos SET 
+                    jefatura = COALESCE(?, jefatura),
                     nombre = COALESCE(?, nombre),
                     nombre_ems = COALESCE(?, nombre_ems),
                     rango_actual = COALESCE(?, rango_actual),
@@ -222,6 +222,7 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     descripcion = COALESCE(?, descripcion)
                   WHERE id = ?`,
             args: [
+                jefatura || null,
                 nombre ? nombre.trim() : null,
                 nombre ? nombre.trim() : null,
                 rango_actual || null,

@@ -20,7 +20,7 @@
         }
         .font-mono-code { font-family: 'JetBrains Mono', monospace; }
         .card-ems {
-            background: linear-gradient(180deg, rgba(16, 17, 24, 0.95) 0%, rgba(10, 11, 15, 0.98) 100%);
+            background: linear-gradient(180deg, rgba(16, 17, 24, 0.96) 0%, rgba(10, 11, 15, 0.98) 100%);
             border: 1px solid rgba(244, 114, 182, 0.2);
             box-shadow: 0 14px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 114, 182, 0.04);
         }
@@ -59,11 +59,13 @@
             border-color: rgba(244, 114, 182, 0.3);
         }
 
-        /* Tabla estilizada más espaciosa y con letra más grande */
+        /* Tabla amplia, despejada y espaciosa */
         .sheet-table { 
-            border-collapse: collapse; 
+            border-collapse: separate; 
+            border-spacing: 0;
             width: 100%; 
-            font-size: 13px; 
+            min-width: 1250px;
+            font-size: 14px; 
         }
         .sheet-th {
             background: linear-gradient(180deg, #e8cbd7 0%, #d8b4c3 100%);
@@ -71,13 +73,13 @@
             border: 1px solid #bf96a8;
             font-weight: 900;
             text-transform: uppercase;
-            padding: 12px 10px;
+            padding: 14px 12px;
             letter-spacing: 0.6px;
             font-size: 12px;
         }
         .sheet-td {
             border: 1px solid #232736;
-            padding: 8px 10px;
+            padding: 10px 12px;
             background: #090b10;
         }
         .sheet-row:nth-child(even) .sheet-td {
@@ -91,42 +93,25 @@
             outline: none;
             padding: 6px 8px;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 14px;
         }
         .cell-input:focus {
             background: #151826;
             box-shadow: 0 0 0 1.5px #f472b6;
         }
 
-        /* Semáforo elegante con efecto pill glow */
-        .pill-badge {
+        /* Semáforo Exterior */
+        .status-pill {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 5px 12px;
+            gap: 8px;
+            padding: 6px 14px;
             border-radius: 9999px;
+            font-size: 12px;
             font-weight: 800;
             letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-        }
-        .pill-red {
-            background: rgba(225, 29, 72, 0.15);
-            color: #fda4af;
-            border: 1px solid rgba(244, 63, 94, 0.4);
-            box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
-        }
-        .pill-yellow {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fde68a;
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
-        }
-        .pill-green {
-            background: rgba(16, 185, 129, 0.15);
-            color: #a7f3d0;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
@@ -311,7 +296,6 @@
             }
         ];
 
-        // Lógica de cálculo numérico de horas
         function parsearHorasNumericas(str) {
             if (!str) return 0;
             const limpio = str.toUpperCase().replace('HRS', '').replace('HR', '').trim();
@@ -319,20 +303,6 @@
             const h = parseFloat(partes[0]) || 0;
             const m = partes[1] ? (parseFloat(partes[1]) || 0) / 60 : 0;
             return h + m;
-        }
-
-        // Semáforo estilizado
-        function obtenerBadgeSemaforo(str) {
-            const val = str || '00 HRS 00:00';
-            const horas = parsearHorasNumericas(val);
-
-            if (horas < 6) {
-                return `<div class="pill-badge pill-red font-mono-code"><span class="text-[10px]">🔴</span> ${val}</div>`;
-            }
-            if (horas < 8) {
-                return `<div class="pill-badge pill-yellow font-mono-code"><span class="text-[10px]">🟡</span> ${val}</div>`;
-            }
-            return `<div class="pill-badge pill-green font-mono-code"><span class="text-[10px]">🟢</span> ${val}</div>`;
         }
 
         function generarOpcionesPostular(rangoActual, examenRealizado, jefaturaActual, postularSeleccionado) {
@@ -377,8 +347,32 @@
             container.innerHTML = JEFATURAS.map(j => `
                 <section id="seccion-${j.id}" class="hidden space-y-4">
                     <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-500">
-                        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-3">
-                            <h2 class="text-xl font-black text-white uppercase tracking-wider">${j.titulo}</h2>
+                        
+                        <!-- Encabezado con Semáforo Elegante Afuera de la Tabla -->
+                        <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-white uppercase tracking-wider">${j.titulo}</h2>
+                                <p class="text-xs text-zinc-400 mt-0.5">Control de ascensos, faltas y cómputo de servicio activo.</p>
+                            </div>
+                            
+                            <!-- Semáforo Exterior -->
+                            <div class="flex items-center gap-2.5 bg-black/70 p-2 px-3 rounded-2xl border border-zinc-800">
+                                <span class="status-pill text-rose-300 border border-rose-500/40">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                    <span>&lt; 6h Warn</span>
+                                    <span class="bg-rose-950/80 px-1.5 py-0.2 rounded text-[11px] font-mono-code font-bold text-white" id="countRojo_${j.id}">0</span>
+                                </span>
+                                <span class="status-pill text-amber-300 border border-amber-500/40">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                    <span>6h - 8h</span>
+                                    <span class="bg-amber-950/80 px-1.5 py-0.2 rounded text-[11px] font-mono-code font-bold text-white" id="countAmarillo_${j.id}">0</span>
+                                </span>
+                                <span class="status-pill text-emerald-300 border border-emerald-500/40">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span>&ge; 8h Óptimo</span>
+                                    <span class="bg-emerald-950/80 px-1.5 py-0.2 rounded text-[11px] font-mono-code font-bold text-white" id="countVerde_${j.id}">0</span>
+                                </span>
+                            </div>
                         </div>
                         
                         <!-- Formulario de Ingreso Rápido -->
@@ -396,19 +390,19 @@
                             </div>
                         </div>
 
-                        <!-- Hoja de Cálculo Interactiva -->
+                        <!-- Hoja de Cálculo Interactiva Amplia -->
                         <div class="overflow-x-auto rounded-2xl border border-zinc-800 shadow-2xl">
                             <table class="sheet-table">
                                 <thead>
                                     <tr>
-                                        <th class="sheet-th">NOMBRE (IC)</th>
-                                        <th class="sheet-th">RANGO ACTUAL</th>
-                                        <th class="sheet-th">RANGO A POSTULAR</th>
-                                        <th class="sheet-th text-center">FALTAS</th>
-                                        <th class="sheet-th text-center">HORAS EN LA SEMANA</th>
-                                        <th class="sheet-th text-center">EXÁMEN</th>
-                                        <th class="sheet-th">DESCRIPCIÓN Y AUSENCIAS</th>
-                                        <th class="sheet-th text-right">ACCIÓN</th>
+                                        <th class="sheet-th w-64 text-left">NOMBRE (IC)</th>
+                                        <th class="sheet-th w-56 text-left">RANGO ACTUAL</th>
+                                        <th class="sheet-th w-60 text-left">RANGO A POSTULAR</th>
+                                        <th class="sheet-th w-32 text-center">FALTAS</th>
+                                        <th class="sheet-th w-44 text-center">HORAS EN LA SEMANA</th>
+                                        <th class="sheet-th w-36 text-center">EXÁMEN</th>
+                                        <th class="sheet-th w-96 text-left">DESCRIPCIÓN Y AUSENCIAS</th>
+                                        <th class="sheet-th w-24 text-right">ACCIÓN</th>
                                     </tr>
                                 </thead>
                                 <tbody id="cuerpoTabla_${j.id}"></tbody>
@@ -555,7 +549,7 @@
             }
         }
 
-        // Lógica de transferencia completa: Se reasigna jefatura y se elimina de la tabla previa
+        // LÓGICA DE TRANSFERENCIA DEFINITIVA ENTRE JEFATURAS
         async function editarCampo(id, campo, valor, jefaturaActual) {
             let datosAEnviar = { [campo]: valor };
 
@@ -567,7 +561,7 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`✅ ¡Personal promovido! Se transfirió automáticamente a la Jefatura de Cirugía.`);
+                    alert(`✅ ¡Personal ascendido! Se removió de Enfermería y se transfirió a la Jefatura de Cirugía.`);
                 } else if (valor.includes('Medicina')) {
                     const rangoLimpio = valor.replace(' (Medicina)', '');
                     datosAEnviar = {
@@ -575,7 +569,7 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`✅ ¡Personal promovido! Se transfirió automáticamente a la Jefatura de Medicina.`);
+                    alert(`✅ ¡Personal ascendido! Se removió de Enfermería y se transfirió a la Jefatura de Medicina.`);
                 }
             }
 
@@ -600,13 +594,25 @@
                     const filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
                     const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
 
+                    let cRojo = 0, cAmarillo = 0, cVerde = 0;
+
+                    filtrados.forEach(r => {
+                        const h = parsearHorasNumericas(r.horas_semana);
+                        if (h < 6) cRojo++;
+                        else if (h < 8) cAmarillo++;
+                        else cVerde++;
+                    });
+
+                    document.getElementById(`countRojo_${j.id}`).innerText = cRojo;
+                    document.getElementById(`countAmarillo_${j.id}`).innerText = cAmarillo;
+                    document.getElementById(`countVerde_${j.id}`).innerText = cVerde;
+
                     if (filtrados.length === 0) {
                         cuerpo.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-zinc-500 italic bg-black/60 text-sm">No hay registros en esta escala.</td></tr>`;
                         return;
                     }
 
                     cuerpo.innerHTML = filtrados.map(r => {
-                        const semaforoBadge = obtenerBadgeSemaforo(r.horas_semana);
                         const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, j.id, r.rango_postular);
                         const opcionesActual = generarOpcionesActual(j.id, r.rango_actual);
 
@@ -633,13 +639,10 @@
                                     </select>
                                 </td>
                                 <td class="sheet-td text-center">
-                                    <div class="flex items-center justify-center gap-1">
-                                        ${semaforoBadge}
-                                        <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" 
-                                               onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${j.id}')" 
-                                               class="w-24 text-center bg-transparent border-b border-zinc-700 font-mono-code text-xs text-zinc-300 focus:outline-none focus:border-pink-500"
-                                               title="Edita el tiempo aquí (ej. 24 HRS 00:00)">
-                                    </div>
+                                    <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" 
+                                           onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${j.id}')" 
+                                           class="cell-input text-center font-mono-code font-bold text-yellow-300 bg-black/40 border border-zinc-800 rounded-lg py-1 px-2"
+                                           placeholder="00 HRS 00:00">
                                 </td>
                                 <td class="sheet-td text-center">
                                     <select onchange="editarCampo(${r.id}, 'examen', this.value, '${j.id}')" class="cell-input font-bold text-center">
@@ -649,10 +652,12 @@
                                     </select>
                                 </td>
                                 <td class="sheet-td">
-                                    <input type="text" value="${r.descripcion || ''}" placeholder="Notas o ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${j.id}')" class="cell-input text-zinc-300 text-xs">
+                                    <textarea rows="1" onblur="editarCampo(${r.id}, 'descripcion', this.value, '${j.id}')" 
+                                              placeholder="Escribe notas, ausencias justificadas o detalles de actividad..." 
+                                              class="cell-input text-zinc-300 text-xs resize-y min-h-[34px] leading-relaxed">${r.descripcion || ''}</textarea>
                                 </td>
                                 <td class="sheet-td text-right">
-                                    <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                                    <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1.5 rounded-lg border border-rose-500/20 text-xs">Eliminar</button>
                                 </td>
                             </tr>
                         `;
