@@ -247,7 +247,6 @@
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-cyan-500/15 text-cyan-300 border-cyan-500/30">Cuerpo de Supervisión</span>
                 </div>
 
-                <!-- Formulario Supervisores -->
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
                     <div class="w-48">
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID</label>
@@ -256,6 +255,13 @@
                     <div class="flex-1 min-w-[200px]">
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Supervisor (IC)</label>
                         <input type="text" id="coordSupervisor" placeholder="Dr. Gregory House" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-sm">
+                    </div>
+                    <div class="w-48">
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
+                        <select id="coordRangoSel" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-xs">
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Coordinador">Coordinador</option>
+                        </select>
                     </div>
                     <div class="w-48">
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Inicial</label>
@@ -271,7 +277,6 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Coordinación -->
                 <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                     <table class="fluid-table">
                         <thead>
@@ -291,13 +296,13 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL DE DIRECCIÓN (UNIFICADO) -->
+        <!-- CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">📋 Censo General del Personal · Dirección</h2>
-                        <p class="text-xs text-zinc-400">Listado consolidado de las escalas de Cirugía, Medicina y Enfermería agrupadas por rango jerárquico.</p>
+                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor rango jerárquico (Dirección hasta Escala Básica).</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
@@ -313,7 +318,7 @@
                                 <th class="fluid-th text-left w-1/4">PERSONAL (IC)</th>
                                 <th class="fluid-th text-left w-40">DEPARTAMENTO</th>
                                 <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
-                                <th class="fluid-th text-left w-48">POSTULACIÓN</th>
+                                <th class="fluid-th text-left w-48">POSTULACIÓN / ESTADO</th>
                                 <th class="fluid-th text-center w-36">HORAS SEMANA</th>
                                 <th class="fluid-th text-center w-28">FALTAS</th>
                                 <th class="fluid-th text-center w-28">EXÁMEN</th>
@@ -353,7 +358,6 @@
         let usuarioActual = null;
         let esRegistro = false;
 
-        // Generar Favicon Dinámico Circular
         function aplicarFaviconCircular() {
             const img = new Image();
             img.crossOrigin = "anonymous";
@@ -384,36 +388,47 @@
             "Supervisor"
         ];
 
-        // Jerarquía de ordenamiento
-        const ORDEN_JERARQUIA = {
-            "Especialista": 1,
-            "Subespecialista": 2,
-            "Residente": 3,
-            "Interno/a": 4,
-            "Estudiante": 5,
-            "Enfermero/a Especialista": 6,
-            "Enfermero/a General": 7,
-            "Enfermero": 8,
-            "Auxiliar de Enfermería": 9,
-            "Celador/a": 10
+        // Jerarquía médica (Valor numérico 1 = Rango más bajo)
+        const JERARQUIA_MENOR_A_MAYOR = {
+            "Celador/a": 1,
+            "Auxiliar de Enfermería": 2,
+            "Enfermero": 3,
+            "Enfermero/a General": 4,
+            "Enfermero/a Especialista": 5,
+            "Estudiante": 6,
+            "Interno/a": 7,
+            "Residente": 8,
+            "Subespecialista": 9,
+            "Especialista": 10,
+            "Supervisor": 11,
+            "Coordinador": 12,
+            "Jefe de Formaciones": 13,
+            "Director de Enfermería": 14,
+            "Jefe de Medicina": 15,
+            "Jefa de Cirugía": 16,
+            "Subdirectora": 17,
+            "Director (Admin)": 18
         };
 
         const RANGOS_EVALUACION = [
-            { id: "Especialista", label: "『🥼』Especialista", escala: "medica" },
-            { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" },
-            { id: "Residente", label: "『📚』Residente", escala: "medica" },
-            { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" },
-            { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" },
-            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
-            { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" },
-            { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" },
+            { id: "Celador/a", label: "『👀』Celador/a", escala: "basica" },
             { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería", escala: "basica" },
-            { id: "Celador/a", label: "『👀』Celador/a", escala: "basica" }
+            { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" },
+            { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" },
+            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
+            { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" },
+            { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" },
+            { id: "Residente", label: "『📚』Residente", escala: "medica" },
+            { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" },
+            { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
+        ];
+
+        const RANGOS_ESCALA_BASICA = [
+            { id: "Celador/a", label: "『👀』Celador/a" },
+            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" }
         ];
 
         const RANGOS_ESCALA_ENFERMERIA = [
-            { id: "Celador/a", label: "『👀』Celador/a" },
-            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" },
             { id: "Enfermero", label: "『💉』Enfermero" },
             { id: "Enfermero/a General", label: "『💉』Enfermero/a General" },
             { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" }
@@ -458,7 +473,6 @@
             return h + m;
         }
 
-        // Formateador inteligente de horas (8 -> 08:00 HRS | 8:30 -> 08:30 HRS)
         function formatearTextoHoras(valorRaw) {
             if (!valorRaw) return '';
             let val = valorRaw.toUpperCase().replace('HRS', '').replace('HR', '').trim();
@@ -485,12 +499,11 @@
             return 'semaforo-horas-verde';
         }
 
-        // Opciones de postulación con Estudiante e Interno/a (sin Residente)
         function generarOpcionesPostular(rangoActual, examenRealizado, jefaturaActual, postularSeleccionado) {
             let lista = [];
 
             if (jefaturaActual === 'enfermeria') {
-                lista = [...RANGOS_ESCALA_ENFERMERIA];
+                lista = [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA];
                 if (rangoActual === 'Enfermero/a Especialista' && examenRealizado === 'REALIZADO') {
                     lista.push(
                         { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" },
@@ -512,7 +525,7 @@
 
         function generarOpcionesActual(jefaturaActual, actualSeleccionado) {
             let lista = jefaturaActual === 'enfermeria' 
-                ? RANGOS_ESCALA_ENFERMERIA 
+                ? [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA] 
                 : RANGOS_EVALUACION.filter(r => r.escala === 'medica');
 
             return lista.map(r => `
@@ -522,10 +535,72 @@
             `).join('');
         }
 
+        function renderizarFilaEvaluacion(r, index, jefaturaId, colorTexto) {
+            const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, jefaturaId, r.rango_postular);
+            const opcionesActual = generarOpcionesActual(jefaturaId, r.rango_actual);
+            const semaforoCasilla = obtenerClaseSemaforoCasilla(r.horas_semana);
+
+            return `
+                <tr class="fluid-row hover:bg-zinc-900/60 transition">
+                    <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                    <td class="fluid-td font-mono-code text-zinc-400">
+                        <input type="text" value="${r.discord_id || 'N/A'}" onblur="editarCampo(${r.id}, 'discord_id', this.value, '${jefaturaId}')" class="cell-input font-mono-code text-xs">
+                    </td>
+                    <td class="fluid-td font-semibold text-white">
+                        <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm">
+                    </td>
+                    <td class="fluid-td">
+                        <select onchange="editarCampo(${r.id}, 'rango_actual', this.value, '${jefaturaId}')" class="cell-input font-bold ${colorTexto}">
+                            ${opcionesActual}
+                        </select>
+                    </td>
+                    <td class="fluid-td">
+                        <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${jefaturaId}')" class="cell-input font-bold text-pink-300">
+                            ${opcionesPostular}
+                        </select>
+                    </td>
+                    <td class="fluid-td text-center">
+                        <select onchange="editarCampo(${r.id}, 'faltas', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
+                            <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
+                            <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-400 text-black font-black">WARN</option>
+                            <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-600 text-white font-black">DESPIDO</option>
+                        </select>
+                    </td>
+                    <td class="fluid-td text-center">
+                        <input type="text" value="${r.horas_semana || ''}" 
+                               placeholder="Ej. 8 ó 8:30"
+                               onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${jefaturaId}')" 
+                               class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforoCasilla}">
+                    </td>
+                    <td class="fluid-td text-center">
+                        <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
+                            <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
+                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
+                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
+                        </select>
+                    </td>
+                    <td class="fluid-td text-center">
+                        <input type="date" value="${r.fecha_ingreso || ''}" 
+                               onchange="editarCampo(${r.id}, 'fecha_ingreso', this.value, '${jefaturaId}')" 
+                               class="cell-input text-center font-mono-code text-xs text-zinc-300">
+                    </td>
+                    <td class="fluid-td">
+                        <input type="text" value="${r.descripcion || ''}" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs">
+                    </td>
+                    <td class="fluid-td text-right">
+                        <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        }
+
         function inicializarEstructuraHtml() {
             const container = document.getElementById('contenedor-secciones');
 
-            container.innerHTML = JEFATURAS.map(j => `
+            container.innerHTML = JEFATURAS.map(j => {
+                const esEnfermeria = j.id === 'enfermeria';
+
+                return `
                 <section id="seccion-${j.id}" class="hidden space-y-4">
                     <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 ${j.colorBorde}">
                         
@@ -533,7 +608,7 @@
                         <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white uppercase tracking-wider">${j.titulo}</h2>
-                                <p class="text-xs text-zinc-400 mt-0.5">Control de ascensos, faltas, cómputo semanal y fecha de ingreso.</p>
+                                <p class="text-xs text-zinc-400 mt-0.5">Control jerárquico ordenado de menor a mayor rango, horas y fecha de ingreso.</p>
                             </div>
                             
                             <div class="flex items-center gap-3 bg-black/60 p-2 px-3 rounded-2xl border border-zinc-800">
@@ -574,7 +649,71 @@
                             </div>
                         </div>
 
-                        <!-- Tabla Fluida Completa con Columna Numérica y Discord ID -->
+                        ${esEnfermeria ? `
+                        <!-- DIVISIÓN ENFERMERÍA (ESTILO EXCEL) -->
+                        <div class="space-y-6 pt-2">
+                            <!-- TABLA 1: ESCALA BÁSICA (CELADORES Y AUXILIARES) -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between px-2">
+                                    <h3 class="text-sm font-black text-emerald-300 uppercase tracking-widest flex items-center gap-2">
+                                        🛡️ ESCALA BÁSICA (CELADORES Y AUXILIARES)
+                                    </h3>
+                                    <span class="text-[11px] text-zinc-400 font-mono-code" id="countBasica">0 Efectivos</span>
+                                </div>
+                                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
+                                    <table class="fluid-table">
+                                        <thead>
+                                            <tr class="bg-emerald-950/60 text-emerald-200">
+                                                <th class="fluid-th text-center w-12">#</th>
+                                                <th class="fluid-th text-left w-36">DISCORD ID</th>
+                                                <th class="fluid-th text-left w-1/4">NOMBRE (IC)</th>
+                                                <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
+                                                <th class="fluid-th text-left w-52">RANGO A POSTULAR</th>
+                                                <th class="fluid-th text-center w-28">FALTAS</th>
+                                                <th class="fluid-th text-center w-36">HORAS EN LA SEMANA</th>
+                                                <th class="fluid-th text-center w-32">EXÁMEN</th>
+                                                <th class="fluid-th text-center w-32">FECHA INGRESO</th>
+                                                <th class="fluid-th text-left w-1/4">DESCRIPCIÓN Y AUSENCIAS</th>
+                                                <th class="fluid-th text-right w-20">ACCIÓN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cuerpoTabla_enfermeria_basica"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- TABLA 2: ESCALA ENFERMERÍA (ENFERMEROS Y ESPECIALISTAS) -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between px-2">
+                                    <h3 class="text-sm font-black text-teal-300 uppercase tracking-widest flex items-center gap-2">
+                                        💉 ESCALA DE ENFERMERÍA (GENERALES Y ESPECIALISTAS)
+                                    </h3>
+                                    <span class="text-[11px] text-zinc-400 font-mono-code" id="countEnfermeria">0 Efectivos</span>
+                                </div>
+                                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
+                                    <table class="fluid-table">
+                                        <thead>
+                                            <tr class="bg-teal-950/60 text-teal-200">
+                                                <th class="fluid-th text-center w-12">#</th>
+                                                <th class="fluid-th text-left w-36">DISCORD ID</th>
+                                                <th class="fluid-th text-left w-1/4">NOMBRE (IC)</th>
+                                                <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
+                                                <th class="fluid-th text-left w-52">RANGO A POSTULAR</th>
+                                                <th class="fluid-th text-center w-28">FALTAS</th>
+                                                <th class="fluid-th text-center w-36">HORAS EN LA SEMANA</th>
+                                                <th class="fluid-th text-center w-32">EXÁMEN</th>
+                                                <th class="fluid-th text-center w-32">FECHA INGRESO</th>
+                                                <th class="fluid-th text-left w-1/4">DESCRIPCIÓN Y AUSENCIAS</th>
+                                                <th class="fluid-th text-right w-20">ACCIÓN</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cuerpoTabla_enfermeria_general"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        ` : `
+                        <!-- TABLA REGULAR PARA CIRUGÍA Y MEDICINA -->
                         <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                             <table class="fluid-table">
                                 <thead>
@@ -595,13 +734,14 @@
                                 <tbody id="cuerpoTabla_${j.id}"></tbody>
                             </table>
                         </div>
+                        `}
                     </div>
                 </section>
-            `).join('');
+                `;
+            }).join('');
 
             document.getElementById('formRango').innerHTML = RANGOS_EVALUACION.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
             
-            // Asignar fecha de hoy a los inputs de fecha
             const hoy = new Date().toISOString().split('T')[0];
             JEFATURAS.forEach(j => {
                 const el = document.getElementById(`fechaIngreso_${j.id}`);
@@ -754,7 +894,6 @@
             }
         }
 
-        // LÓGICA DE TRANSFERENCIA DEFINITIVA ENTRE JEFATURAS CON ESTUDIANTE E INTERNO/A
         async function editarCampo(id, campo, valor, jefaturaActual) {
             let datosAEnviar = { [campo]: valor };
 
@@ -802,15 +941,13 @@
                 JEFATURAS.forEach(j => {
                     let filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
 
-                    // Ordenar por Jerarquía y por Antigüedad
+                    // ORDENAR ESTRICTAMENTE DE MENOR A MAYOR (Jerarquía 1 -> 18) PARA LAS TABLAS DE EVALUACIÓN
                     filtrados.sort((a, b) => {
-                        const pesoA = ORDEN_JERARQUIA[a.rango_actual] || 99;
-                        const pesoB = ORDEN_JERARQUIA[b.rango_actual] || 99;
+                        const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 99;
+                        const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 99;
                         if (pesoA !== pesoB) return pesoA - pesoB;
                         return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                     });
-
-                    const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
 
                     let cRojo = 0, cAmarillo = 0, cVerde = 0;
 
@@ -825,69 +962,37 @@
                     document.getElementById(`countAmarillo_${j.id}`).innerText = cAmarillo;
                     document.getElementById(`countVerde_${j.id}`).innerText = cVerde;
 
-                    if (filtrados.length === 0) {
-                        cuerpo.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-500 italic bg-black/60 text-sm">No hay registros en esta escala.</td></tr>`;
-                        return;
+                    if (j.id === 'enfermeria') {
+                        // Dividir entre Escala Básica y Escala Enfermería
+                        const basica = filtrados.filter(x => x.rango_actual === 'Celador/a' || x.rango_actual === 'Auxiliar de Enfermería');
+                        const enfermeria = filtrados.filter(x => x.rango_actual !== 'Celador/a' && x.rango_actual !== 'Auxiliar de Enfermería');
+
+                        document.getElementById('countBasica').innerText = `${basica.length} Efectivos`;
+                        document.getElementById('countEnfermeria').innerText = `${enfermeria.length} Efectivos`;
+
+                        const cuerpoBasica = document.getElementById('cuerpoTabla_enfermeria_basica');
+                        const cuerpoEnf = document.getElementById('cuerpoTabla_enfermeria_general');
+
+                        if (basica.length === 0) {
+                            cuerpoBasica.innerHTML = `<tr><td colspan="11" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay celadores ni auxiliares registrados.</td></tr>`;
+                        } else {
+                            cuerpoBasica.innerHTML = basica.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-emerald-400')).join('');
+                        }
+
+                        if (enfermeria.length === 0) {
+                            cuerpoEnf.innerHTML = `<tr><td colspan="11" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay enfermeros ni especialistas registrados.</td></tr>`;
+                        } else {
+                            cuerpoEnf.innerHTML = enfermeria.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-teal-400')).join('');
+                        }
+
+                    } else {
+                        const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
+                        if (filtrados.length === 0) {
+                            cuerpo.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-500 italic bg-black/60 text-sm">No hay registros en esta escala.</td></tr>`;
+                            return;
+                        }
+                        cuerpo.innerHTML = filtrados.map((r, i) => renderizarFilaEvaluacion(r, i, j.id, j.colorTexto)).join('');
                     }
-
-                    cuerpo.innerHTML = filtrados.map((r, index) => {
-                        const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, j.id, r.rango_postular);
-                        const opcionesActual = generarOpcionesActual(j.id, r.rango_actual);
-                        const semaforoCasilla = obtenerClaseSemaforoCasilla(r.horas_semana);
-
-                        return `
-                            <tr class="fluid-row hover:bg-zinc-900/60 transition">
-                                <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                                <td class="fluid-td font-mono-code text-zinc-400">
-                                    <input type="text" value="${r.discord_id || 'N/A'}" onblur="editarCampo(${r.id}, 'discord_id', this.value, '${j.id}')" class="cell-input font-mono-code text-xs">
-                                </td>
-                                <td class="fluid-td font-semibold text-white">
-                                    <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${j.id}')" class="cell-input font-bold text-white text-sm">
-                                </td>
-                                <td class="fluid-td">
-                                    <select onchange="editarCampo(${r.id}, 'rango_actual', this.value, '${j.id}')" class="cell-input font-bold ${j.colorTexto}">
-                                        ${opcionesActual}
-                                    </select>
-                                </td>
-                                <td class="fluid-td">
-                                    <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${j.id}')" class="cell-input font-bold text-pink-300">
-                                        ${opcionesPostular}
-                                    </select>
-                                </td>
-                                <td class="fluid-td text-center">
-                                    <select onchange="editarCampo(${r.id}, 'faltas', this.value, '${j.id}')" class="cell-input font-bold text-center">
-                                        <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
-                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-400 text-black font-black">WARN</option>
-                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-600 text-white font-black">DESPIDO</option>
-                                    </select>
-                                </td>
-                                <td class="fluid-td text-center">
-                                    <input type="text" value="${r.horas_semana || ''}" 
-                                           placeholder="Ej. 8 ó 8:30"
-                                           onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${j.id}')" 
-                                           class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforoCasilla}">
-                                </td>
-                                <td class="fluid-td text-center">
-                                    <select onchange="editarCampo(${r.id}, 'examen', this.value, '${j.id}')" class="cell-input font-bold text-center">
-                                        <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                                        <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
-                                        <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
-                                    </select>
-                                </td>
-                                <td class="fluid-td text-center">
-                                    <input type="date" value="${r.fecha_ingreso || ''}" 
-                                           onchange="editarCampo(${r.id}, 'fecha_ingreso', this.value, '${j.id}')" 
-                                           class="cell-input text-center font-mono-code text-xs text-zinc-300">
-                                </td>
-                                <td class="fluid-td">
-                                    <input type="text" value="${r.descripcion || ''}" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${j.id}')" class="cell-input text-zinc-300 text-xs">
-                                </td>
-                                <td class="fluid-td text-right">
-                                    <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
                 });
             } catch (e) {
                 console.error("Error al cargar ascensos:", e);
@@ -1015,6 +1120,7 @@
         async function guardarSupervisorCoordinacion() {
             const discord_id = document.getElementById('coordDiscord').value.trim();
             const supervisor = document.getElementById('coordSupervisor').value.trim();
+            const rango = document.getElementById('coordRangoSel').value;
             const estado = document.getElementById('coordEstado').value;
 
             if (!supervisor) return alert("Ingresa el nombre del supervisor.");
@@ -1026,7 +1132,7 @@
                     body: JSON.stringify({
                         discord_id: discord_id || 'N/A',
                         supervisor,
-                        rango: 'Supervisor',
+                        rango,
                         estado,
                         actualizado_por: usuarioActual ? usuarioActual.nombre : 'Coordinación'
                     })
@@ -1071,7 +1177,12 @@
                         <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                         <td class="fluid-td font-mono-code text-zinc-400 text-xs">${c.discord_id}</td>
                         <td class="fluid-td font-bold text-white text-sm">${c.supervisor}</td>
-                        <td class="fluid-td font-semibold text-cyan-300">${c.rango}</td>
+                        <td class="fluid-td">
+                            <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango', this.value)" class="cell-input font-semibold text-cyan-300">
+                                <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
+                                <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>Coordinador</option>
+                            </select>
+                        </td>
                         <td class="fluid-td text-center">
                             <select onchange="editarCoordinacionEnTabla(${c.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs">
                                 <option value="Activo" ${c.estado === 'Activo' ? 'selected' : ''}>🟢 Activo</option>
@@ -1101,56 +1212,106 @@
             cargarCoordinacion();
         }
 
-        // ==========================================
-        // CENSO GENERAL DE DIRECCIÓN (UNIFICADO)
-        // ==========================================
+        // =========================================================================
+        // CENSO GENERAL DE DIRECCIÓN (ORDENADO ESTRICTAMENTE DE MAYOR A MENOR)
+        // =========================================================================
         async function cargarCensoGeneral() {
             try {
-                const res = await fetch('/api/ascensos');
-                const data = await res.json();
+                const [resAsc, resCoord] = await Promise.all([
+                    fetch('/api/ascensos'),
+                    fetch('/api/coordinacion')
+                ]);
+
+                const dataAsc = await resAsc.json();
+                const dataCoord = await resCoord.json();
+
+                let listaUnificada = [];
+
+                if (Array.isArray(dataAsc)) {
+                    dataAsc.forEach(a => {
+                        listaUnificada.push({
+                            discord_id: a.discord_id || 'N/A',
+                            nombre: a.nombre,
+                            departamento: a.jefatura,
+                            rango_actual: a.rango_actual,
+                            rango_postular: a.rango_postular || '—',
+                            horas_semana: a.horas_semana,
+                            faltas: a.faltas,
+                            examen: a.examen,
+                            fecha_ingreso: a.fecha_ingreso || '—',
+                            descripcion: a.descripcion || '—',
+                            esMando: false
+                        });
+                    });
+                }
+
+                if (Array.isArray(dataCoord)) {
+                    dataCoord.forEach(c => {
+                        listaUnificada.push({
+                            discord_id: c.discord_id || 'N/A',
+                            nombre: c.supervisor,
+                            departamento: 'coordinacion',
+                            rango_actual: c.rango || 'Supervisor',
+                            rango_postular: `Estado: ${c.estado}`,
+                            horas_semana: null,
+                            faltas: '—',
+                            examen: '—',
+                            fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
+                            descripcion: c.feedback_semanal || '—',
+                            esMando: true
+                        });
+                    });
+                }
+
                 const cuerpo = document.getElementById('cuerpoTablaCenso');
 
-                if (!Array.isArray(data) || data.length === 0) {
+                if (listaUnificada.length === 0) {
                     cuerpo.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
                     document.getElementById('txtTotalCenso').innerText = "0 Efectivos";
                     return;
                 }
 
-                const ordenados = [...data].sort((a, b) => {
-                    const pesoA = ORDEN_JERARQUIA[a.rango_actual] || 99;
-                    const pesoB = ORDEN_JERARQUIA[b.rango_actual] || 99;
-                    if (pesoA !== pesoB) return pesoA - pesoB;
+                // ORDENAR ESTRICTAMENTE DE MAYOR A MENOR (Rango más alto hasta arriba: 18 -> 1)
+                listaUnificada.sort((a, b) => {
+                    const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
+                    const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
+                    if (pesoA !== pesoB) return pesoB - pesoA; // Invertido: Mayor a menor
                     return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                 });
 
-                document.getElementById('txtTotalCenso').innerText = `${ordenados.length} Efectivos`;
+                document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos`;
 
-                cuerpo.innerHTML = ordenados.map((r, index) => {
+                cuerpo.innerHTML = listaUnificada.map((r, index) => {
                     let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
-                    if (r.jefatura === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
-                    if (r.jefatura === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería</span>';
+                    if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
+                    if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
+                    if (r.departamento === 'coordinacion') deptoTag = '<span class="text-cyan-400 font-bold">Coordinación</span>';
 
-                    const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
+                    let celdaHoras = '';
+                    if (r.esMando) {
+                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[11px] bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">Mando / Supervisión</span>`;
+                    } else {
+                        const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
+                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${semaforo}">${r.horas_semana || '00:00 HRS'}</span>`;
+                    }
 
                     return `
                         <tr class="fluid-row hover:bg-zinc-900/40">
                             <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">${r.discord_id || 'N/A'}</td>
+                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">${r.discord_id}</td>
                             <td class="fluid-td font-bold text-white">${r.nombre}</td>
                             <td class="fluid-td">${deptoTag}</td>
                             <td class="fluid-td font-semibold text-pink-300">${r.rango_actual}</td>
-                            <td class="fluid-td font-semibold text-zinc-400">${r.rango_postular || '—'}</td>
-                            <td class="fluid-td text-center">
-                                <span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${semaforo}">${r.horas_semana || '00:00 HRS'}</span>
-                            </td>
+                            <td class="fluid-td font-semibold text-zinc-400">${r.rango_postular}</td>
+                            <td class="fluid-td text-center">${celdaHoras}</td>
                             <td class="fluid-td text-center font-bold text-xs ${r.faltas === 'WARN' ? 'text-amber-400' : r.faltas === 'DESPIDO' ? 'text-rose-500' : 'text-zinc-500'}">
                                 ${r.faltas}
                             </td>
                             <td class="fluid-td text-center font-bold text-xs ${r.examen === 'REALIZADO' ? 'text-emerald-400' : 'text-zinc-400'}">
                                 ${r.examen}
                             </td>
-                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">${r.fecha_ingreso || '—'}</td>
-                            <td class="fluid-td text-zinc-400 text-xs">${r.descripcion || '—'}</td>
+                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">${r.fecha_ingreso}</td>
+                            <td class="fluid-td text-zinc-400 text-xs">${r.descripcion}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1204,6 +1365,9 @@
             cargarTablas();
             cargarFormaciones();
             cargarCoordinacion();
+            if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                cargarCensoGeneral();
+            }
         });
 
     </script>
