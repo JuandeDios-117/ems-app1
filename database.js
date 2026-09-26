@@ -31,9 +31,12 @@ const db = createClient({
       CREATE TABLE IF NOT EXISTS registro_ascensos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         jefatura TEXT NOT NULL,
-        nombre TEXT NOT NULL,
+        discord_id TEXT DEFAULT 'N/A',
+        nombre_ems TEXT DEFAULT '',
+        nombre TEXT DEFAULT '',
         rango_actual TEXT NOT NULL,
-        rango_postular TEXT NOT NULL,
+        rango_propuesto TEXT DEFAULT '',
+        rango_postular TEXT DEFAULT '',
         faltas TEXT DEFAULT 'NINGUNA',
         horas_semana TEXT DEFAULT '00 HRS 00:00',
         examen TEXT DEFAULT 'NO APLICA',
@@ -43,7 +46,6 @@ const db = createClient({
       )
     `);
 
-    // Migraciones preventivas para bases de datos con esquema anterior
     const migraciones = [
       "ALTER TABLE registro_ascensos ADD COLUMN nombre TEXT DEFAULT ''",
       "ALTER TABLE registro_ascensos ADD COLUMN rango_postular TEXT DEFAULT ''",
@@ -57,7 +59,7 @@ const db = createClient({
       try {
         await db.execute(sql);
       } catch (e) {
-        // Ignora el error si la columna ya existe
+        // Ignorar si la columna ya existe
       }
     }
 

@@ -167,17 +167,32 @@ app.post('/api/ascensos', async (req, res) => {
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_ascensos (jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            sql: `INSERT INTO registro_ascensos (
+                    jefatura, 
+                    discord_id, 
+                    nombre_ems, 
+                    nombre, 
+                    rango_actual, 
+                    rango_propuesto, 
+                    rango_postular, 
+                    faltas, 
+                    horas_semana, 
+                    examen, 
+                    descripcion, 
+                    actualizado_por
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
-                jefatura, 
-                nombre.trim(), 
-                rango_actual, 
-                rango_postular, 
-                faltas || 'NINGUNA', 
-                horas_semana || '00 HRS 00:00', 
-                examen || 'NO APLICA', 
-                descripcion || '', 
+                jefatura,
+                'N/A',
+                nombre.trim(),
+                nombre.trim(),
+                rango_actual,
+                rango_postular,
+                rango_postular,
+                faltas || 'NINGUNA',
+                horas_semana || '00 HRS 00:00',
+                examen || 'NO APLICA',
+                descripcion || '',
                 actualizado_por || 'Jefatura'
             ]
         });
