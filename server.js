@@ -159,10 +159,11 @@ app.get('/api/ascensos', async (req, res) => {
     }
 });
 
+// CREACIÓN RÁPIDA: Solo pide Discord ID y Nombre IC
 app.post('/api/ascensos', async (req, res) => {
-    const { jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion, actualizado_por } = req.body;
-    if (!jefatura || !nombre || !rango_actual || !rango_postular) {
-        return res.status(400).json({ error: "Faltan campos por completar." });
+    const { jefatura, discord_id, nombre, actualizado_por } = req.body;
+    if (!jefatura || !nombre) {
+        return res.status(400).json({ error: "Ingresa el nombre del personal." });
     }
 
     try {
@@ -183,23 +184,60 @@ app.post('/api/ascensos', async (req, res) => {
                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 jefatura,
-                'N/A',
+                (discord_id || 'N/A').trim(),
                 nombre.trim(),
                 nombre.trim(),
-                rango_actual,
-                rango_postular,
-                rango_postular,
-                faltas || 'NINGUNA',
-                horas_semana || '00 HRS 00:00',
-                examen || 'NO APLICA',
-                descripcion || '',
+                'Celador/a',
+                'Celador/a',
+                'Celador/a',
+                'NINGUNA',
+                '00 HRS 00:00',
+                'NO APLICA',
+                '',
                 actualizado_por || 'Jefatura'
             ]
         });
         notificar('ascensos_actualizados', { jefatura });
-        res.json({ message: "Registro guardado." });
+        res.json({ message: "Personal ingresado con éxito." });
     } catch (e) {
         console.error("[ERROR GUARDAR ASCENSO]:", e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// MODIFICACIÓN DIRECTA DESDE LA TABLA
+app.put('/api/ascensos/:id', async (req, res) => {
+    const { nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE registro_ascensos SET 
+                    nombre = COALESCE(?, nombre),
+                    nombre_ems = COALESCE(?, nombre_ems),
+                    rango_actual = COALESCE(?, rango_actual),
+                    rango_postular = COALESCE(?, rango_postular),
+                    rango_propuesto = COALESCE(?, rango_propuesto),
+                    faltas = COALESCE(?, faltas),
+                    horas_semana = COALESCE(?, horas_semana),
+                    examen = COALESCE(?, examen),
+                    descripcion = COALESCE(?, descripcion)
+                  WHERE id = ?`,
+            args: [
+                nombre ? nombre.trim() : null,
+                nombre ? nombre.trim() : null,
+                rango_actual || null,
+                rango_postular || null,
+                rango_postular || null,
+                faltas || null,
+                horas_semana ? horas_semana.trim() : null,
+                examen || null,
+                descripcion !== undefined ? descripcion.trim() : null,
+                req.params.id
+            ]
+        });
+        notificar('ascensos_actualizados');
+        res.json({ message: "Actualizado correctamente." });
+    } catch (e) {
+        console.error("[ERROR ACTUALIZAR ASCENSO]:", e.message);
         res.status(500).json({ error: e.message });
     }
 });

@@ -71,11 +71,24 @@
         }
         .sheet-td {
             border: 1px solid #232736;
-            padding: 6px 8px;
+            padding: 4px 6px;
             background: #090b10;
         }
         .sheet-row:nth-child(even) .sheet-td {
             background: #0d0f17;
+        }
+        .cell-input {
+            background: transparent;
+            width: 100%;
+            color: inherit;
+            border: none;
+            outline: none;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .cell-input:focus {
+            background: #141724;
+            box-shadow: 0 0 0 1px #f472b6;
         }
     </style>
 </head>
@@ -142,7 +155,6 @@
                     <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border bg-amber-500/15 text-amber-300 border-amber-500/30">$20K / Instrucción</span>
                 </div>
 
-                <!-- Formulario Formaciones -->
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Instructor (IC)</label>
@@ -165,7 +177,6 @@
                     </div>
                 </div>
 
-                <!-- Tabla Formaciones -->
                 <div class="overflow-x-auto pt-2">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
@@ -221,16 +232,16 @@
         ];
 
         const RANGOS_EVALUACION = [
-            { id: "Especialista", label: "『🥼』Especialista", color: "bg-sky-500/20 text-sky-300 border-sky-500/40" },
-            { id: "Subespecialista", label: "『🔬』Subespecialista", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" },
-            { id: "Residente", label: "『📚』Residente", color: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40" },
-            { id: "Interno/a", label: "『📝』Interno/a", color: "bg-pink-500/20 text-pink-300 border-pink-500/40" },
-            { id: "Estudiante", label: "『📗』Estudiante", color: "bg-blue-500/20 text-blue-300 border-blue-500/40" },
-            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
-            { id: "Enfermero/a General", label: "『💉』Enfermero/a General", color: "bg-teal-500/20 text-teal-300 border-teal-500/40" },
-            { id: "Enfermero", label: "『💉』Enfermero", color: "bg-teal-500/20 text-teal-300 border-teal-500/40" },
-            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería", color: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
-            { id: "Celador/a", label: "『👀』Celador/a", color: "bg-amber-500/20 text-amber-300 border-amber-500/40" }
+            { id: "Especialista", label: "『🥼』Especialista" },
+            { id: "Subespecialista", label: "『🔬』Subespecialista" },
+            { id: "Residente", label: "『📚』Residente" },
+            { id: "Interno/a", label: "『📝』Interno/a" },
+            { id: "Estudiante", label: "『📗』Estudiante" },
+            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" },
+            { id: "Enfermero/a General", label: "『💉』Enfermero/a General" },
+            { id: "Enfermero", label: "『💉』Enfermero" },
+            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" },
+            { id: "Celador/a", label: "『👀』Celador/a" }
         ];
 
         const JEFATURAS = [
@@ -254,87 +265,41 @@
             }
         ];
 
-        function obtenerPlacaRango(valor) {
-            const r = RANGOS_EVALUACION.find(x => x.id === valor);
-            if (r) {
-                return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border font-bold text-[10px] ${r.color}">${r.label}</span>`;
-            }
-            return `<span class="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded text-[10px] font-semibold">${valor}</span>`;
-        }
-
-        function obtenerBadgeFaltas(f) {
-            if (f === 'WARN') return '<span class="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px]">WARN</span>';
-            if (f === 'DESPIDO') return '<span class="bg-rose-600 text-white px-2 py-0.5 rounded font-black text-[10px]">DESPIDO</span>';
-            return '<span class="text-zinc-500 text-[10px]">—</span>';
-        }
-
-        function obtenerBadgeExamen(e) {
-            if (e === 'PENDIENTE') return '<span class="bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-black text-[10px]">PENDIENTE</span>';
-            if (e === 'REALIZADO') return '<span class="bg-emerald-400 text-emerald-950 px-2 py-0.5 rounded font-black text-[10px]">REALIZADO</span>';
-            if (e === 'NO APLICA') return '<span class="bg-sky-400 text-sky-950 px-2 py-0.5 rounded font-black text-[10px]">NO APLICA</span>';
-            return '<span class="text-zinc-500 text-[10px]">—</span>';
-        }
-
-        function generarOpcionesSelect() {
-            return RANGOS_EVALUACION.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
+        function generarOpcionesSelect(seleccionado) {
+            return RANGOS_EVALUACION.map(r => `
+                <option value="${r.id}" ${r.id === seleccionado ? 'selected' : ''}>${r.label}</option>
+            `).join('');
         }
 
         function inicializarEstructuraHtml() {
             const container = document.getElementById('contenedor-secciones');
-            const opciones = generarOpcionesSelect();
 
             container.innerHTML = JEFATURAS.map(j => `
                 <section id="seccion-${j.id}" class="hidden space-y-4">
                     <div class="card-ems p-5 rounded-3xl space-y-4 border-l-4 border-pink-500">
                         <h2 class="text-lg font-black text-white uppercase tracking-wider">${j.titulo}</h2>
                         
-                        <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2.5 text-xs">
-                            <div class="md:col-span-2">
+                        <!-- FORMULARIO RÁPIDO: Solo Discord ID y Nombre Completo -->
+                        <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
+                            <div class="flex-1 min-w-[180px]">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID</label>
+                                <input type="text" id="discord_${j.id}" placeholder="423984124..." class="w-full input-ems px-3 py-2 rounded-xl font-mono-code">
+                            </div>
+                            <div class="flex-2 min-w-[220px]">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Nombre Completo (IC)</label>
                                 <input type="text" id="nombre_${j.id}" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango Actual</label>
-                                <select id="actual_${j.id}" class="w-full input-ems px-2.5 py-2 rounded-xl font-bold text-xs">${opciones}</select>
-                            </div>
-                            <div>
-                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango a Postular</label>
-                                <select id="postular_${j.id}" class="w-full input-ems px-2.5 py-2 rounded-xl font-bold text-xs text-pink-300">${opciones}</select>
-                            </div>
-                            <div>
-                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Faltas</label>
-                                <select id="faltas_${j.id}" class="w-full input-ems px-2.5 py-2 rounded-xl font-bold text-xs">
-                                    <option value="NINGUNA">Ninguna</option>
-                                    <option value="WARN">WARN</option>
-                                    <option value="DESPIDO">DESPIDO</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Horas Semana</label>
-                                <input type="text" id="horas_${j.id}" placeholder="24 HRS 00:00" class="w-full input-ems px-2.5 py-2 rounded-xl font-mono-code font-bold text-yellow-400 text-center">
-                            </div>
-                            <div class="flex items-end">
-                                <button onclick="guardarRegistroSheet('${j.id}')" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs tracking-wider">+ Agregar</button>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Exámen</label>
-                                <select id="examen_${j.id}" class="w-full input-ems px-3 py-2 rounded-xl font-bold text-xs">
-                                    <option value="NO APLICA">NO APLICA</option>
-                                    <option value="PENDIENTE">PENDIENTE</option>
-                                    <option value="REALIZADO">REALIZADO</option>
-                                </select>
-                            </div>
-                            <div class="md:col-span-5">
-                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Descripción y Ausencias</label>
-                                <input type="text" id="desc_${j.id}" placeholder="Nuevo ingreso / Sin previa ausencia..." class="w-full input-ems px-3 py-2 rounded-xl">
+                                <button onclick="agregarPersonalRapido('${j.id}')" class="btn-origen px-5 py-2 rounded-xl uppercase text-xs tracking-wider font-extrabold">+ AGREGAR</button>
                             </div>
                         </div>
 
+                        <!-- TABLA INTERACTIVA -->
                         <div class="overflow-x-auto rounded-xl border border-zinc-800">
                             <table class="sheet-table">
                                 <thead>
                                     <tr>
-                                        <th class="sheet-th">NOMBRE</th>
+                                        <th class="sheet-th">NOMBRE (IC)</th>
                                         <th class="sheet-th">RANGO ACTUAL</th>
                                         <th class="sheet-th">RANGO A POSTULAR</th>
                                         <th class="sheet-th text-center">FALTAS</th>
@@ -351,7 +316,7 @@
                 </section>
             `).join('');
 
-            document.getElementById('formRango').innerHTML = opciones;
+            document.getElementById('formRango').innerHTML = generarOpcionesSelect('Celador/a');
         }
 
         inicializarEstructuraHtml();
@@ -457,6 +422,51 @@
             if (pestana === 'admin') cargarGestionAdmin();
         }
 
+        // AGREGAR CON SOLO DISCORD ID Y NOMBRE
+        async function agregarPersonalRapido(jefaturaId) {
+            const discord_id = document.getElementById(`discord_${jefaturaId}`).value.trim();
+            const nombre = document.getElementById(`nombre_${jefaturaId}`).value.trim();
+
+            if (!nombre) return alert("Ingresa el Nombre Completo.");
+
+            try {
+                const res = await fetch('/api/ascensos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jefatura: jefaturaId,
+                        discord_id: discord_id || 'N/A',
+                        nombre,
+                        actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById(`discord_${jefaturaId}`).value = '';
+                    document.getElementById(`nombre_${jefaturaId}`).value = '';
+                    await cargarTablas();
+                } else {
+                    alert("Error: " + (data.error || "No se pudo agregar"));
+                }
+            } catch (e) {
+                alert("Error de conexión al agregar.");
+            }
+        }
+
+        // EDITAR CAMPO DIRECTAMENTE DESDE LA TABLA
+        async function editarCampo(id, campo, valor) {
+            try {
+                await fetch(`/api/ascensos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [campo]: valor })
+                });
+            } catch (e) {
+                console.error("Error al actualizar celda:", e);
+            }
+        }
+
         async function cargarTablas() {
             try {
                 const res = await fetch('/api/ascensos');
@@ -473,15 +483,41 @@
 
                     cuerpo.innerHTML = filtrados.map(r => `
                         <tr class="sheet-row hover:bg-zinc-900/60 transition">
-                            <td class="sheet-td font-bold text-white">${r.nombre}</td>
-                            <td class="sheet-td">${obtenerPlacaRango(r.rango_actual)}</td>
-                            <td class="sheet-td">${obtenerPlacaRango(r.rango_postular)}</td>
-                            <td class="sheet-td text-center">${obtenerBadgeFaltas(r.faltas)}</td>
-                            <td class="sheet-td text-center font-mono-code font-bold text-yellow-400 bg-black/40">${r.horas_semana}</td>
-                            <td class="sheet-td text-center">${obtenerBadgeExamen(r.examen)}</td>
-                            <td class="sheet-td text-zinc-300 text-xs">${r.descripcion || '—'}</td>
+                            <td class="sheet-td">
+                                <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value)" class="cell-input font-bold text-white">
+                            </td>
+                            <td class="sheet-td">
+                                <select onchange="editarCampo(${r.id}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
+                                    ${generarOpcionesSelect(r.rango_actual)}
+                                </select>
+                            </td>
+                            <td class="sheet-td">
+                                <select onchange="editarCampo(${r.id}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                    ${generarOpcionesSelect(r.rango_postular)}
+                                </select>
+                            </td>
+                            <td class="sheet-td text-center">
+                                <select onchange="editarCampo(${r.id}, 'faltas', this.value)" class="cell-input font-bold text-center">
+                                    <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
+                                    <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-400 text-black font-black">WARN</option>
+                                    <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-600 text-white font-black">DESPIDO</option>
+                                </select>
+                            </td>
+                            <td class="sheet-td text-center">
+                                <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" onblur="editarCampo(${r.id}, 'horas_semana', this.value)" class="cell-input font-mono-code font-bold text-yellow-400 text-center">
+                            </td>
+                            <td class="sheet-td text-center">
+                                <select onchange="editarCampo(${r.id}, 'examen', this.value)" class="cell-input font-bold text-center">
+                                    <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
+                                    <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
+                                    <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
+                                </select>
+                            </td>
+                            <td class="sheet-td">
+                                <input type="text" value="${r.descripcion || ''}" placeholder="Escribe notas/ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value)" class="cell-input text-zinc-300">
+                            </td>
                             <td class="sheet-td text-right">
-                                <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-[11px]">Eliminar</button>
+                                <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded text-[11px]">Eliminar</button>
                             </td>
                         </tr>
                     `).join('');
@@ -491,55 +527,13 @@
             }
         }
 
-        async function guardarRegistroSheet(jefaturaId) {
-            const nombre = document.getElementById(`nombre_${jefaturaId}`).value.trim();
-            const rango_actual = document.getElementById(`actual_${jefaturaId}`).value;
-            const rango_postular = document.getElementById(`postular_${jefaturaId}`).value;
-            const faltas = document.getElementById(`faltas_${jefaturaId}`).value;
-            const horas_semana = document.getElementById(`horas_${jefaturaId}`).value.trim() || '00 HRS 00:00';
-            const examen = document.getElementById(`examen_${jefaturaId}`).value;
-            const descripcion = document.getElementById(`desc_${jefaturaId}`).value.trim();
-
-            if (!nombre) return alert("Ingresa el Nombre Completo.");
-
-            try {
-                const res = await fetch('/api/ascensos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        jefatura: jefaturaId,
-                        nombre,
-                        rango_actual,
-                        rango_postular,
-                        faltas,
-                        horas_semana,
-                        examen,
-                        descripcion,
-                        actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
-                    })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    document.getElementById(`nombre_${jefaturaId}`).value = '';
-                    document.getElementById(`horas_${jefaturaId}`).value = '';
-                    document.getElementById(`desc_${jefaturaId}`).value = '';
-                    await cargarTablas();
-                } else {
-                    alert("Error: " + (data.error || "No se pudo guardar"));
-                }
-            } catch (err) {
-                alert("Error de conexión al guardar el registro.");
-            }
-        }
-
         async function eliminarRegistro(id) {
-            if (!confirm("¿Eliminar registro?")) return;
+            if (!confirm("¿Deseas eliminar este registro de la evaluación?")) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
             cargarTablas();
         }
 
+        // SECCIÓN FORMACIONES
         function calcularTotalPreview() {
             const cant = parseInt(document.getElementById('formCant').value) || 0;
             const total = cant * 20000;
@@ -593,7 +587,7 @@
                 cuerpo.innerHTML = data.map(f => `
                     <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
                         <td class="p-3 font-bold text-white">${f.instructor}</td>
-                        <td class="p-3">${obtenerPlacaRango(f.rango)}</td>
+                        <td class="p-3 text-pink-300 font-semibold">${f.rango}</td>
                         <td class="p-3 text-center font-mono-code font-bold text-yellow-400">${f.instrucciones_hechas}</td>
                         <td class="p-3 font-mono-code font-black text-emerald-400 text-sm">$${f.total_pago.toLocaleString()}</td>
                         <td class="p-3 text-zinc-400 text-[11px]">${f.actualizado_por}</td>
@@ -613,6 +607,7 @@
             cargarFormaciones();
         }
 
+        // PANEL ADMIN
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
             const data = await res.json();
