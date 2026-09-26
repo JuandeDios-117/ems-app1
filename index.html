@@ -141,7 +141,7 @@
             <p class="text-center text-xs text-zinc-400 cursor-pointer hover:text-pink-300 pt-1" onclick="toggleAuth()" id="toggleAuthTxt">¿No tienes cuenta? Regístrate</p>
         </div>
 
-        <!-- SECCIONES PRINCIPALES -->
+        <!-- SECCIONES PRINCIPALES (CIRUGÍA, MEDICINA, ENFERMERÍA / BÁSICA) -->
         <main id="contenedor-secciones"></main>
 
         <!-- JEFATURA DE FORMACIONES -->
@@ -231,17 +231,27 @@
             "Supervisor"
         ];
 
+        // Todos los rangos ordenados por escalas
         const RANGOS_EVALUACION = [
-            { id: "Especialista", label: "『🥼』Especialista" },
-            { id: "Subespecialista", label: "『🔬』Subespecialista" },
-            { id: "Residente", label: "『📚』Residente" },
-            { id: "Interno/a", label: "『📝』Interno/a" },
-            { id: "Estudiante", label: "『📗』Estudiante" },
-            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" },
-            { id: "Enfermero/a General", label: "『💉』Enfermero/a General" },
-            { id: "Enfermero", label: "『💉』Enfermero" },
+            { id: "Especialista", label: "『🥼』Especialista", escala: "medica" },
+            { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" },
+            { id: "Residente", label: "『📚』Residente", escala: "medica" },
+            { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" },
+            { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" },
+            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
+            { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" },
+            { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" },
+            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería", escala: "basica" },
+            { id: "Celador/a", label: "『👀』Celador/a", escala: "basica" }
+        ];
+
+        // Rangos para Escala Básica y Enfermería (Celador hasta Enfermero Especialista)
+        const RANGOS_ESCALA_ENFERMERIA = [
+            { id: "Celador/a", label: "『👀』Celador/a" },
             { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" },
-            { id: "Celador/a", label: "『👀』Celador/a" }
+            { id: "Enfermero", label: "『💉』Enfermero" },
+            { id: "Enfermero/a General", label: "『💉』Enfermero/a General" },
+            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" }
         ];
 
         const JEFATURAS = [
@@ -249,25 +259,81 @@
                 id: 'cirugia', 
                 tituloNav: '🏥 CIRUGÍA',
                 titulo: '🏥 Jefatura de Cirugía · Evaluación de Ascensos',
+                escala: 'cirugia',
                 rangosPermitidos: ["Jefa de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'medicina', 
                 tituloNav: '💊 MEDICINA',
                 titulo: '💊 Jefatura de Medicina · Evaluación de Ascensos',
+                escala: 'medicina',
                 rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'enfermeria', 
-                tituloNav: '💉 ENFERMERÍA',
-                titulo: '💉 Dirección de Enfermería · Evaluación de Ascensos',
+                tituloNav: '💉 ENFERMERÍA & BÁSICA',
+                titulo: '💉 Escala Básica y Dirección de Enfermería',
+                escala: 'enfermeria',
                 rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             }
         ];
 
-        function generarOpcionesSelect(seleccionado) {
-            return RANGOS_EVALUACION.map(r => `
-                <option value="${r.id}" ${r.id === seleccionado ? 'selected' : ''}>${r.label}</option>
+        // Parsing y Semáforo de Horas Semanales
+        function parsearHorasNumericas(str) {
+            if (!str) return 0;
+            const limpio = str.toUpperCase().replace('HRS', '').replace('HR', '').trim();
+            const partes = limpio.split(':');
+            const h = parseFloat(partes[0]) || 0;
+            const m = partes[1] ? (parseFloat(partes[1]) || 0) / 60 : 0;
+            return h + m;
+        }
+
+        function obtenerClaseSemaforoHoras(str) {
+            const horas = parsearHorasNumericas(str);
+            if (horas < 6) {
+                return 'bg-rose-950/70 text-rose-300 border border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.3)]';
+            }
+            if (horas < 8) {
+                return 'bg-amber-950/70 text-amber-300 border border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]';
+            }
+            return 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.2)]';
+        }
+
+        // Generador dinámico de selects para rangos a postular
+        function generarOpcionesPostular(rangoActual, examenRealizado, jefaturaActual, postularSeleccionado) {
+            let lista = [];
+
+            if (jefaturaActual === 'enfermeria') {
+                lista = [...RANGOS_ESCALA_ENFERMERIA];
+                // Si es Enfermero/a Especialista y aprobó su examen, puede postular a Escala Médica
+                if (rangoActual === 'Enfermero/a Especialista' && examenRealizado === 'REALIZADO') {
+                    lista.push(
+                        { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía", destinoJefatura: "cirugia", rangoReal: "Interno/a" },
+                        { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina", destinoJefatura: "medicina", rangoReal: "Interno/a" },
+                        { id: "Residente (Cirugía)", label: "『📚』Residente ➔ Cirugía", destinoJefatura: "cirugia", rangoReal: "Residente" },
+                        { id: "Residente (Medicina)", label: "『📚』Residente ➔ Medicina", destinoJefatura: "medicina", rangoReal: "Residente" }
+                    );
+                }
+            } else {
+                lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
+            }
+
+            return lista.map(r => `
+                <option value="${r.id}" ${r.id === postularSeleccionado || r.rangoReal === postularSeleccionado ? 'selected' : ''}>
+                    ${r.label}
+                </option>
+            `).join('');
+        }
+
+        function generarOpcionesActual(jefaturaActual, actualSeleccionado) {
+            let lista = jefaturaActual === 'enfermeria' 
+                ? RANGOS_ESCALA_ENFERMERIA 
+                : RANGOS_EVALUACION.filter(r => r.escala === 'medica');
+
+            return lista.map(r => `
+                <option value="${r.id}" ${r.id === actualSeleccionado ? 'selected' : ''}>
+                    ${r.label}
+                </option>
             `).join('');
         }
 
@@ -277,9 +343,16 @@
             container.innerHTML = JEFATURAS.map(j => `
                 <section id="seccion-${j.id}" class="hidden space-y-4">
                     <div class="card-ems p-5 rounded-3xl space-y-4 border-l-4 border-pink-500">
-                        <h2 class="text-lg font-black text-white uppercase tracking-wider">${j.titulo}</h2>
+                        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-zinc-800 pb-3">
+                            <h2 class="text-lg font-black text-white uppercase tracking-wider">${j.titulo}</h2>
+                            <div class="flex items-center gap-2 text-[10px] font-bold">
+                                <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/40">&lt;6h: Rojo</span>
+                                <span class="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40">6h-8h: Amarillo</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">&ge;8h: Verde</span>
+                            </div>
+                        </div>
                         
-                        <!-- FORMULARIO RÁPIDO: Solo Discord ID y Nombre Completo -->
+                        <!-- Formulario de Ingreso Rápido -->
                         <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
                             <div class="flex-1 min-w-[180px]">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID</label>
@@ -294,7 +367,7 @@
                             </div>
                         </div>
 
-                        <!-- TABLA INTERACTIVA -->
+                        <!-- Hoja de Cálculo Interactiva -->
                         <div class="overflow-x-auto rounded-xl border border-zinc-800">
                             <table class="sheet-table">
                                 <thead>
@@ -316,7 +389,7 @@
                 </section>
             `).join('');
 
-            document.getElementById('formRango').innerHTML = generarOpcionesSelect('Celador/a');
+            document.getElementById('formRango').innerHTML = RANGOS_EVALUACION.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
         }
 
         inicializarEstructuraHtml();
@@ -422,7 +495,6 @@
             if (pestana === 'admin') cargarGestionAdmin();
         }
 
-        // AGREGAR CON SOLO DISCORD ID Y NOMBRE
         async function agregarPersonalRapido(jefaturaId) {
             const discord_id = document.getElementById(`discord_${jefaturaId}`).value.trim();
             const nombre = document.getElementById(`nombre_${jefaturaId}`).value.trim();
@@ -454,16 +526,40 @@
             }
         }
 
-        // EDITAR CAMPO DIRECTAMENTE DESDE LA TABLA
-        async function editarCampo(id, campo, valor) {
+        // LÓGICA DE EDICIÓN Y MOVIMIENTO AUTOMÁTICO ENTRE TABLAS
+        async function editarCampo(id, campo, valor, jefaturaActual) {
+            let datosAEnviar = { [campo]: valor };
+
+            // Control de transferencia automática de Enfermería a Cirugía o Medicina
+            if (campo === 'rango_postular' && jefaturaActual === 'enfermeria') {
+                if (valor.includes('Cirugía')) {
+                    const rangoLimpio = valor.replace(' (Cirugía)', '');
+                    datosAEnviar = {
+                        jefatura: 'cirugia',
+                        rango_actual: rangoLimpio,
+                        rango_postular: rangoLimpio
+                    };
+                    alert(`✅ ¡Personal ascendido con éxito! Se ha movido automáticamente a la Jefatura de Cirugía con el rango de ${rangoLimpio}.`);
+                } else if (valor.includes('Medicina')) {
+                    const rangoLimpio = valor.replace(' (Medicina)', '');
+                    datosAEnviar = {
+                        jefatura: 'medicina',
+                        rango_actual: rangoLimpio,
+                        rango_postular: rangoLimpio
+                    };
+                    alert(`✅ ¡Personal ascendido con éxito! Se ha movido automáticamente a la Jefatura de Medicina con el rango de ${rangoLimpio}.`);
+                }
+            }
+
             try {
                 await fetch(`/api/ascensos/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ [campo]: valor })
+                    body: JSON.stringify(datosAEnviar)
                 });
+                await cargarTablas();
             } catch (e) {
-                console.error("Error al actualizar celda:", e);
+                console.error("Error al actualizar:", e);
             }
         }
 
@@ -481,46 +577,55 @@
                         return;
                     }
 
-                    cuerpo.innerHTML = filtrados.map(r => `
-                        <tr class="sheet-row hover:bg-zinc-900/60 transition">
-                            <td class="sheet-td">
-                                <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value)" class="cell-input font-bold text-white">
-                            </td>
-                            <td class="sheet-td">
-                                <select onchange="editarCampo(${r.id}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
-                                    ${generarOpcionesSelect(r.rango_actual)}
-                                </select>
-                            </td>
-                            <td class="sheet-td">
-                                <select onchange="editarCampo(${r.id}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
-                                    ${generarOpcionesSelect(r.rango_postular)}
-                                </select>
-                            </td>
-                            <td class="sheet-td text-center">
-                                <select onchange="editarCampo(${r.id}, 'faltas', this.value)" class="cell-input font-bold text-center">
-                                    <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
-                                    <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-400 text-black font-black">WARN</option>
-                                    <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-600 text-white font-black">DESPIDO</option>
-                                </select>
-                            </td>
-                            <td class="sheet-td text-center">
-                                <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" onblur="editarCampo(${r.id}, 'horas_semana', this.value)" class="cell-input font-mono-code font-bold text-yellow-400 text-center">
-                            </td>
-                            <td class="sheet-td text-center">
-                                <select onchange="editarCampo(${r.id}, 'examen', this.value)" class="cell-input font-bold text-center">
-                                    <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                                    <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
-                                    <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
-                                </select>
-                            </td>
-                            <td class="sheet-td">
-                                <input type="text" value="${r.descripcion || ''}" placeholder="Escribe notas/ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value)" class="cell-input text-zinc-300">
-                            </td>
-                            <td class="sheet-td text-right">
-                                <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded text-[11px]">Eliminar</button>
-                            </td>
-                        </tr>
-                    `).join('');
+                    cuerpo.innerHTML = filtrados.map(r => {
+                        const semaforoClase = obtenerClaseSemaforoHoras(r.horas_semana);
+                        const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, j.id, r.rango_postular);
+                        const opcionesActual = generarOpcionesActual(j.id, r.rango_actual);
+
+                        return `
+                            <tr class="sheet-row hover:bg-zinc-900/60 transition">
+                                <td class="sheet-td">
+                                    <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${j.id}')" class="cell-input font-bold text-white">
+                                </td>
+                                <td class="sheet-td">
+                                    <select onchange="editarCampo(${r.id}, 'rango_actual', this.value, '${j.id}')" class="cell-input font-bold text-sky-300">
+                                        ${opcionesActual}
+                                    </select>
+                                </td>
+                                <td class="sheet-td">
+                                    <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${j.id}')" class="cell-input font-bold text-pink-300">
+                                        ${opcionesPostular}
+                                    </select>
+                                </td>
+                                <td class="sheet-td text-center">
+                                    <select onchange="editarCampo(${r.id}, 'faltas', this.value, '${j.id}')" class="cell-input font-bold text-center">
+                                        <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
+                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-400 text-black font-black">WARN</option>
+                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-600 text-white font-black">DESPIDO</option>
+                                    </select>
+                                </td>
+                                <td class="sheet-td text-center">
+                                    <input type="text" value="${r.horas_semana || '00 HRS 00:00'}" 
+                                           onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${j.id}')" 
+                                           class="cell-input font-mono-code font-black text-center rounded-lg px-2 py-1 ${semaforoClase}"
+                                           title="Rojo (<6h) | Amarillo (6h-8h) | Verde (>=8h)">
+                                </td>
+                                <td class="sheet-td text-center">
+                                    <select onchange="editarCampo(${r.id}, 'examen', this.value, '${j.id}')" class="cell-input font-bold text-center">
+                                        <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
+                                        <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
+                                        <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
+                                    </select>
+                                </td>
+                                <td class="sheet-td">
+                                    <input type="text" value="${r.descripcion || ''}" placeholder="Notas/ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${j.id}')" class="cell-input text-zinc-300">
+                                </td>
+                                <td class="sheet-td text-right">
+                                    <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-[11px]">Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
                 });
             } catch (e) {
                 console.error("Error al cargar ascensos:", e);
