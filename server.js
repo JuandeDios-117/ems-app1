@@ -57,7 +57,7 @@ function notificar(evento, data = {}) {
     io.emit('db_update', { evento, ...data });
 }
 
-// 1. REGISTRO & LOGIN
+// 1. AUTENTICACIÓN
 app.post('/api/register', async (req, res) => {
     const { nombre, usuario, password } = req.body;
     const userClean = (usuario || '').trim().toLowerCase();
@@ -73,31 +73,23 @@ app.post('/api/register', async (req, res) => {
         });
 
         if (check.rows && check.rows.length > 0) {
-            return res.status(400).json({ error: "El nombre de usuario ya existe. Intenta iniciar sesión." });
+            return res.status(400).json({ error: "El usuario ya existe." });
         }
 
         const count = await db.execute("SELECT COUNT(*) as total FROM usuarios");
         const esPrimero = Number(count.rows[0].total) === 0;
         const rangoInicial = esPrimero ? 'Director (Admin)' : 'Supervisor';
         const rolInicial = esPrimero ? 'admin' : 'empleado';
-        const comision = esPrimero ? 0 : 30;
 
         const result = await db.execute({
-            sql: "INSERT INTO usuarios (nombre, usuario, password, rango, rol, comision_porcentaje) VALUES (?, ?, ?, ?, ?, ?)",
-            args: [nombre.trim(), userClean, String(password), rangoInicial, rolInicial, comision]
+            sql: "INSERT INTO usuarios (nombre, usuario, password, rango, rol) VALUES (?, ?, ?, ?, ?)",
+            args: [nombre.trim(), userClean, String(password), rangoInicial, rolInicial]
         });
 
         notificar('nuevo_usuario');
-        res.json({
-            id: Number(result.lastInsertRowid),
-            nombre: nombre.trim(),
-            usuario: userClean,
-            rango: rangoInicial,
-            rol: rolInicial
-        });
+        res.json({ id: Number(result.lastInsertRowid), nombre: nombre.trim(), usuario: userClean, rango: rangoInicial, rol: rolInicial });
     } catch (e) {
-        console.error("[REGISTER ERROR]:", e.message);
-        res.status(500).json({ error: "Error registrando usuario en la base de datos." });
+        res.status(500).json({ error: "Error registrando usuario." });
     }
 });
 
@@ -110,32 +102,23 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(comision_porcentaje, 30) as comision_porcentaje FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
+        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
         const result = await db.execute({ sql, args: [userClean, String(password)] });
         
         if (!result.rows || result.rows.length === 0) {
             return res.status(401).json({ error: "Usuario o contraseña incorrectos." });
         }
 
-        const user = result.rows[0];
-        res.json({
-            id: Number(user.id),
-            nombre: user.nombre,
-            usuario: user.usuario,
-            rango: user.rango,
-            rol: user.rol,
-            comision_porcentaje: Number(user.comision_porcentaje)
-        });
+        res.json(result.rows[0]);
     } catch (e) {
-        console.error("[LOGIN ERROR]:", e.message);
         res.status(500).json({ error: "Error al validar credenciales." });
     }
 });
 
-// 2. GESTIÓN DE USUARIOS Y RANGOS (ADMIN)
+// 2. PANEL ADMIN
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const result = await db.execute("SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(comision_porcentaje, 30) as comision_porcentaje, created_at FROM usuarios ORDER BY id ASC");
+        const result = await db.execute("SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -143,14 +126,14 @@ app.get('/api/usuarios', async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', async (req, res) => {
-    const { rango, rol, comision_porcentaje } = req.body;
+    const { rango, rol } = req.body;
     try {
         await db.execute({
-            sql: "UPDATE usuarios SET rango = ?, rol = ?, comision_porcentaje = ? WHERE id = ?",
-            args: [rango, rol, Number(comision_porcentaje) || 30, req.params.id]
+            sql: "UPDATE usuarios SET rango = ?, rol = ? WHERE id = ?",
+            args: [rango, rol, req.params.id]
         });
         notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango, rol });
-        res.json({ message: "Rango actualizado con éxito." });
+        res.json({ message: "Rango actualizado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -158,22 +141,18 @@ app.put('/api/usuarios/:id', async (req, res) => {
 
 app.delete('/api/usuarios/:id', async (req, res) => {
     try {
-        await db.execute({ sql: "DELETE FROM facturas WHERE usuario_id = ?", args: [req.params.id] });
         await db.execute({ sql: "DELETE FROM usuarios WHERE id = ?", args: [req.params.id] });
         notificar('usuario_eliminado', { usuario_id: Number(req.params.id) });
-        res.json({ message: "Usuario eliminado correctamente." });
+        res.json({ message: "Usuario eliminado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// 3. TABLAS DE JEFATURAS (ASCENSOS, HORAS Y DISCORD ID)
-app.get('/api/ascensos/:jefatura', async (req, res) => {
+// 3. REGISTROS DE EVALUACIÓN (CIRUGÍA, MEDICINA, ENFERMERÍA, BÁSICA)
+app.get('/api/ascensos', async (req, res) => {
     try {
-        const result = await db.execute({
-            sql: "SELECT * FROM registro_ascensos WHERE jefatura = ? ORDER BY horas_hechas DESC",
-            args: [req.params.jefatura]
-        });
+        const result = await db.execute("SELECT * FROM registro_ascensos ORDER BY id DESC");
         res.json(result.rows || []);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -181,19 +160,29 @@ app.get('/api/ascensos/:jefatura', async (req, res) => {
 });
 
 app.post('/api/ascensos', async (req, res) => {
-    const { jefatura, discord_id, nombre_ems, rango_actual, rango_propuesto, horas_hechas, notas, actualizado_por } = req.body;
-    if (!jefatura || !discord_id || !nombre_ems) {
-        return res.status(400).json({ error: "Faltan campos obligatorios para el registro." });
+    const { jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion, actualizado_por } = req.body;
+    if (!jefatura || !nombre || !rango_actual || !rango_postular) {
+        return res.status(400).json({ error: "Faltan campos por completar." });
     }
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_ascensos (jefatura, discord_id, nombre_ems, rango_actual, rango_propuesto, horas_hechas, notas, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [jefatura, discord_id, nombre_ems, rango_actual, rango_propuesto, parseFloat(horas_hechas) || 0, notas || '', actualizado_por || 'Jefatura']
+            sql: `INSERT INTO registro_ascensos (jefatura, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+                jefatura, 
+                nombre.trim(), 
+                rango_actual, 
+                rango_postular, 
+                faltas || 'NINGUNA', 
+                horas_semana || '00 HRS 00:00', 
+                examen || 'NO APLICA', 
+                descripcion || '', 
+                actualizado_por || 'Jefatura'
+            ]
         });
         notificar('ascensos_actualizados', { jefatura });
-        res.json({ message: "Personal ingresado a la tabla de ascensos." });
+        res.json({ message: "Registro guardado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -203,58 +192,49 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     try {
         await db.execute({ sql: "DELETE FROM registro_ascensos WHERE id = ?", args: [req.params.id] });
         notificar('ascensos_actualizados');
-        res.json({ message: "Registro retirado de la tabla." });
+        res.json({ message: "Registro eliminado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-// 4. FACTURACIÓN MÉDICA
-app.post('/api/facturas', async (req, res) => {
-    const { usuario_id, paciente, dni, items } = req.body;
-    if (!usuario_id || !items || items.length === 0) {
-        return res.status(400).json({ error: "Datos incompletos de la atención médica." });
-    }
-
+// 4. JEFATURA DE FORMACIONES ($20,000 POR INSTRUCCIÓN)
+app.get('/api/formaciones', async (req, res) => {
     try {
-        const userRes = await db.execute({ sql: "SELECT nombre, comision_porcentaje FROM usuarios WHERE id = ?", args: [usuario_id] });
-        if (!userRes.rows || userRes.rows.length === 0) {
-            return res.status(404).json({ error: "Médico no encontrado." });
-        }
-        const user = userRes.rows[0];
-
-        let totalCobrado = 0;
-        let costeSuministros = 0;
-
-        items.forEach(it => {
-            totalCobrado += (it.precio * it.cantidad);
-            costeSuministros += ((it.costo || 0) * it.cantidad);
-        });
-
-        const gananciaBruta = totalCobrado - costeSuministros;
-        const comisionMedico = gananciaBruta > 0 ? gananciaBruta * (user.comision_porcentaje / 100) : 0;
-        const fondoHospital = totalCobrado - comisionMedico;
-
-        const result = await db.execute({
-            sql: `INSERT INTO facturas (usuario_id, paciente, dni, total_cobrado, coste_suministros, fondo_hospital, comision_medico, items_json)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [usuario_id, paciente, dni || 'S/N', totalCobrado, costeSuministros, fondoHospital, comisionMedico, JSON.stringify(items)]
-        });
-
-        notificar('nueva_factura', { medico: user.nombre, paciente, total: totalCobrado });
-        res.json({ id: Number(result.lastInsertRowid), total: totalCobrado, comision: comisionMedico, hospital: fondoHospital });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
-
-app.get('/api/mis-facturas/:id', async (req, res) => {
-    try {
-        const result = await db.execute({
-            sql: "SELECT * FROM facturas WHERE usuario_id = ? ORDER BY fecha DESC LIMIT 50",
-            args: [req.params.id]
-        });
+        const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
         res.json(result.rows || []);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/formaciones', async (req, res) => {
+    const { instructor, rango, instrucciones_hechas, notas, actualizado_por } = req.body;
+    const cant = parseInt(instrucciones_hechas) || 0;
+    if (!instructor || !rango) {
+        return res.status(400).json({ error: "Ingresa el nombre del instructor y su rango." });
+    }
+
+    const totalPago = cant * 20000;
+
+    try {
+        await db.execute({
+            sql: `INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, total_pago, notas, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?)`,
+            args: [instructor.trim(), rango, cant, totalPago, notas || '', actualizado_por || 'Jefe de Formaciones']
+        });
+        notificar('formaciones_actualizadas');
+        res.json({ message: "Instructor registrado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/formaciones/:id', async (req, res) => {
+    try {
+        await db.execute({ sql: "DELETE FROM registro_formaciones WHERE id = ?", args: [req.params.id] });
+        notificar('formaciones_actualizadas');
+        res.json({ message: "Registro eliminado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

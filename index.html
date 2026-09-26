@@ -3,40 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMS Origen Roleplay - Sistema de Gestión y Ascensos</title>
+    <title>EMS Origen Roleplay - Sistema de Evaluación</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #06070a;
             background-image: 
-                radial-gradient(circle at 50% -10%, rgba(244, 114, 182, 0.15) 0%, transparent 55%),
-                radial-gradient(circle at 10% 30%, rgba(236, 72, 153, 0.04) 0%, transparent 40%),
-                radial-gradient(circle at 90% 70%, rgba(219, 39, 119, 0.04) 0%, transparent 40%);
+                radial-gradient(circle at 50% -10%, rgba(244, 114, 182, 0.16) 0%, transparent 60%),
+                radial-gradient(circle at 10% 40%, rgba(236, 72, 153, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 90% 70%, rgba(219, 39, 119, 0.04) 0%, transparent 50%);
             color: #f3f4f6;
-            font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+            font-family: 'Montserrat', system-ui, sans-serif;
             min-height: 100vh;
         }
-        .font-mono-code {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .font-mono-code { font-family: 'JetBrains Mono', monospace; }
         .card-ems {
-            background: linear-gradient(180deg, rgba(17, 18, 26, 0.92) 0%, rgba(10, 11, 16, 0.96) 100%);
-            border: 1px solid rgba(244, 114, 182, 0.16);
-            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75), 0 0 20px rgba(244, 114, 182, 0.04);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(180deg, rgba(16, 17, 24, 0.95) 0%, rgba(10, 11, 15, 0.98) 100%);
+            border: 1px solid rgba(244, 114, 182, 0.2);
+            box-shadow: 0 14px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 114, 182, 0.04);
         }
         .input-ems {
             background-color: #040508;
-            border: 1px solid rgba(244, 114, 182, 0.22);
+            border: 1px solid rgba(244, 114, 182, 0.25);
             color: #ffffff;
             transition: all 0.2s ease;
         }
         .input-ems:focus {
             border-color: #f472b6;
             outline: none;
-            box-shadow: 0 0 14px rgba(244, 114, 182, 0.35);
+            box-shadow: 0 0 14px rgba(244, 114, 182, 0.4);
         }
         .btn-origen {
             background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
@@ -53,7 +50,7 @@
         .btn-tab-inactive {
             background: rgba(14, 16, 24, 0.85);
             color: #9ca3af;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.2s ease;
         }
         .btn-tab-inactive:hover {
@@ -61,18 +58,35 @@
             color: #f472b6;
             border-color: rgba(244, 114, 182, 0.3);
         }
-        .text-glow {
-            text-shadow: 0 0 16px rgba(244, 114, 182, 0.45);
+
+        /* Estilo Sheet de Google Sheets oficial */
+        .sheet-table { border-collapse: collapse; width: 100%; font-size: 11px; }
+        .sheet-th {
+            background: #e5c5d3;
+            color: #1f1118;
+            border: 1px solid #c99fb1;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 8px 6px;
+            letter-spacing: 0.5px;
+        }
+        .sheet-td {
+            border: 1px solid #232736;
+            padding: 6px 8px;
+            background: #090b10;
+        }
+        .sheet-row:nth-child(even) .sheet-td {
+            background: #0d0f17;
         }
     </style>
 </head>
-<body class="p-4 md:p-6 text-sm">
-    <div class="max-w-7xl mx-auto space-y-5">
+<body class="p-3 md:p-6 text-sm">
+    <div class="max-w-7xl mx-auto space-y-4">
         
-        <!-- ENCABEZADO OFICIAL EMS ORIGEN ROLEPLAY -->
-        <header class="card-ems p-5 md:p-6 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500 relative overflow-hidden">
-            <div class="flex items-center gap-4 z-10">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-pink-500/20 to-black/80 border border-pink-500/40 flex items-center justify-center p-2 shadow-inner shrink-0">
+        <!-- HEADER EMS ORIGEN -->
+        <header class="card-ems p-4 md:p-5 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500">
+            <div class="flex items-center gap-3">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-b from-pink-500/20 to-black/80 border border-pink-500/40 flex items-center justify-center p-2 shrink-0">
                     <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]" fill="none">
                         <path d="M50 8L82 22V52C82 72 50 92 50 92C50 92 18 72 18 52V22L50 8Z" stroke="#f472b6" stroke-width="4" fill="#13141f"/>
                         <path d="M50 24V70M32 46H68" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
@@ -80,76 +94,108 @@
                     </svg>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-black tracking-widest text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-md border border-pink-500/30 uppercase">Sistema Departamental</span>
-                    </div>
-                    <h1 class="text-2xl md:text-3xl font-black uppercase tracking-wider text-white mt-0.5">
-                        EMS <span class="text-pink-400 text-glow">ORIGEN</span> <span class="text-xs font-bold text-zinc-400 tracking-normal block md:inline md:ml-1">ROLEPLAY</span>
+                    <h1 class="text-xl md:text-2xl font-black uppercase text-white">
+                        EMS <span class="text-pink-400">ORIGEN</span> <span class="text-xs font-bold text-zinc-400">ROLEPLAY</span>
                     </h1>
-                    <p class="text-xs text-zinc-400 font-medium tracking-wide">Control de Evaluaciones · Registro de Servicio · San Andreas</p>
+                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas y Formaciones</p>
                 </div>
             </div>
-            
-            <div id="userInfo" class="z-10 text-xs text-zinc-400 flex items-center gap-3"></div>
+            <div id="userInfo" class="text-xs text-zinc-400 flex items-center gap-3"></div>
         </header>
 
-        <!-- BARRA SUPERIOR DE NAVEGACIÓN -->
+        <!-- NAVEGACIÓN -->
         <nav class="flex flex-wrap items-center card-ems p-2 rounded-2xl gap-2 hidden" id="navBarContenedor"></nav>
 
-        <!-- ACCESO / REGISTRO -->
-        <div id="seccion-auth" class="max-w-md mx-auto card-ems p-8 rounded-3xl space-y-5 mt-10 border border-pink-500/30">
+        <!-- AUTH -->
+        <div id="seccion-auth" class="max-w-md mx-auto card-ems p-8 rounded-3xl space-y-4 mt-10 border border-pink-500/30">
             <div class="text-center space-y-1">
-                <div class="w-12 h-12 mx-auto rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-xl">
-                    🏥
-                </div>
-                <h2 class="text-xl font-black text-white uppercase tracking-wider pt-2" id="authTitle">Acceso San Andreas EMS</h2>
-                <p class="text-xs text-zinc-400">Autenticación de personal médico y de supervisión.</p>
+                <div class="w-12 h-12 mx-auto rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-xl">🏥</div>
+                <h2 class="text-lg font-black text-white uppercase pt-2" id="authTitle">Acceso San Andreas EMS</h2>
+                <p class="text-xs text-zinc-400">Autenticación de personal médico y directivo.</p>
             </div>
-
             <div id="campoNombre" class="hidden">
-                <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">Nombre Completo (IC)</label>
-                <input type="text" id="regNombre" placeholder="Dr. John Watson" class="w-full input-ems px-4 py-2.5 rounded-xl text-sm font-semibold placeholder:text-zinc-600">
+                <label class="block text-xs font-bold text-zinc-300 mb-1">Nombre Completo (IC)</label>
+                <input type="text" id="regNombre" placeholder="Dr. John Watson" class="w-full input-ems px-3 py-2 rounded-xl text-sm">
             </div>
-
             <div>
-                <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">Usuario</label>
-                <input type="text" id="authUsuario" placeholder="watson" class="w-full input-ems px-4 py-2.5 rounded-xl text-sm font-semibold placeholder:text-zinc-600">
+                <label class="block text-xs font-bold text-zinc-300 mb-1">Usuario</label>
+                <input type="text" id="authUsuario" placeholder="watson" class="w-full input-ems px-3 py-2 rounded-xl text-sm">
             </div>
-
             <div>
-                <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase tracking-wider">Contraseña</label>
-                <input type="password" id="authPassword" placeholder="••••••••" class="w-full input-ems px-4 py-2.5 rounded-xl text-sm font-semibold placeholder:text-zinc-600">
+                <label class="block text-xs font-bold text-zinc-300 mb-1">Contraseña</label>
+                <input type="password" id="authPassword" placeholder="••••••••" class="w-full input-ems px-3 py-2 rounded-xl text-sm">
             </div>
-
-            <button onclick="procesarAuth()" class="w-full btn-origen py-3 rounded-xl uppercase text-xs tracking-wider" id="btnAuth">Ingresar</button>
-
-            <p class="text-center text-xs text-zinc-400 cursor-pointer hover:text-pink-300 transition pt-1" onclick="toggleAuth()" id="toggleAuthTxt">
-                ¿No tienes cuenta? Regístrate
-            </p>
+            <button onclick="procesarAuth()" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs" id="btnAuth">Ingresar</button>
+            <p class="text-center text-xs text-zinc-400 cursor-pointer hover:text-pink-300 pt-1" onclick="toggleAuth()" id="toggleAuthTxt">¿No tienes cuenta? Regístrate</p>
         </div>
 
-        <!-- SECCIONES DE LAS 4 JEFATURAS -->
+        <!-- SECCIONES PRINCIPALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- PANEL DE DIRECCIÓN (ADMINISTRACIÓN GENERAL) -->
-        <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-pink-500">
-            <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800/80 pb-4">
-                <div>
-                    <h2 class="text-xl font-black text-white uppercase flex items-center gap-2">
-                        👑 PANEL DE DIRECCIÓN GENERAL (ADMIN)
-                    </h2>
-                    <p class="text-xs text-zinc-400 mt-0.5">Asignación de rangos jerárquicos y control de accesos a las jefaturas departamentales.</p>
+        <!-- JEFATURA DE FORMACIONES -->
+        <section id="seccion-formaciones" class="hidden space-y-4">
+            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
+                <div class="flex flex-wrap justify-between items-center gap-3 border-b border-zinc-800 pb-3">
+                    <div>
+                        <h2 class="text-lg font-black text-white uppercase">📚 Jefatura de Formaciones · Liquidación de Instrucciones</h2>
+                        <p class="text-xs text-zinc-400">Registro de capacitadores y cálculo automático de nómina ($20,000 por instrucción).</p>
+                    </div>
+                    <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border bg-amber-500/15 text-amber-300 border-amber-500/30">$20K / Instrucción</span>
+                </div>
+
+                <!-- Formulario Formaciones -->
+                <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Instructor (IC)</label>
+                        <input type="text" id="formInstructor" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
+                        <select id="formRango" class="w-full input-ems px-3 py-2 rounded-xl font-semibold"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Instrucciones Hechas</label>
+                        <input type="number" id="formCant" placeholder="3" min="0" oninput="calcularTotalPreview()" class="w-full input-ems px-3 py-2 rounded-xl font-mono-code font-bold text-center text-yellow-400">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Total Calculado</label>
+                        <div id="formPreviewPago" class="w-full bg-zinc-950 px-3 py-2 rounded-xl font-mono-code font-black text-emerald-400 border border-zinc-800 text-sm">$0</div>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="guardarRegistroFormacion()" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs tracking-wider">+ Liquidar</button>
+                    </div>
+                </div>
+
+                <!-- Tabla Formaciones -->
+                <div class="overflow-x-auto pt-2">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-zinc-800 text-zinc-400 uppercase text-[11px]">
+                                <th class="p-3">Instructor</th>
+                                <th class="p-3">Rango</th>
+                                <th class="p-3 text-center">Instrucciones</th>
+                                <th class="p-3">Total a Pagar</th>
+                                <th class="p-3">Asentado Por</th>
+                                <th class="p-3 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaFormaciones" class="divide-y divide-zinc-800/40"></tbody>
+                    </table>
                 </div>
             </div>
+        </section>
 
+        <!-- PANEL ADMIN -->
+        <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-pink-500">
+            <h2 class="text-xl font-black text-white uppercase">👑 Panel de Dirección General (Admin)</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-zinc-800 text-zinc-400 uppercase text-[11px] tracking-wider">
-                            <th class="p-3.5">Personal</th>
-                            <th class="p-3.5">Rango Asignado</th>
-                            <th class="p-3.5">Permisos del Sistema</th>
-                            <th class="p-3.5 text-right">Acción</th>
+                        <tr class="border-b border-zinc-800 text-zinc-400 uppercase text-[11px]">
+                            <th class="p-3">Personal</th>
+                            <th class="p-3">Rango Oficial</th>
+                            <th class="p-3">Permisos</th>
+                            <th class="p-3 text-right">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaAdmin" class="divide-y divide-zinc-800/50"></tbody>
@@ -158,20 +204,6 @@
         </div>
 
     </div>
-
-    <!-- DATALIST CON LOS RANGOS OFICIALES DE EMS ORIGEN ROLEPLAY -->
-    <datalist id="lista-rangos-discord">
-        <option value="Especialista">
-        <option value="Subespecialista">
-        <option value="Residente">
-        <option value="Interno/a">
-        <option value="Estudiante">
-        <option value="Enfermero/a Especialista">
-        <option value="Enfermero/a General">
-        <option value="Enfermero">
-        <option value="Auxiliar de Enfermería">
-        <option value="Celador/a">
-    </datalist>
 
     <script>
         const socket = io();
@@ -189,126 +221,141 @@
             "Supervisor"
         ];
 
-        const DEPARTAMENTOS = [
+        // RANGOS VISUALES CON FORMATO OFICIAL DISCORD
+        const RANGOS_EVALUACION = [
+            { id: "Especialista", label: "『🥼』Especialista", color: "bg-sky-500/20 text-sky-300 border-sky-500/40" },
+            { id: "Subespecialista", label: "『🔬』Subespecialista", color: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" },
+            { id: "Residente", label: "『📚』Residente", color: "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40" },
+            { id: "Interno/a", label: "『📝』Interno/a", color: "bg-pink-500/20 text-pink-300 border-pink-500/40" },
+            { id: "Estudiante", label: "『📗』Estudiante", color: "bg-blue-500/20 text-blue-300 border-blue-500/40" },
+            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+            { id: "Enfermero/a General", label: "『💉』Enfermero/a General", color: "bg-teal-500/20 text-teal-300 border-teal-500/40" },
+            { id: "Enfermero", label: "『💉』Enfermero", color: "bg-teal-500/20 text-teal-300 border-teal-500/40" },
+            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería", color: "bg-orange-500/20 text-orange-300 border-orange-500/40" },
+            { id: "Celador/a", label: "『👀』Celador/a", color: "bg-amber-500/20 text-amber-300 border-amber-500/40" }
+        ];
+
+        const JEFATURAS = [
             { 
                 id: 'cirugia', 
-                tituloNav: '🏥 JEFATURA CIRUGÍA',
-                titulo: '🏥 Jefatura de Cirugía · Evaluación de Personal', 
-                descripcion: 'Supervisión de cirujanos, especialistas y personal quirúrgico en servicio.',
-                colorBorde: 'border-pink-500', 
-                colorTexto: 'text-pink-400', 
-                colorBadge: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
+                tituloNav: '🏥 CIRUGÍA',
+                titulo: '🏥 Jefatura de Cirugía · Evaluación de Ascensos',
                 rangosPermitidos: ["Jefa de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'medicina', 
-                tituloNav: '💊 JEFATURA MEDICINA',
-                titulo: '💊 Jefatura de Medicina · Evaluación de Personal', 
-                descripcion: 'Control clínico de consultas, tratamientos hospitalarios e ingresos.',
-                colorBorde: 'border-rose-500', 
-                colorTexto: 'text-rose-400', 
-                colorBadge: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                tituloNav: '💊 MEDICINA',
+                titulo: '💊 Jefatura de Medicina · Evaluación de Ascensos',
                 rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             },
             { 
                 id: 'enfermeria', 
-                tituloNav: '💉 DIR. ENFERMERÍA',
-                titulo: '💉 Dirección de Enfermería · Evaluación de Personal', 
-                descripcion: 'Supervisión de enfermeros especialistas, generales, auxiliares y celadores.',
-                colorBorde: 'border-fuchsia-500', 
-                colorTexto: 'text-fuchsia-400', 
-                colorBadge: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
+                tituloNav: '💉 ENFERMERÍA',
+                titulo: '💉 Dirección de Enfermería · Evaluación de Ascensos',
                 rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
-            },
-            { 
-                id: 'formaciones', 
-                tituloNav: '📚 JEFATURA FORMACIONES',
-                titulo: '📚 Jefatura de Formaciones · Evaluación de Personal', 
-                descripcion: 'Seguimiento de aspirantes, estudiantes, protocolos teóricos y pruebas de aptitud.',
-                colorBorde: 'border-purple-500', 
-                colorTexto: 'text-purple-400', 
-                colorBadge: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-                rangosPermitidos: ["Jefe de Formaciones", "Director (Admin)", "Subdirectora", "Coordinador", "Supervisor"]
             }
         ];
 
-        function obtenerInsigniaRango(rango) {
-            const r = (rango || '').toLowerCase();
-            if (r.includes('director')) return `<span class="bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border border-pink-500/40 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">👑 ${rango}</span>`;
-            if (r.includes('subdirector')) return `<span class="bg-pink-500/15 text-pink-300 border border-pink-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">🛡️ ${rango}</span>`;
-            if (r.includes('jef') || r.includes('jefe')) return `<span class="bg-rose-500/15 text-rose-300 border border-rose-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">⭐ ${rango}</span>`;
-            if (r.includes('coordinador')) return `<span class="bg-purple-500/15 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">👔 ${rango}</span>`;
-            if (r.includes('supervisor')) return `<span class="bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">📋 ${rango}</span>`;
-            
-            // Rangos de las escalas de evaluación
-            if (r.includes('especialista') || r.includes('subespecialista')) return `<span class="bg-sky-500/15 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">🩺 ${rango}</span>`;
-            if (r.includes('residente') || r.includes('interno') || r.includes('estudiante')) return `<span class="bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">📑 ${rango}</span>`;
-            if (r.includes('enfermer')) return `<span class="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">💉 ${rango}</span>`;
-            if (r.includes('auxiliar') || r.includes('celador')) return `<span class="bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-lg text-[10px] font-bold">🛡️ ${rango}</span>`;
+        function obtenerPlacaRango(valor) {
+            const r = RANGOS_EVALUACION.find(x => x.id === valor);
+            if (r) {
+                return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg border font-bold text-[10px] ${r.color}">${r.label}</span>`;
+            }
+            return `<span class="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded text-[10px] font-semibold">${valor}</span>`;
+        }
 
-            return `<span class="bg-zinc-800 text-zinc-300 border border-zinc-700 px-2.5 py-0.5 rounded-lg text-[10px] font-semibold">${rango}</span>`;
+        function obtenerBadgeFaltas(f) {
+            if (f === 'WARN') return '<span class="bg-amber-400 text-black px-2 py-0.5 rounded font-black text-[10px]">WARN</span>';
+            if (f === 'DESPIDO') return '<span class="bg-rose-600 text-white px-2 py-0.5 rounded font-black text-[10px]">DESPIDO</span>';
+            return '<span class="text-zinc-500 text-[10px]">—</span>';
+        }
+
+        function obtenerBadgeExamen(e) {
+            if (e === 'PENDIENTE') return '<span class="bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-black text-[10px]">PENDIENTE</span>';
+            if (e === 'REALIZADO') return '<span class="bg-emerald-400 text-emerald-950 px-2 py-0.5 rounded font-black text-[10px]">REALIZADO</span>';
+            if (e === 'NO APLICA') return '<span class="bg-sky-400 text-sky-950 px-2 py-0.5 rounded font-black text-[10px]">NO APLICA</span>';
+            return '<span class="text-zinc-500 text-[10px]">—</span>';
+        }
+
+        function generarOpcionesSelect() {
+            return RANGOS_EVALUACION.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
         }
 
         function inicializarEstructuraHtml() {
             const container = document.getElementById('contenedor-secciones');
-            container.innerHTML = DEPARTAMENTOS.map(d => `
-                <section id="seccion-${d.id}" class="hidden space-y-4">
-                    <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 ${d.colorBorde}">
-                        <div class="flex flex-wrap justify-between items-start gap-3 border-b border-zinc-800/80 pb-4">
-                            <div>
-                                <h2 class="text-lg font-black text-white uppercase tracking-wider">${d.titulo}</h2>
-                                <p class="text-xs text-zinc-400 mt-0.5">${d.descripcion}</p>
-                            </div>
-                            <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg border ${d.colorBadge}">Control Departamental</span>
-                        </div>
+            const opciones = generarOpcionesSelect();
+
+            container.innerHTML = JEFATURAS.map(j => `
+                <section id="seccion-${j.id}" class="hidden space-y-4">
+                    <div class="card-ems p-5 rounded-3xl space-y-4 border-l-4 border-pink-500">
+                        <h2 class="text-lg font-black text-white uppercase tracking-wider">${j.titulo}</h2>
                         
-                        <!-- Formulario de Ingreso -->
-                        <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
-                            <div>
-                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Discord ID</label>
-                                <input type="text" id="ascDiscord_${d.id}" placeholder="423984124..." class="w-full input-ems px-3 py-2.5 rounded-xl font-mono-code font-medium text-pink-200">
+                        <!-- Formulario de Evaluación Sheet -->
+                        <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2.5 text-xs">
+                            <div class="md:col-span-2">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Nombre Completo (IC)</label>
+                                <input type="text" id="nombre_${j.id}" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Nombre Completo (IC)</label>
-                                <input type="text" id="ascNombre_${d.id}" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango Actual</label>
+                                <select id="actual_${j.id}" class="w-full input-ems px-2.5 py-2 rounded-xl font-bold text-xs">${opciones}</select>
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Rango Actual</label>
-                                <input type="text" id="ascActual_${d.id}" list="lista-rangos-discord" placeholder="Celador/a..." class="w-full input-ems px-3 py-2.5 rounded-xl">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango a Postular</label>
+                                <select id="postular_${j.id}" class="w-full input-ems px-2.5 py-2 rounded-xl font-bold text-xs text-pink-300">${opciones}</select>
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Rango Propuesto</label>
-                                <input type="text" id="ascPropuesto_${d.id}" list="lista-rangos-discord" placeholder="Residente..." class="w-full input-ems px-3 py-2.5 rounded-xl font-bold ${d.colorTexto}">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Faltas</label>
+                                <select id="faltas_${j.id}" class="w-full input-ems px-2.5 py-2 rounded-xl font-bold text-xs">
+                                    <option value="NINGUNA">Ninguna</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="DESPIDO">DESPIDO</option>
+                                </select>
                             </div>
                             <div>
-                                <label class="block font-bold text-zinc-400 mb-1.5 uppercase tracking-wider text-[11px]">Horas Registradas</label>
-                                <input type="number" id="ascHoras_${d.id}" placeholder="40" class="w-full input-ems px-3 py-2.5 rounded-xl text-center font-bold text-yellow-400 font-mono-code">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Horas Semana</label>
+                                <input type="text" id="horas_${j.id}" placeholder="24 HRS 00:00" class="w-full input-ems px-2.5 py-2 rounded-xl font-mono-code font-bold text-yellow-400 text-center">
                             </div>
                             <div class="flex items-end">
-                                <button onclick="guardarRegistroAscenso('${d.id}')" class="w-full btn-origen py-2.5 rounded-xl text-xs uppercase tracking-wider">+ Agregar</button>
+                                <button onclick="guardarRegistroSheet('${j.id}')" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs tracking-wider">+ Agregar</button>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Exámen</label>
+                                <select id="examen_${j.id}" class="w-full input-ems px-3 py-2 rounded-xl font-bold text-xs">
+                                    <option value="NO APLICA">NO APLICA</option>
+                                    <option value="PENDIENTE">PENDIENTE</option>
+                                    <option value="REALIZADO">REALIZADO</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-5">
+                                <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Descripción y Ausencias</label>
+                                <input type="text" id="desc_${j.id}" placeholder="Nuevo ingreso / Sin previa ausencia..." class="w-full input-ems px-3 py-2 rounded-xl">
                             </div>
                         </div>
 
-                        <!-- Tabla del Departamento -->
-                        <div class="overflow-x-auto pt-2">
-                            <table class="w-full text-left text-xs border-collapse">
+                        <!-- Hoja de Cálculo / Tabla Oficial -->
+                        <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                            <table class="sheet-table">
                                 <thead>
-                                    <tr class="border-b border-zinc-800 text-zinc-400 uppercase text-[11px] tracking-wider">
-                                        <th class="p-3.5">Discord ID</th>
-                                        <th class="p-3.5">Personal Evaluado</th>
-                                        <th class="p-3.5">Rango Actual</th>
-                                        <th class="p-3.5">Rango Propuesto</th>
-                                        <th class="p-3.5 text-center">Horas de Guardia</th>
-                                        <th class="p-3.5">Evaluado Por</th>
-                                        <th class="p-3.5 text-right">Acción</th>
+                                    <tr>
+                                        <th class="sheet-th">NOMBRE</th>
+                                        <th class="sheet-th">RANGO ACTUAL</th>
+                                        <th class="sheet-th">RANGO A POSTULAR</th>
+                                        <th class="sheet-th text-center">FALTAS</th>
+                                        <th class="sheet-th text-center">HORAS EN LA SEMANA</th>
+                                        <th class="sheet-th text-center">EXÁMEN</th>
+                                        <th class="sheet-th">DESCRIPCIÓN Y AUSENCIAS</th>
+                                        <th class="sheet-th text-right">ACCIÓN</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cuerpoTabla_${d.id}" class="divide-y divide-zinc-800/40"></tbody>
+                                <tbody id="cuerpoTabla_${j.id}"></tbody>
                             </table>
                         </div>
                     </div>
                 </section>
             `).join('');
+
+            document.getElementById('formRango').innerHTML = opciones;
         }
 
         inicializarEstructuraHtml();
@@ -334,7 +381,7 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert("Cuenta creada con éxito. Ahora puedes ingresar.");
+                    alert("Cuenta creada con éxito.");
                     toggleAuth();
                 } else alert(data.error);
             } else {
@@ -353,7 +400,6 @@
 
         function actualizarUIUsuario() {
             if (!usuarioActual) return;
-            
             document.getElementById('seccion-auth').classList.add('hidden');
             const nav = document.getElementById('navBarContenedor');
             nav.classList.remove('hidden');
@@ -361,168 +407,219 @@
             document.getElementById('userInfo').innerHTML = `
                 <div class="flex items-center gap-2">
                     <span class="text-white font-bold">${usuarioActual.nombre}</span>
-                    ${obtenerInsigniaRango(usuarioActual.rango)}
+                    <span class="bg-pink-500/20 text-pink-300 border border-pink-500/40 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">${usuarioActual.rango}</span>
                 </div>
-                <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2 transition">Salir</button>
+                <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2">Salir</button>
             `;
 
             const esAdmin = usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)';
             let pestanaAInicializar = null;
             let navBotonesHTML = '';
 
-            DEPARTAMENTOS.forEach(d => {
-                const tieneAcceso = esAdmin || d.rangosPermitidos.includes(usuarioActual.rango);
+            JEFATURAS.forEach(j => {
+                const tieneAcceso = esAdmin || j.rangosPermitidos.includes(usuarioActual.rango);
                 if (tieneAcceso) {
-                    navBotonesHTML += `
-                        <button onclick="cambiarPestana('${d.id}')" id="tab-${d.id}" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">
-                            ${d.tituloNav}
-                        </button>
-                    `;
-                    if (!pestanaAInicializar) pestanaAInicializar = d.id;
+                    navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
+                    if (!pestanaAInicializar) pestanaAInicializar = j.id;
                 }
             });
 
+            // Formaciones
+            const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones' || usuarioActual.rango === 'Director de Enfermería' || usuarioActual.rango === 'Subdirectora';
+            if (esFormador) {
+                navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
+            }
+
             if (esAdmin) {
-                navBotonesHTML += `
-                    <button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-400">
-                        👑 PANEL DIRECCIÓN
-                    </button>
-                `;
+                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive text-pink-400">👑 PANEL DIRECCIÓN</button>`;
             }
 
             nav.innerHTML = navBotonesHTML;
 
-            cargarTablasVisibles();
-            if (pestanaAInicializar) {
-                cambiarPestana(pestanaAInicializar);
-            } else if (esAdmin) {
-                cambiarPestana('admin');
-            }
+            cargarTablas();
+            cargarFormaciones();
+            if (pestanaAInicializar) cambiarPestana(pestanaAInicializar);
 
             socket.emit('user_connected', usuarioActual);
         }
 
         function cambiarPestana(pestana) {
-            const todas = [...DEPARTAMENTOS.map(d => d.id), 'admin'];
-            
+            const todas = [...JEFATURAS.map(j => j.id), 'formaciones', 'admin'];
             todas.forEach(p => {
                 const sec = document.getElementById(`seccion-${p}`);
-                if(sec) sec.classList.add('hidden');
-                
+                if (sec) sec.classList.add('hidden');
                 const btn = document.getElementById(`tab-${p}`);
-                if(btn) {
-                    btn.className = 'tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive';
-                }
+                if (btn) btn.className = 'tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-tab-inactive';
             });
 
-            const sectionActiva = document.getElementById(`seccion-${pestana}`);
-            if(sectionActiva) sectionActiva.classList.remove('hidden');
+            const secActiva = document.getElementById(`seccion-${pestana}`);
+            if (secActiva) secActiva.classList.remove('hidden');
 
             const btnActivo = document.getElementById(`tab-${pestana}`);
-            if(btnActivo) {
-                btnActivo.className = 'tab-btn px-4 py-2.5 rounded-xl font-bold text-xs btn-origen text-white';
-            }
+            if (btnActivo) btnActivo.className = 'tab-btn px-4 py-2 rounded-xl font-bold text-xs btn-origen text-white';
 
             if (pestana === 'admin') cargarGestionAdmin();
         }
 
-        async function cargarTablasVisibles() {
+        async function cargarTablas() {
             const res = await fetch('/api/ascensos');
-            const listaCompleta = await res.json();
+            const data = await res.json();
 
-            DEPARTAMENTOS.forEach(d => {
-                const filtrados = listaCompleta.filter(item => item.jefatura === d.id);
-                const cuerpo = document.getElementById(`cuerpoTabla_${d.id}`);
-                
+            JEFATURAS.forEach(j => {
+                const filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
+                const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
+
                 if (filtrados.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-zinc-500 italic">No hay personal registrado en esta jefatura.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-zinc-500 italic bg-black/60">No hay registros en esta escala.</td></tr>`;
                     return;
                 }
 
-                cuerpo.innerHTML = filtrados.map(item => `
-                    <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40 transition">
-                        <td class="p-3.5 font-mono-code text-zinc-400 font-semibold">${item.discord_id}</td>
-                        <td class="p-3.5 font-bold text-white">${item.nombre_ems}</td>
-                        <td class="p-3.5">${obtenerInsigniaRango(item.rango_actual)}</td>
-                        <td class="p-3.5">${obtenerInsigniaRango(item.rango_propuesto)}</td>
-                        <td class="p-3.5 text-center font-bold text-yellow-400 font-mono-code bg-black/30 rounded-lg">${item.horas_hechas} hrs</td>
-                        <td class="p-3.5 text-zinc-400 text-[11px] font-medium">${item.actualizado_por}</td>
-                        <td class="p-3.5 text-right">
-                            <button onclick="eliminarAscenso(${item.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1 rounded-lg border border-rose-500/30 transition">
-                                Retirar
-                            </button>
+                cuerpo.innerHTML = filtrados.map(r => `
+                    <tr class="sheet-row hover:bg-zinc-900/60 transition">
+                        <td class="sheet-td font-bold text-white">${r.nombre}</td>
+                        <td class="sheet-td">${obtenerPlacaRango(r.rango_actual)}</td>
+                        <td class="sheet-td">${obtenerPlacaRango(r.rango_postular)}</td>
+                        <td class="sheet-td text-center">${obtenerBadgeFaltas(r.faltas)}</td>
+                        <td class="sheet-td text-center font-mono-code font-bold text-yellow-400 bg-black/40">${r.horas_semana}</td>
+                        <td class="sheet-td text-center">${obtenerBadgeExamen(r.examen)}</td>
+                        <td class="sheet-td text-zinc-300 text-xs">${r.descripcion || '—'}</td>
+                        <td class="sheet-td text-right">
+                            <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-[11px]">Eliminar</button>
                         </td>
                     </tr>
                 `).join('');
             });
         }
 
-        async function guardarRegistroAscenso(jefaturaId) {
-            const discord_id = document.getElementById(`ascDiscord_${jefaturaId}`).value.trim();
-            const nombre_ems = document.getElementById(`ascNombre_${jefaturaId}`).value.trim();
-            const rango_actual = document.getElementById(`ascActual_${jefaturaId}`).value.trim();
-            const rango_propuesto = document.getElementById(`ascPropuesto_${jefaturaId}`).value.trim();
-            const horas_hechas = document.getElementById(`ascHoras_${jefaturaId}`).value;
+        async function guardarRegistroSheet(jefaturaId) {
+            const nombre = document.getElementById(`nombre_${jefaturaId}`).value.trim();
+            const rango_actual = document.getElementById(`actual_${jefaturaId}`).value;
+            const rango_postular = document.getElementById(`postular_${jefaturaId}`).value;
+            const faltas = document.getElementById(`faltas_${jefaturaId}`).value;
+            const horas_semana = document.getElementById(`horas_${jefaturaId}`).value.trim() || '00 HRS 00:00';
+            const examen = document.getElementById(`examen_${jefaturaId}`).value;
+            const descripcion = document.getElementById(`desc_${jefaturaId}`).value.trim();
 
-            if (!discord_id || !nombre_ems) return alert("Completa el Discord ID y el Nombre.");
+            if (!nombre) return alert("Ingresa el Nombre Completo.");
 
             const res = await fetch('/api/ascensos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     jefatura: jefaturaId,
-                    discord_id,
-                    nombre_ems,
+                    nombre,
                     rango_actual,
-                    rango_propuesto,
-                    horas_hechas,
+                    rango_postular,
+                    faltas,
+                    horas_semana,
+                    examen,
+                    descripcion,
                     actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
                 })
             });
 
             if (res.ok) {
-                document.getElementById(`ascDiscord_${jefaturaId}`).value = '';
-                document.getElementById(`ascNombre_${jefaturaId}`).value = '';
-                document.getElementById(`ascActual_${jefaturaId}`).value = '';
-                document.getElementById(`ascPropuesto_${jefaturaId}`).value = '';
-                document.getElementById(`ascHoras_${jefaturaId}`).value = '';
-                cargarTablasVisibles();
+                document.getElementById(`nombre_${jefaturaId}`).value = '';
+                document.getElementById(`horas_${jefaturaId}`).value = '';
+                document.getElementById(`desc_${jefaturaId}`).value = '';
+                cargarTablas();
             } else {
-                const data = await res.json();
-                alert(data.error);
+                alert("Error al registrar.");
             }
         }
 
-        async function eliminarAscenso(id) {
-            if (!confirm("¿Deseas retirar a este miembro del registro de ascensos?")) return;
+        async function eliminarRegistro(id) {
+            if (!confirm("¿Eliminar registro?")) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
-            cargarTablasVisibles();
+            cargarTablas();
         }
 
+        // SECCIÓN FORMACIONES
+        function calcularTotalPreview() {
+            const cant = parseInt(document.getElementById('formCant').value) || 0;
+            const total = cant * 20000;
+            document.getElementById('formPreviewPago').innerText = `$${total.toLocaleString()}`;
+        }
+
+        async function guardarRegistroFormacion() {
+            const instructor = document.getElementById('formInstructor').value.trim();
+            const rango = document.getElementById('formRango').value;
+            const instrucciones_hechas = document.getElementById('formCant').value;
+
+            if (!instructor) return alert("Ingresa el nombre del instructor.");
+
+            const res = await fetch('/api/formaciones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    instructor,
+                    rango,
+                    instrucciones_hechas,
+                    actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefe de Formaciones'
+                })
+            });
+
+            if (res.ok) {
+                document.getElementById('formInstructor').value = '';
+                document.getElementById('formCant').value = '';
+                document.getElementById('formPreviewPago').innerText = '$0';
+                cargarFormaciones();
+            }
+        }
+
+        async function cargarFormaciones() {
+            const res = await fetch('/api/formaciones');
+            const data = await res.json();
+            const cuerpo = document.getElementById('cuerpoTablaFormaciones');
+
+            if (!Array.isArray(data) || data.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-zinc-500 italic">No hay liquidaciones de instrucción registradas.</td></tr>`;
+                return;
+            }
+
+            cuerpo.innerHTML = data.map(f => `
+                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
+                    <td class="p-3 font-bold text-white">${f.instructor}</td>
+                    <td class="p-3">${obtenerPlacaRango(f.rango)}</td>
+                    <td class="p-3 text-center font-mono-code font-bold text-yellow-400">${f.instrucciones_hechas}</td>
+                    <td class="p-3 font-mono-code font-black text-emerald-400 text-sm">$${f.total_pago.toLocaleString()}</td>
+                    <td class="p-3 text-zinc-400 text-[11px]">${f.actualizado_por}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="eliminarFormacion(${f.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function eliminarFormacion(id) {
+            if (!confirm("¿Eliminar registro de formación?")) return;
+            await fetch(`/api/formaciones/${id}`, { method: 'DELETE' });
+            cargarFormaciones();
+        }
+
+        // PANEL ADMIN
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
-            const usuarios = await res.json();
+            const data = await res.json();
             const cuerpo = document.getElementById('cuerpoTablaAdmin');
 
-            cuerpo.innerHTML = usuarios.map(u => `
-                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40 transition">
-                    <td class="p-3.5 font-bold text-white">
-                        ${u.nombre} 
-                        <span class="text-zinc-500 font-normal font-mono-code text-[11px] block">@${u.usuario}</span>
-                    </td>
-                    <td class="p-3.5">
-                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300">
+            cuerpo.innerHTML = data.map(u => `
+                <tr class="hover:bg-zinc-900/40 border-b border-zinc-800/40">
+                    <td class="p-3 font-bold text-white">${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-[11px]">(@${u.usuario})</span></td>
+                    <td class="p-3">
+                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1 rounded-xl text-xs font-bold text-pink-300">
                             ${RANGOS_EMS.map(r => `<option value="${r}" ${u.rango === r ? 'selected' : ''}>${r}</option>`).join('')}
                         </select>
                     </td>
-                    <td class="p-3.5">
-                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-semibold">
+                    <td class="p-3">
+                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1 rounded-xl text-xs">
                             <option value="empleado" ${u.rol === 'empleado' ? 'selected' : ''}>Personal</option>
                             <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
                         </select>
                     </td>
-                    <td class="p-3.5 text-right">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-3.5 py-1.5 rounded-xl text-xs">Guardar</button>
+                    <td class="p-3 text-right">
+                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-3 py-1 rounded-xl text-xs">Guardar</button>
                     </td>
                 </tr>
             `).join('');
@@ -536,11 +633,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rango, rol }) 
             });
-            alert("Rango y permisos actualizados correctamente.");
+            alert("Rango actualizado.");
         }
 
-        socket.on('db_update', (d) => {
-            if (d.evento === 'ascensos_actualizados') cargarTablasVisibles();
+        socket.on('db_update', () => {
+            cargarTablas();
+            cargarFormaciones();
         });
 
     </script>
