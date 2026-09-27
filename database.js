@@ -21,7 +21,7 @@ const db = createClient({
         nombre TEXT NOT NULL,
         usuario TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        rango TEXT DEFAULT 'Supervisor',
+        rango TEXT DEFAULT 'Sin Rango (Pendiente)',
         rol TEXT DEFAULT 'empleado',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -40,6 +40,7 @@ const db = createClient({
         faltas TEXT DEFAULT 'NINGUNA',
         horas_semana TEXT DEFAULT '',
         examen TEXT DEFAULT 'NO APLICA',
+        estado TEXT DEFAULT 'Activo',
         descripcion TEXT DEFAULT '',
         fecha_ingreso TEXT DEFAULT '',
         actualizado_por TEXT,
@@ -47,7 +48,10 @@ const db = createClient({
       )
     `);
 
-    // Migración por si la columna fecha_ingreso no existía
+    try {
+      await db.execute("ALTER TABLE registro_ascensos ADD COLUMN estado TEXT DEFAULT 'Activo'");
+    } catch (e) {}
+
     try {
       await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''");
     } catch (e) {}
@@ -78,7 +82,7 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Base de datos EMS Origen Roleplay actualizada en Turso.");
+    console.log("[DB] Tablas de EMS Origen Roleplay configuradas y blindadas en Turso.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

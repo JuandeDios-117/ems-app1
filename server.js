@@ -57,7 +57,7 @@ function notificar(evento, data = {}) {
     io.emit('db_update', { evento, ...data });
 }
 
-// 1. AUTENTICACIÓN
+// 1. REGISTRO & LOGIN (NUEVOS USUARIOS NACEN SIN RANGO PARA SEGURIDAD)
 app.post('/api/register', async (req, res) => {
     const { nombre, usuario, password } = req.body;
     const userClean = (usuario || '').trim().toLowerCase();
@@ -78,7 +78,7 @@ app.post('/api/register', async (req, res) => {
 
         const count = await db.execute("SELECT COUNT(*) as total FROM usuarios");
         const esPrimero = Number(count.rows[0].total) === 0;
-        const rangoInicial = esPrimero ? 'Director (Admin)' : 'Supervisor';
+        const rangoInicial = esPrimero ? 'Director (Admin)' : 'Sin Rango (Pendiente)';
         const rolInicial = esPrimero ? 'admin' : 'empleado';
 
         const result = await db.execute({
@@ -102,7 +102,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
+        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
         const result = await db.execute({ sql, args: [userClean, String(password)] });
         
         if (!result.rows || result.rows.length === 0) {
@@ -118,7 +118,7 @@ app.post('/api/login', async (req, res) => {
 // 2. PANEL ADMIN
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const result = await db.execute("SELECT id, nombre, usuario, COALESCE(rango, 'Supervisor') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios ORDER BY id ASC");
+        const result = await db.execute("SELECT id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -133,7 +133,7 @@ app.put('/api/usuarios/:id', async (req, res) => {
             args: [rango, rol, req.params.id]
         });
         notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango, rol });
-        res.json({ message: "Rango actualizado." });
+        res.json({ message: "Rango actualizado con éxito." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -165,6 +165,7 @@ app.post('/api/ascensos', async (req, res) => {
         return res.status(400).json({ error: "Ingresa el nombre del personal." });
     }
 
+    const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
     const fechaHoy = fecha_ingreso || new Date().toISOString().split('T')[0];
 
     try {
@@ -180,21 +181,23 @@ app.post('/api/ascensos', async (req, res) => {
                     faltas, 
                     horas_semana, 
                     examen, 
+                    estado,
                     descripcion, 
                     fecha_ingreso,
                     actualizado_por
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 jefatura,
-                (discord_id || 'N/A').trim(),
+                discordLimpio,
                 nombre.trim(),
                 nombre.trim(),
-                'Celador/a',
-                'Celador/a',
-                'Celador/a',
+                jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante',
+                jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante',
+                jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante',
                 'NINGUNA',
                 '',
                 'NO APLICA',
+                'Activo',
                 '',
                 fechaHoy,
                 actualizado_por || 'Jefatura'
@@ -209,7 +212,13 @@ app.post('/api/ascensos', async (req, res) => {
 });
 
 app.put('/api/ascensos/:id', async (req, res) => {
-    const { jefatura, discord_id, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, descripcion, fecha_ingreso } = req.body;
+    const { jefatura, discord_id, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, estado, descripcion, fecha_ingreso } = req.body;
+    
+    let discordLimpio = null;
+    if (discord_id !== undefined && discord_id !== null) {
+        discordLimpio = String(discord_id).replace(/[^0-9]/g, '') || 'N/A';
+    }
+
     try {
         await db.execute({
             sql: `UPDATE registro_ascensos SET 
@@ -223,12 +232,13 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     faltas = COALESCE(?, faltas),
                     horas_semana = COALESCE(?, horas_semana),
                     examen = COALESCE(?, examen),
+                    estado = COALESCE(?, estado),
                     descripcion = COALESCE(?, descripcion),
                     fecha_ingreso = COALESCE(?, fecha_ingreso)
                   WHERE id = ?`,
             args: [
                 jefatura || null,
-                discord_id ? discord_id.trim() : null,
+                discordLimpio,
                 nombre ? nombre.trim() : null,
                 nombre ? nombre.trim() : null,
                 rango_actual || null,
@@ -237,6 +247,7 @@ app.put('/api/ascensos/:id', async (req, res) => {
                 faltas || null,
                 horas_semana !== undefined ? horas_semana.trim() : null,
                 examen || null,
+                estado || null,
                 descripcion !== undefined ? descripcion.trim() : null,
                 fecha_ingreso !== undefined ? fecha_ingreso.trim() : null,
                 req.params.id
@@ -260,7 +271,7 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// 4. JEFATURA DE FORMACIONES
+// 4. FORMACIONES
 app.get('/api/formaciones', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
@@ -272,9 +283,7 @@ app.get('/api/formaciones', async (req, res) => {
 
 app.post('/api/formaciones', async (req, res) => {
     const { instructor, rango, actualizado_por } = req.body;
-    if (!instructor) {
-        return res.status(400).json({ error: "Ingresa el nombre del instructor." });
-    }
+    if (!instructor) return res.status(400).json({ error: "Ingresa el nombre del instructor." });
 
     try {
         await db.execute({
@@ -291,7 +300,7 @@ app.post('/api/formaciones', async (req, res) => {
 
 app.put('/api/formaciones/:id', async (req, res) => {
     const { instrucciones_hechas, notas, rango } = req.body;
-    const cant = parseInt(instrucciones_hechas) || 0;
+    const cant = Math.max(0, parseInt(instrucciones_hechas) || 0);
     const totalPago = cant * 20000;
 
     try {
@@ -337,7 +346,7 @@ app.delete('/api/formaciones/:id', async (req, res) => {
     }
 });
 
-// 5. COORDINACIÓN Y SUPERVISIÓN
+// 5. COORDINACIÓN
 app.get('/api/coordinacion', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_coordinacion ORDER BY id DESC");
@@ -351,12 +360,14 @@ app.post('/api/coordinacion', async (req, res) => {
     const { discord_id, supervisor, rango, estado, feedback_semanal, actualizado_por } = req.body;
     if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
 
+    const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
+
     try {
         await db.execute({
             sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, estado, feedback_semanal, actualizado_por)
                   VALUES (?, ?, ?, ?, ?, ?)`,
             args: [
-                discord_id || 'N/A',
+                discordLimpio,
                 supervisor.trim(),
                 rango || 'Supervisor',
                 estado || 'Activo',
