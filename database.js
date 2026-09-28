@@ -18,14 +18,27 @@ const db = createClient({
     await db.execute(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        discord_id TEXT DEFAULT 'N/A',
         nombre TEXT NOT NULL,
         usuario TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         rango TEXT DEFAULT 'Sin Rango (Pendiente)',
         rol TEXT DEFAULT 'empleado',
+        horas_semana TEXT DEFAULT '',
+        fecha_ingreso TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    try {
+      await db.execute("ALTER TABLE usuarios ADD COLUMN discord_id TEXT DEFAULT 'N/A'");
+    } catch (e) {}
+    try {
+      await db.execute("ALTER TABLE usuarios ADD COLUMN horas_semana TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      await db.execute("ALTER TABLE usuarios ADD COLUMN fecha_ingreso TEXT DEFAULT ''");
+    } catch (e) {}
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_ascensos (
@@ -51,7 +64,6 @@ const db = createClient({
     try {
       await db.execute("ALTER TABLE registro_ascensos ADD COLUMN estado TEXT DEFAULT 'Activo'");
     } catch (e) {}
-
     try {
       await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''");
     } catch (e) {}
@@ -75,6 +87,7 @@ const db = createClient({
         discord_id TEXT DEFAULT 'N/A',
         supervisor TEXT NOT NULL,
         rango TEXT DEFAULT 'Supervisor',
+        horas_semana TEXT DEFAULT '',
         estado TEXT DEFAULT 'Activo',
         feedback_semanal TEXT DEFAULT '',
         actualizado_por TEXT,
@@ -82,7 +95,11 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Tablas de EMS Origen Roleplay configuradas y blindadas en Turso.");
+    try {
+      await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''");
+    } catch (e) {}
+
+    console.log("[DB] Tablas de EMS Origen Roleplay verificadas y actualizadas en Turso.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

@@ -97,7 +97,6 @@
             box-shadow: 0 0 0 1.5px #f472b6;
         }
 
-        /* Semáforo dinámico de horas en celda */
         .semaforo-horas-rojo {
             background: rgba(225, 29, 72, 0.18) !important;
             color: #fca5a5 !important;
@@ -117,7 +116,6 @@
             box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
         }
 
-        /* Pintado completo de celdas de FALTAS */
         .td-falta-warn {
             background: rgba(217, 119, 6, 0.35) !important;
             border-left: 2px solid #f59e0b !important;
@@ -129,7 +127,6 @@
             border-right: 2px solid #ef4444 !important;
         }
 
-        /* Colores sobrios y sutiles para ESTADO DE SERVICIO */
         .badge-estado-activo {
             background: rgba(16, 185, 129, 0.12);
             color: #6ee7b7;
@@ -190,7 +187,7 @@
         <!-- NAVEGACIÓN -->
         <nav class="flex flex-wrap items-center card-ems p-2 rounded-2xl gap-2 hidden" id="navBarContenedor"></nav>
 
-        <!-- PANTALLA DE BLOQUEO / PENDIENTE DE ASIGNACIÓN DE RANGO -->
+        <!-- PANTALLA PENDIENTE DE ASIGNACIÓN -->
         <div id="seccion-pendiente" class="max-w-lg mx-auto card-ems p-8 rounded-3xl text-center space-y-4 mt-12 border border-amber-500/30 hidden">
             <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-3xl">
                 ⏳
@@ -291,7 +288,7 @@
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
-                        <p class="text-xs text-zinc-400">Seguimiento de actividad, ausencias temporales, excedencias y feedback semanal de supervisores.</p>
+                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y feedback semanal.</p>
                     </div>
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-cyan-500/15 text-cyan-300 border-cyan-500/30">Cuerpo de Supervisión</span>
                 </div>
@@ -312,7 +309,11 @@
                             <option value="Coordinador">Coordinador</option>
                         </select>
                     </div>
-                    <div class="w-48">
+                    <div class="w-40">
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Horas Guardia</label>
+                        <input type="text" id="coordHoras" placeholder="Ej. 8:00" class="w-full input-ems px-3 py-2.5 rounded-xl text-center font-mono-code text-xs font-bold">
+                    </div>
+                    <div class="w-44">
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Inicial</label>
                         <select id="coordEstado" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-xs">
                             <option value="Activo">🟢 Activo</option>
@@ -333,8 +334,9 @@
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-36">DISCORD ID</th>
                                 <th class="fluid-th text-left w-1/4">SUPERVISOR A CARGO</th>
-                                <th class="fluid-th text-left w-44">RANGO</th>
-                                <th class="fluid-th text-center w-48">ESTADO DE SERVICIO</th>
+                                <th class="fluid-th text-left w-40">RANGO</th>
+                                <th class="fluid-th text-center w-36">HORAS DE GUARDIA</th>
+                                <th class="fluid-th text-center w-40">ESTADO DE SERVICIO</th>
                                 <th class="fluid-th text-left w-1/3">FEEDBACK SEMANAL / DESEMPEÑO</th>
                                 <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
@@ -350,8 +352,10 @@
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
-                        <h2 class="text-2xl font-black text-white uppercase">📋 Censo General del Personal · Dirección</h2>
-                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica (Dirección hasta Escala Básica).</p>
+                        <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
+                            👑 CENSO GENERAL DEL PERSONAL · DIRECCIÓN
+                        </h2>
+                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica (Dirección hasta Escala Básica) con panel de edición de Dirección.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
@@ -373,6 +377,7 @@
                                 <th class="fluid-th text-center w-28">EXAMEN</th>
                                 <th class="fluid-th text-center w-32">INGRESO</th>
                                 <th class="fluid-th text-left w-1/4">OBSERVACIONES</th>
+                                <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody id="cuerpoTablaCenso"></tbody>
@@ -384,12 +389,13 @@
         <!-- PANEL ADMIN (USUARIOS DE LA WEB) -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-pink-500">
             <h2 class="text-xl font-black text-white uppercase">👑 Panel de Cuentas y Asignación de Rangos</h2>
-            <p class="text-xs text-zinc-400">Otorga el rango oficial a los nuevos usuarios para que puedan visualizar su respectiva jefatura.</p>
+            <p class="text-xs text-zinc-400">Otorga el rango oficial a los nuevos usuarios. Al asignarse un rango médico o directivo, se integran de inmediato al Censo General.</p>
             <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                 <table class="fluid-table">
                     <thead>
                         <tr class="bg-zinc-900 text-zinc-300">
                             <th class="fluid-th text-center w-12">#</th>
+                            <th class="fluid-th text-left w-36">DISCORD ID</th>
                             <th class="fluid-th text-left">CUENTA</th>
                             <th class="fluid-th text-left">RANGO DE SISTEMA ASIGNADO</th>
                             <th class="fluid-th text-left">PERMISOS</th>
@@ -514,6 +520,10 @@
             }
         ];
 
+        function esDirector() {
+            return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora');
+        }
+
         function parsearHorasNumericas(str) {
             if (!str) return 0;
             const limpio = str.toUpperCase().replace('HRS', '').replace('HR', '').trim();
@@ -523,7 +533,6 @@
             return Math.max(0, h + m);
         }
 
-        // Formateador sin permitir negativos
         function formatearTextoHoras(valorRaw) {
             if (!valorRaw) return '';
             let val = valorRaw.toUpperCase().replace(/[^0-9:]/g, '').trim();
@@ -552,13 +561,11 @@
             return 'semaforo-horas-verde';
         }
 
-        // Opciones de postulación con ascensos y descensos
         function generarOpcionesPostular(rangoActual, examenRealizado, jefaturaActual, postularSeleccionado) {
             let lista = [];
 
             if (jefaturaActual === 'enfermeria') {
                 lista = [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA];
-                // Si es especialista y aprobó examen, habilita ascenso a Estudiante o Interno
                 if (rangoActual === 'Enfermero/a Especialista' && examenRealizado === 'REALIZADO') {
                     lista.push(
                         { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" },
@@ -568,7 +575,6 @@
                     );
                 }
             } else {
-                // Cirugía y Medicina tienen sus rangos + opción de bajar a Enfermería
                 lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
                 lista.push(
                     { id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" },
@@ -601,12 +607,10 @@
             const opcionesActual = generarOpcionesActual(jefaturaId, r.rango_actual);
             const semaforoCasilla = obtenerClaseSemaforoCasilla(r.horas_semana);
 
-            // Clase de celda completa para Faltas
             let claseFaltaTd = '';
             if (r.faltas === 'WARN') claseFaltaTd = 'td-falta-warn';
             if (r.faltas === 'DESPIDO') claseFaltaTd = 'td-falta-despido';
 
-            // Clase de Estado de Servicio
             const estadoActual = r.estado || 'Activo';
             let claseEstadoBadge = 'badge-estado-activo';
             if (estadoActual === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
@@ -637,8 +641,6 @@
                             ${opcionesPostular}
                         </select>
                     </td>
-                    
-                    <!-- ESTADO DE SERVICIO INTEGRADO (PROPUESTA ACEPTADA) -->
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'estado', this.value, '${jefaturaId}')" 
                                 class="cell-input font-bold text-center text-xs py-1 rounded-lg ${claseEstadoBadge}">
@@ -648,8 +650,6 @@
                             <option value="Baja" ${estadoActual === 'Baja' ? 'selected' : ''}>🔴 Baja</option>
                         </select>
                     </td>
-
-                    <!-- CELDA DE FALTAS CON PINTADO COMPLETO -->
                     <td class="fluid-td text-center ${claseFaltaTd}">
                         <select onchange="editarCampo(${r.id}, 'faltas', this.value, '${jefaturaId}')" class="cell-input font-black text-center text-xs">
                             <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''} class="bg-zinc-900 text-zinc-300 font-normal">—</option>
@@ -657,8 +657,6 @@
                             <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white font-black">DESPIDO</option>
                         </select>
                     </td>
-
-                    <!-- HORAS EN LA SEMANA (BLOQUEO DE NEGATIVOS Y AUTOFROMATO) -->
                     <td class="fluid-td text-center">
                         <input type="text" value="${r.horas_semana || ''}" 
                                placeholder="Ej. 8 ó 8:30"
@@ -666,8 +664,6 @@
                                onblur="editarCampo(${r.id}, 'horas_semana', this.value, '${jefaturaId}')" 
                                class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforoCasilla}">
                     </td>
-
-                    <!-- COLUMNA EXAMEN: SOLO APARECE EN ENFERMERÍA (CORREGIDO SIN TILDE) -->
                     ${esEnfermeria ? `
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
@@ -677,8 +673,6 @@
                         </select>
                     </td>
                     ` : ''}
-
-                    <!-- FECHA INGRESO (BLOQUEO DE FECHAS FUTURAS) -->
                     <td class="fluid-td text-center">
                         <input type="date" value="${r.fecha_ingreso || ''}" 
                                max="${maxFecha}"
@@ -731,7 +725,7 @@
                             </div>
                         </div>
                         
-                        <!-- Formulario Rápido con validaciones estrictas -->
+                        <!-- Formulario Rápido -->
                         <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
                             <div class="w-48">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID (Solo Números)</label>
@@ -753,7 +747,6 @@
                         </div>
 
                         ${esEnfermeria ? `
-                        <!-- DIVISIÓN ENFERMERÍA (ESTILO EXCEL) -->
                         <div class="space-y-6 pt-2">
                             <!-- TABLA 1: ESCALA BÁSICA -->
                             <div class="space-y-2">
@@ -818,7 +811,6 @@
                             </div>
                         </div>
                         ` : `
-                        <!-- TABLA REGULAR PARA CIRUGÍA Y MEDICINA (SIN COLUMNA DE EXAMEN) -->
                         <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                             <table class="fluid-table">
                                 <thead>
@@ -892,7 +884,6 @@
             if (!usuarioActual) return;
             document.getElementById('seccion-auth').classList.add('hidden');
 
-            // CONTROL ESTRICTO DE USUARIOS SIN RANGO ASIGNADO
             if (usuarioActual.rango === 'Sin Rango (Pendiente)') {
                 document.getElementById('navBarContenedor').classList.add('hidden');
                 document.getElementById('seccion-pendiente').classList.remove('hidden');
@@ -917,7 +908,7 @@
                 <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2">Salir</button>
             `;
 
-            const esAdmin = usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)';
+            const esAdmin = esDirector();
             let pestanaAInicializar = null;
             let navBotonesHTML = '';
 
@@ -929,13 +920,13 @@
                 }
             });
 
-            const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones' || usuarioActual.rango === 'Subdirectora';
+            const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones';
             if (esFormador) {
                 navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
                 if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
             }
 
-            const esCoordinador = esAdmin || usuarioActual.rango === 'Coordinador' || usuarioActual.rango === 'Supervisor' || usuarioActual.rango === 'Subdirectora';
+            const esCoordinador = esAdmin || usuarioActual.rango === 'Coordinador' || usuarioActual.rango === 'Supervisor';
             if (esCoordinador) {
                 navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-cyan-400">🛡️ COORDINACIÓN</button>`;
                 if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
@@ -983,7 +974,6 @@
 
             if (!nombre) return alert("Ingresa el Nombre Completo.");
 
-            // Validación estricta de fecha futura
             const hoy = new Date().toISOString().split('T')[0];
             if (fecha_ingreso > hoy) {
                 return alert("No puedes ingresar una fecha posterior al día de hoy.");
@@ -1015,7 +1005,6 @@
             }
         }
 
-        // CONTROL BIDIRECCIONAL DE SUBIDAS Y BAJADAS DE ESCALA
         async function editarCampo(id, campo, valor, jefaturaActual) {
             let datosAEnviar = { [campo]: valor };
 
@@ -1023,7 +1012,6 @@
                 datosAEnviar[campo] = formatearTextoHoras(valor);
             }
 
-            // 1. ASCENSO DESDE ENFERMERÍA HACIA CIRUGÍA O MEDICINA
             if (campo === 'rango_postular' && jefaturaActual === 'enfermeria') {
                 if (valor.includes('Cirugía')) {
                     const rangoLimpio = valor.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
@@ -1032,7 +1020,7 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`✅ ¡Personal promovido! Se transfirió de Enfermería a la Jefatura de Cirugía con el rango de ${rangoLimpio}.`);
+                    alert(`✅ ¡Personal promovido! Se transfirió de Enfermería a Cirugía con el rango de ${rangoLimpio}.`);
                 } else if (valor.includes('Medicina')) {
                     const rangoLimpio = valor.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').trim();
                     datosAEnviar = {
@@ -1040,11 +1028,10 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`✅ ¡Personal promovido! Se transfirió de Enfermería a la Jefatura de Medicina con el rango de ${rangoLimpio}.`);
+                    alert(`✅ ¡Personal promovido! Se transfirió de Enfermería a Medicina con el rango de ${rangoLimpio}.`);
                 }
             }
 
-            // 2. DESCENSO DESDE CIRUGÍA O MEDICINA HACIA ENFERMERÍA
             if (campo === 'rango_postular' && (jefaturaActual === 'cirugia' || jefaturaActual === 'medicina')) {
                 if (valor.includes('Bajar')) {
                     const rangoLimpio = valor.replace(' (Bajar)', '').trim();
@@ -1053,7 +1040,7 @@
                         rango_actual: rangoLimpio,
                         rango_postular: rangoLimpio
                     };
-                    alert(`⬇️ Reasignación completada: El miembro ha descendido a la Escala de Enfermería con rango ${rangoLimpio}.`);
+                    alert(`⬇️ Reasignación completada: El miembro ha descendido a la Escala de Enfermería (${rangoLimpio}).`);
                 }
             }
 
@@ -1077,7 +1064,6 @@
                 JEFATURAS.forEach(j => {
                     let filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
 
-                    // ORDEN DE MENOR A MAYOR EN LAS TABLAS DE EVALUACIÓN
                     filtrados.sort((a, b) => {
                         const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 99;
                         const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 99;
@@ -1138,6 +1124,9 @@
             if (!confirm("¿Deseas eliminar este registro de la evaluación?")) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
             cargarTablas();
+            if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                cargarCensoGeneral();
+            }
         }
 
         // ==========================================
@@ -1250,13 +1239,15 @@
         }
 
         // ==========================================
-        // COORDINACIÓN & SUPERVISIÓN
+        // COORDINACIÓN & SUPERVISIÓN (CON HORAS)
         // ==========================================
         async function guardarSupervisorCoordinacion() {
             const discord_raw = document.getElementById('coordDiscord').value.trim();
             const discord_id = discord_raw.replace(/[^0-9]/g, '');
             const supervisor = document.getElementById('coordSupervisor').value.trim();
             const rango = document.getElementById('coordRangoSel').value;
+            const horas_raw = document.getElementById('coordHoras').value.trim();
+            const horas_semana = formatearTextoHoras(horas_raw);
             const estado = document.getElementById('coordEstado').value;
 
             if (!supervisor) return alert("Ingresa el nombre del supervisor.");
@@ -1269,6 +1260,7 @@
                         discord_id: discord_id || 'N/A',
                         supervisor,
                         rango,
+                        horas_semana,
                         estado,
                         actualizado_por: usuarioActual ? usuarioActual.nombre : 'Coordinación'
                     })
@@ -1277,6 +1269,7 @@
                 if (res.ok) {
                     document.getElementById('coordDiscord').value = '';
                     document.getElementById('coordSupervisor').value = '';
+                    document.getElementById('coordHoras').value = '';
                     await cargarCoordinacion();
                 }
             } catch (e) {
@@ -1285,11 +1278,16 @@
         }
 
         async function editarCoordinacionEnTabla(id, campo, valor) {
+            let datosAEnviar = { [campo]: valor };
+            if (campo === 'horas_semana') {
+                datosAEnviar[campo] = formatearTextoHoras(valor);
+            }
+
             try {
                 await fetch(`/api/coordinacion/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ [campo]: valor })
+                    body: JSON.stringify(datosAEnviar)
                 });
                 await cargarCoordinacion();
             } catch (e) {
@@ -1304,7 +1302,7 @@
                 const cuerpo = document.getElementById('cuerpoTablaCoordinacion');
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-zinc-500 italic text-sm">No hay supervisores registrados en coordinación.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-zinc-500 italic text-sm">No hay supervisores registrados en coordinación.</td></tr>`;
                     return;
                 }
 
@@ -1314,16 +1312,31 @@
                     if (c.estado === 'Excedencia') badgeEstado = 'badge-estado-excedencia';
                     if (c.estado === 'Baja') badgeEstado = 'badge-estado-baja';
 
+                    const semaforoHoras = obtenerClaseSemaforoCasilla(c.horas_semana);
+
                     return `
                     <tr class="fluid-row hover:bg-zinc-900/40">
                         <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                        <td class="fluid-td font-mono-code text-zinc-400 text-xs">${c.discord_id}</td>
-                        <td class="fluid-td font-bold text-white text-sm">${c.supervisor}</td>
+                        <td class="fluid-td font-mono-code text-zinc-400 text-xs">
+                            <input type="text" value="${c.discord_id || 'N/A'}" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                   onblur="editarCoordinacionEnTabla(${c.id}, 'discord_id', this.value)" 
+                                   class="cell-input font-mono-code text-xs">
+                        </td>
+                        <td class="fluid-td font-bold text-white text-sm">
+                            <input type="text" value="${c.supervisor}" onblur="editarCoordinacionEnTabla(${c.id}, 'supervisor', this.value)" class="cell-input font-bold text-white">
+                        </td>
                         <td class="fluid-td">
                             <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango', this.value)" class="cell-input font-semibold text-cyan-300">
                                 <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
                                 <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>Coordinador</option>
                             </select>
+                        </td>
+                        <td class="fluid-td text-center">
+                            <input type="text" value="${c.horas_semana || ''}" 
+                                   placeholder="00:00 HRS"
+                                   onblur="editarCoordinacionEnTabla(${c.id}, 'horas_semana', this.value)" 
+                                   class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforoHoras}">
                         </td>
                         <td class="fluid-td text-center">
                             <select onchange="editarCoordinacionEnTabla(${c.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
@@ -1352,26 +1365,34 @@
             if (!confirm("¿Eliminar registro de coordinación?")) return;
             await fetch(`/api/coordinacion/${id}`, { method: 'DELETE' });
             cargarCoordinacion();
+            if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                cargarCensoGeneral();
+            }
         }
 
-        // ==========================================
-        // CENSO GENERAL (ORDENADO DE MAYOR A MENOR)
-        // ==========================================
+        // =========================================================================
+        // CENSO GENERAL DE DIRECCIÓN (INCLUYE CUENTAS Y PERMITE GESTIÓN COMPLETA)
+        // =========================================================================
         async function cargarCensoGeneral() {
             try {
-                const [resAsc, resCoord] = await Promise.all([
+                const [resAsc, resCoord, resUsers] = await Promise.all([
                     fetch('/api/ascensos'),
-                    fetch('/api/coordinacion')
+                    fetch('/api/coordinacion'),
+                    fetch('/api/usuarios')
                 ]);
 
                 const dataAsc = await resAsc.json();
                 const dataCoord = await resCoord.json();
+                const dataUsers = await resUsers.json();
 
                 let listaUnificada = [];
 
+                // 1. Personal evaluado en Cirugía, Medicina y Enfermería
                 if (Array.isArray(dataAsc)) {
                     dataAsc.forEach(a => {
                         listaUnificada.push({
+                            id_original: a.id,
+                            tipo_origen: 'ascenso',
                             discord_id: a.discord_id || 'N/A',
                             nombre: a.nombre,
                             departamento: a.jefatura,
@@ -1387,15 +1408,18 @@
                     });
                 }
 
+                // 2. Supervisores y Coordinadores
                 if (Array.isArray(dataCoord)) {
                     dataCoord.forEach(c => {
                         listaUnificada.push({
+                            id_original: c.id,
+                            tipo_origen: 'coordinacion',
                             discord_id: c.discord_id || 'N/A',
                             nombre: c.supervisor,
                             departamento: 'coordinacion',
                             rango_actual: c.rango || 'Supervisor',
                             rango_postular: `Estado: ${c.estado}`,
-                            horas_semana: null,
+                            horas_semana: c.horas_semana || '',
                             faltas: '—',
                             examen: '—',
                             fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
@@ -1405,15 +1429,42 @@
                     });
                 }
 
+                // 3. CUENTAS DEL PANEL DE DIRECCIÓN (Directores, Subdirectores, Jefes registrados)
+                if (Array.isArray(dataUsers)) {
+                    dataUsers.forEach(u => {
+                        // Evita duplicar si ya están en ascensos o si están pendientes
+                        if (u.rango !== 'Sin Rango (Pendiente)') {
+                            const yaExiste = listaUnificada.some(x => x.nombre.toLowerCase().trim() === u.nombre.toLowerCase().trim());
+                            if (!yaExiste) {
+                                listaUnificada.push({
+                                    id_original: u.id,
+                                    tipo_origen: 'usuario',
+                                    discord_id: u.discord_id || 'N/A',
+                                    nombre: u.nombre,
+                                    departamento: 'direccion',
+                                    rango_actual: u.rango,
+                                    rango_postular: 'Cargo Oficial',
+                                    horas_semana: u.horas_semana || 'Mando Institucional',
+                                    faltas: '—',
+                                    examen: '—',
+                                    fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
+                                    descripcion: `Cuenta institucional @${u.usuario}`,
+                                    esMando: true
+                                });
+                            }
+                        }
+                    });
+                }
+
                 const cuerpo = document.getElementById('cuerpoTablaCenso');
 
                 if (listaUnificada.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
                     document.getElementById('txtTotalCenso').innerText = "0 Efectivos";
                     return;
                 }
 
-                // ORDENAR ESTRICTAMENTE DE MAYOR A MENOR (18 -> 1)
+                // ORDENAR ESTRICTAMENTE DE MAYOR A MENOR JERARQUÍA (18 -> 1)
                 listaUnificada.sort((a, b) => {
                     const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
                     const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
@@ -1421,17 +1472,25 @@
                     return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                 });
 
-                document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos`;
+                document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos Totales`;
 
                 cuerpo.innerHTML = listaUnificada.map((r, index) => {
                     let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
                     if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
                     if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
                     if (r.departamento === 'coordinacion') deptoTag = '<span class="text-cyan-400 font-bold">Coordinación</span>';
+                    if (r.departamento === 'direccion') deptoTag = '<span class="text-pink-400 font-bold">Dirección / Jefatura</span>';
 
                     let celdaHoras = '';
-                    if (r.esMando) {
-                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[11px] bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">Mando / Supervisión</span>`;
+                    if (r.departamento === 'direccion') {
+                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-pink-950/60 text-pink-300 border border-pink-500/30">Mando Institucional</span>`;
+                    } else if (r.departamento === 'coordinacion') {
+                        if (r.horas_semana) {
+                            const sc = obtenerClaseSemaforoCasilla(r.horas_semana);
+                            celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${sc}">${r.horas_semana}</span>`;
+                        } else {
+                            celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">Mando / Supervisión</span>`;
+                        }
                     } else {
                         const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
                         celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${semaforo}">${r.horas_semana || '00:00 HRS'}</span>`;
@@ -1454,12 +1513,32 @@
                             </td>
                             <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">${r.fecha_ingreso}</td>
                             <td class="fluid-td text-zinc-400 text-xs">${r.descripcion}</td>
+                            <td class="fluid-td text-right">
+                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-xs">Eliminar</button>
+                            </td>
                         </tr>
                     `;
                 }).join('');
             } catch (e) {
                 console.error("Error al cargar censo:", e);
             }
+        }
+
+        async function eliminarDesdeCenso(tipo, id) {
+            if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar este registro del censo y de su respectivo departamento?")) return;
+
+            if (tipo === 'ascenso') {
+                await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
+            } else if (tipo === 'coordinacion') {
+                await fetch(`/api/coordinacion/${id}`, { method: 'DELETE' });
+            } else if (tipo === 'usuario') {
+                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+            }
+
+            cargarCensoGeneral();
+            cargarTablas();
+            cargarCoordinacion();
+            cargarGestionAdmin();
         }
 
         // ==========================================
@@ -1473,7 +1552,14 @@
             cuerpo.innerHTML = data.map((u, index) => `
                 <tr class="fluid-row hover:bg-zinc-900/40">
                     <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                    <td class="fluid-td font-bold text-white text-sm">${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-xs">(@${u.usuario})</span></td>
+                    <td class="fluid-td font-mono-code text-zinc-400 text-xs">
+                        <input type="text" id="discordAdmin-${u.id}" value="${u.discord_id || ''}" placeholder="Discord ID" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="cell-input font-mono-code text-xs text-zinc-300">
+                    </td>
+                    <td class="fluid-td font-bold text-white text-sm">
+                        ${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-xs">(@${u.usuario})</span>
+                    </td>
                     <td class="fluid-td">
                         <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300">
                             ${RANGOS_EMS.map(r => `<option value="${r}" ${u.rango === r ? 'selected' : ''}>${r}</option>`).join('')}
@@ -1482,11 +1568,12 @@
                     <td class="fluid-td">
                         <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs">
                             <option value="empleado" ${u.rol === 'empleado' ? 'selected' : ''}>Personal</option>
-                            <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+                            <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador (Director)</option>
                         </select>
                     </td>
-                    <td class="fluid-td text-right">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1.5 rounded-xl text-xs">Guardar</button>
+                    <td class="fluid-td text-right flex items-center justify-end gap-1.5 py-3">
+                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1 rounded-xl text-xs">Guardar</button>
+                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded-xl text-xs">Eliminar</button>
                     </td>
                 </tr>
             `).join('');
@@ -1495,12 +1582,22 @@
         async function guardarAdminUsuario(id) {
             const rango = document.getElementById(`selRangoAdmin-${id}`).value;
             const rol = document.getElementById(`selRolAdmin-${id}`).value;
+            const discord_id = document.getElementById(`discordAdmin-${id}`).value.trim();
+
             await fetch(`/api/usuarios/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rango, rol }) 
+                body: JSON.stringify({ rango, rol, discord_id }) 
             });
-            alert("Rango y permisos actualizados con éxito.");
+            alert("Cuenta actualizada y rango reflejado en el Censo General.");
+            cargarCensoGeneral();
+        }
+
+        async function eliminarAdminUsuario(id) {
+            if (!confirm("¿Deseas dar de baja y eliminar esta cuenta del sistema?")) return;
+            await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+            cargarGestionAdmin();
+            cargarCensoGeneral();
         }
 
         socket.on('db_update', () => {

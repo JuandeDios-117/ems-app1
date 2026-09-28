@@ -57,7 +57,7 @@ function notificar(evento, data = {}) {
     io.emit('db_update', { evento, ...data });
 }
 
-// 1. REGISTRO & LOGIN (NUEVOS USUARIOS NACEN SIN RANGO PARA SEGURIDAD)
+// 1. REGISTRO & LOGIN
 app.post('/api/register', async (req, res) => {
     const { nombre, usuario, password } = req.body;
     const userClean = (usuario || '').trim().toLowerCase();
@@ -80,10 +80,11 @@ app.post('/api/register', async (req, res) => {
         const esPrimero = Number(count.rows[0].total) === 0;
         const rangoInicial = esPrimero ? 'Director (Admin)' : 'Sin Rango (Pendiente)';
         const rolInicial = esPrimero ? 'admin' : 'empleado';
+        const hoy = new Date().toISOString().split('T')[0];
 
         const result = await db.execute({
-            sql: "INSERT INTO usuarios (nombre, usuario, password, rango, rol) VALUES (?, ?, ?, ?, ?)",
-            args: [nombre.trim(), userClean, String(password), rangoInicial, rolInicial]
+            sql: "INSERT INTO usuarios (nombre, usuario, password, rango, rol, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?)",
+            args: [nombre.trim(), userClean, String(password), rangoInicial, rolInicial, hoy]
         });
 
         notificar('nuevo_usuario');
@@ -115,10 +116,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 2. PANEL ADMIN
+// 2. PANEL ADMIN / CUENTAS
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const result = await db.execute("SELECT id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios ORDER BY id ASC");
+        const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -126,14 +127,22 @@ app.get('/api/usuarios', async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', async (req, res) => {
-    const { rango, rol } = req.body;
+    const { rango, rol, discord_id, horas_semana, fecha_ingreso } = req.body;
+    let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
+
     try {
         await db.execute({
-            sql: "UPDATE usuarios SET rango = ?, rol = ? WHERE id = ?",
-            args: [rango, rol, req.params.id]
+            sql: `UPDATE usuarios SET 
+                    rango = COALESCE(?, rango), 
+                    rol = COALESCE(?, rol),
+                    discord_id = COALESCE(?, discord_id),
+                    horas_semana = COALESCE(?, horas_semana),
+                    fecha_ingreso = COALESCE(?, fecha_ingreso)
+                  WHERE id = ?`,
+            args: [rango || null, rol || null, discordLimpio, horas_semana || null, fecha_ingreso || null, req.params.id]
         });
         notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango, rol });
-        res.json({ message: "Rango actualizado con éxito." });
+        res.json({ message: "Cuenta actualizada." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -357,19 +366,20 @@ app.get('/api/coordinacion', async (req, res) => {
 });
 
 app.post('/api/coordinacion', async (req, res) => {
-    const { discord_id, supervisor, rango, estado, feedback_semanal, actualizado_por } = req.body;
+    const { discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por } = req.body;
     if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
 
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, estado, feedback_semanal, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?)`,
+            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 discordLimpio,
                 supervisor.trim(),
                 rango || 'Supervisor',
+                horas_semana || '',
                 estado || 'Activo',
                 feedback_semanal || '',
                 actualizado_por || 'Coordinación'
@@ -383,15 +393,19 @@ app.post('/api/coordinacion', async (req, res) => {
 });
 
 app.put('/api/coordinacion/:id', async (req, res) => {
-    const { estado, feedback_semanal, rango } = req.body;
+    const { estado, feedback_semanal, rango, horas_semana, discord_id } = req.body;
+    let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
+
     try {
         await db.execute({
             sql: `UPDATE registro_coordinacion SET 
                     estado = COALESCE(?, estado),
                     feedback_semanal = COALESCE(?, feedback_semanal),
-                    rango = COALESCE(?, rango)
+                    rango = COALESCE(?, rango),
+                    horas_semana = COALESCE(?, horas_semana),
+                    discord_id = COALESCE(?, discord_id)
                   WHERE id = ?`,
-            args: [estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null, req.params.id]
+            args: [estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null, horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, req.params.id]
         });
         notificar('coordinacion_actualizada');
         res.json({ message: "Coordinación actualizada." });
