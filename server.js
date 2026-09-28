@@ -280,7 +280,7 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// 4. FORMACIONES
+// 4. FORMACIONES ($50,000 POR INSTRUCCIÓN)
 app.get('/api/formaciones', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
@@ -310,7 +310,7 @@ app.post('/api/formaciones', async (req, res) => {
 app.put('/api/formaciones/:id', async (req, res) => {
     const { instrucciones_hechas, notas, rango } = req.body;
     const cant = Math.max(0, parseInt(instrucciones_hechas) || 0);
-    const totalPago = cant * 20000;
+    const totalPago = cant * 50000; // Liquidación a $50,000 por instrucción
 
     try {
         await db.execute({
@@ -329,7 +329,7 @@ app.put('/api/formaciones/:id', async (req, res) => {
             ]
         });
         notificar('formaciones_actualizadas');
-        res.json({ message: "Formación actualizada." });
+        res.json({ message: "Formación actualizada.", total_pago: totalPago });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

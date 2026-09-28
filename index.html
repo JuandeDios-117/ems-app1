@@ -233,16 +233,16 @@
         <!-- SECCIONES DEPARTAMENTALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- JEFATURA DE FORMACIONES ($20K POR INSTRUCCIÓN + CORTE SEMANAL) -->
+        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN + CORTE SEMANAL) -->
         <section id="seccion-formaciones" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">📚 Jefatura de Formaciones · Nómina de Instructores</h2>
-                        <p class="text-xs text-zinc-400">Registro de capacitadores y liquidación semanal automatizada ($20,000 por instrucción).</p>
+                        <p class="text-xs text-zinc-400">Registro de capacitadores y liquidación semanal en tiempo real ($50,000 por instrucción).</p>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$20,000 / Instrucción</span>
+                        <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Instrucción</span>
                         <button onclick="ejecutarCorteSemanalFormaciones()" class="bg-rose-600 hover:bg-rose-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-rose-600/30">
                             🔄 Corte Semanal ($0)
                         </button>
@@ -284,13 +284,13 @@
 
         <!-- COORDINACIÓN Y SUPERVISIÓN -->
         <section id="seccion-coordinacion" class="hidden space-y-4">
-            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-cyan-500">
+            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-400">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
                         <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y feedback semanal.</p>
                     </div>
-                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-cyan-500/15 text-cyan-300 border-cyan-500/30">Cuerpo de Supervisión</span>
+                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
@@ -305,8 +305,8 @@
                     <div class="w-48">
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
                         <select id="coordRangoSel" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-xs">
-                            <option value="Supervisor">Supervisor</option>
-                            <option value="Coordinador">Coordinador</option>
+                            <option value="Supervisor">Supervisor (Rosa Fuerte)</option>
+                            <option value="Coordinador">Coordinador (Rosa Claro)</option>
                         </select>
                     </div>
                     <div class="w-40">
@@ -330,7 +330,7 @@
                 <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                     <table class="fluid-table">
                         <thead>
-                            <tr class="bg-cyan-950/40 text-cyan-200">
+                            <tr class="bg-pink-950/40 text-pink-200">
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-36">DISCORD ID</th>
                                 <th class="fluid-th text-left w-1/4">SUPERVISOR A CARGO</th>
@@ -349,7 +349,7 @@
 
         <!-- CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR) -->
         <section id="seccion-censo" class="hidden space-y-4">
-            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-500">
+            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
@@ -365,7 +365,7 @@
                 <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                     <table class="fluid-table">
                         <thead>
-                            <tr class="bg-pink-950/40 text-pink-200">
+                            <tr class="bg-zinc-900 text-zinc-300">
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-32">DISCORD ID</th>
                                 <th class="fluid-th text-left w-1/4">PERSONAL (IC)</th>
@@ -387,7 +387,7 @@
         </section>
 
         <!-- PANEL ADMIN (USUARIOS DE LA WEB) -->
-        <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-pink-500">
+        <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
             <h2 class="text-xl font-black text-white uppercase">👑 Panel de Cuentas y Asignación de Rangos</h2>
             <p class="text-xs text-zinc-400">Otorga el rango oficial a los nuevos usuarios. Al asignarse un rango médico o directivo, se integran de inmediato al Censo General.</p>
             <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
@@ -504,7 +504,7 @@
                 id: 'medicina', 
                 tituloNav: '💊 MEDICINA',
                 titulo: '💊 Jefatura de Medicina · Evaluación de Ascensos',
-                colorBorde: 'border-blue-500',
+                colorBorde: 'border-blue-600',
                 colorHeader: 'bg-blue-950/40 text-blue-200',
                 colorTexto: 'text-blue-400',
                 rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador"]
@@ -519,6 +519,44 @@
                 rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador"]
             }
         ];
+
+        function obtenerBadgeRango(rango) {
+            const r = (rango || '').toLowerCase();
+            
+            if (r.includes('director (admin)') || r.includes('subdirectora')) {
+                return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">👑 ${rango}</span>`;
+            }
+            if (r.includes('cirugía') || r.includes('cirugia')) {
+                return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">⭐ ${rango}</span>`;
+            }
+            if (r.includes('medicina')) {
+                return `<span class="inline-flex items-center gap-1 bg-blue-600/25 text-blue-200 border border-blue-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">⭐ ${rango}</span>`;
+            }
+            if (r.includes('formaciones') || r.includes('formacion')) {
+                return `<span class="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">⭐ ${rango}</span>`;
+            }
+            if (r.includes('coordinador')) {
+                return `<span class="inline-flex items-center gap-1 bg-pink-300/20 text-pink-200 border border-pink-300/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">👔 ${rango}</span>`;
+            }
+            if (r.includes('supervisor')) {
+                return `<span class="inline-flex items-center gap-1 bg-fuchsia-600/25 text-fuchsia-200 border border-fuchsia-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📋 ${rango}</span>`;
+            }
+            if (r.includes('enfermería') || r.includes('enfermeria')) {
+                return `<span class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">⭐ ${rango}</span>`;
+            }
+
+            if (r.includes('subespecialista')) return `<span class="text-cyan-300 font-bold">🩺 『🔬』 ${rango}</span>`;
+            if (r.includes('especialista')) return `<span class="text-sky-300 font-bold">🩺 『🥼』 ${rango}</span>`;
+            if (r.includes('residente')) return `<span class="text-fuchsia-300 font-bold">📑 『📚』 ${rango}</span>`;
+            if (r.includes('interno')) return `<span class="text-pink-300 font-bold">📑 『📝』 ${rango}</span>`;
+            if (r.includes('estudiante')) return `<span class="text-blue-300 font-bold">📑 『📗』 ${rango}</span>`;
+            if (r.includes('enfermero/a especialista')) return `<span class="text-emerald-300 font-bold">💉 『🧵』 ${rango}</span>`;
+            if (r.includes('enfermero/a general') || r === 'enfermero') return `<span class="text-teal-300 font-bold">💉 『💉』 ${rango}</span>`;
+            if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️ 『🧴』 ${rango}</span>`;
+            if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡️ 『👀』 ${rango}</span>`;
+
+            return `<span class="text-zinc-300 font-semibold">${rango}</span>`;
+        }
 
         function esDirector() {
             return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora');
@@ -680,7 +718,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <input type="text" value="${r.descripcion || ''}" placeholder="Notas, rango de ausencia..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs">
+                        <input type="text" value="${r.descripcion || ''}" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs">
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -725,7 +763,6 @@
                             </div>
                         </div>
                         
-                        <!-- Formulario Rápido -->
                         <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
                             <div class="w-48">
                                 <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID (Solo Números)</label>
@@ -903,7 +940,7 @@
             document.getElementById('userInfo').innerHTML = `
                 <div class="flex items-center gap-2">
                     <span class="text-white font-bold">${usuarioActual.nombre}</span>
-                    <span class="bg-pink-500/20 text-pink-300 border border-pink-500/40 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase">${usuarioActual.rango}</span>
+                    ${obtenerBadgeRango(usuarioActual.rango)}
                 </div>
                 <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2">Salir</button>
             `;
@@ -928,13 +965,13 @@
 
             const esCoordinador = esAdmin || usuarioActual.rango === 'Coordinador' || usuarioActual.rango === 'Supervisor';
             if (esCoordinador) {
-                navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-cyan-400">🛡️ COORDINACIÓN</button>`;
+                navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-300">🛡️ COORDINACIÓN</button>`;
                 if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
             }
 
             if (esAdmin) {
-                navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-400">📋 CENSO GENERAL</button>`;
-                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">👑 PANEL CUENTAS</button>`;
+                navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">👑 CENSO GENERAL</button>`;
+                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">⚙️ PANEL CUENTAS</button>`;
             }
 
             nav.innerHTML = navBotonesHTML;
@@ -1129,9 +1166,9 @@
             }
         }
 
-        // ==========================================
-        // FORMACIONES ($20K + CORTE SEMANAL)
-        // ==========================================
+        // =========================================================================
+        // FORMACIONES ($50,000 POR INSTRUCCIÓN CON CÁLCULO INSTANTÁNEO EN VIVO)
+        // =========================================================================
         async function guardarNuevoInstructor() {
             const instructor = document.getElementById('formInstructor').value.trim();
             const rango = document.getElementById('formRango').value;
@@ -1161,6 +1198,29 @@
             }
         }
 
+        // Multiplicador ajustado a $50,000 en tiempo real
+        function calcularPagoInstantaneo(id, inputElement) {
+            const cant = Math.max(0, parseInt(inputElement.value) || 0);
+            const total = cant * 50000;
+            const targetCell = document.getElementById(`totalPagoForm_${id}`);
+            if (targetCell) {
+                targetCell.innerText = `$${total.toLocaleString()}`;
+            }
+            actualizarFormacionBackendDebounced(id, cant);
+        }
+
+        let debounceTimers = {};
+        function actualizarFormacionBackendDebounced(id, cant) {
+            clearTimeout(debounceTimers[id]);
+            debounceTimers[id] = setTimeout(async () => {
+                await fetch(`/api/formaciones/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ instrucciones_hechas: cant })
+                });
+            }, 300);
+        }
+
         async function editarFormacionEnTabla(id, campo, valor) {
             try {
                 await fetch(`/api/formaciones/${id}`, {
@@ -1175,7 +1235,7 @@
         }
 
         async function ejecutarCorteSemanalFormaciones() {
-            const confirmar = confirm("⚠️ ¿Confirmas realizar el CORTE SEMANAL de nómina?\n\nEsta acción reiniciará a 0 todas las instrucciones y el total a pagar de cada instructor.");
+            const confirmar = confirm("⚠️ ¿Confirmas realizar el CORTE SEMANAL de nómina?\n\nEsta acción reiniciará a 0 todas las instrucciones y el total a pagar de cada instructor ($50,000 por instrucción).");
             if (!confirmar) return;
 
             try {
@@ -1211,10 +1271,10 @@
                         </td>
                         <td class="fluid-td text-center">
                             <input type="number" min="0" value="${f.instrucciones_hechas}" 
-                                   onchange="editarFormacionEnTabla(${f.id}, 'instrucciones_hechas', this.value)" 
+                                   oninput="calcularPagoInstantaneo(${f.id}, this)"
                                    class="cell-input text-center font-mono-code font-black text-yellow-400 text-sm bg-black/40 border border-zinc-800 rounded-lg py-1">
                         </td>
-                        <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-base">
+                        <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-base" id="totalPagoForm_${f.id}">
                             $${(f.total_pago || 0).toLocaleString()}
                         </td>
                         <td class="fluid-td">
@@ -1327,9 +1387,9 @@
                             <input type="text" value="${c.supervisor}" onblur="editarCoordinacionEnTabla(${c.id}, 'supervisor', this.value)" class="cell-input font-bold text-white">
                         </td>
                         <td class="fluid-td">
-                            <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango', this.value)" class="cell-input font-semibold text-cyan-300">
-                                <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
-                                <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>Coordinador</option>
+                            <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango', this.value)" class="cell-input font-bold ${c.rango === 'Coordinador' ? 'text-pink-300' : 'text-fuchsia-300'}">
+                                <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>Supervisor (Rosa Fuerte)</option>
+                                <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>Coordinador (Rosa Claro)</option>
                             </select>
                         </td>
                         <td class="fluid-td text-center">
@@ -1371,7 +1431,7 @@
         }
 
         // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (INCLUYE CUENTAS Y PERMITE GESTIÓN COMPLETA)
+        // CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR CON COLORES OFICIALES)
         // =========================================================================
         async function cargarCensoGeneral() {
             try {
@@ -1387,7 +1447,6 @@
 
                 let listaUnificada = [];
 
-                // 1. Personal evaluado en Cirugía, Medicina y Enfermería
                 if (Array.isArray(dataAsc)) {
                     dataAsc.forEach(a => {
                         listaUnificada.push({
@@ -1408,7 +1467,6 @@
                     });
                 }
 
-                // 2. Supervisores y Coordinadores
                 if (Array.isArray(dataCoord)) {
                     dataCoord.forEach(c => {
                         listaUnificada.push({
@@ -1429,10 +1487,8 @@
                     });
                 }
 
-                // 3. CUENTAS DEL PANEL DE DIRECCIÓN (Directores, Subdirectores, Jefes registrados)
                 if (Array.isArray(dataUsers)) {
                     dataUsers.forEach(u => {
-                        // Evita duplicar si ya están en ascensos o si están pendientes
                         if (u.rango !== 'Sin Rango (Pendiente)') {
                             const yaExiste = listaUnificada.some(x => x.nombre.toLowerCase().trim() === u.nombre.toLowerCase().trim());
                             if (!yaExiste) {
@@ -1464,7 +1520,6 @@
                     return;
                 }
 
-                // ORDENAR ESTRICTAMENTE DE MAYOR A MENOR JERARQUÍA (18 -> 1)
                 listaUnificada.sort((a, b) => {
                     const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
                     const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
@@ -1478,18 +1533,18 @@
                     let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
                     if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
                     if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
-                    if (r.departamento === 'coordinacion') deptoTag = '<span class="text-cyan-400 font-bold">Coordinación</span>';
-                    if (r.departamento === 'direccion') deptoTag = '<span class="text-pink-400 font-bold">Dirección / Jefatura</span>';
+                    if (r.departamento === 'coordinacion') deptoTag = '<span class="text-pink-300 font-bold">Coordinación</span>';
+                    if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
 
                     let celdaHoras = '';
                     if (r.departamento === 'direccion') {
-                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-pink-950/60 text-pink-300 border border-pink-500/30">Mando Institucional</span>`;
+                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-rose-950/60 text-rose-300 border border-rose-500/30">Mando Institucional</span>`;
                     } else if (r.departamento === 'coordinacion') {
                         if (r.horas_semana) {
                             const sc = obtenerClaseSemaforoCasilla(r.horas_semana);
                             celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${sc}">${r.horas_semana}</span>`;
                         } else {
-                            celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">Mando / Supervisión</span>`;
+                            celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-pink-950/60 text-pink-300 border border-pink-400/30">Mando / Supervisión</span>`;
                         }
                     } else {
                         const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
@@ -1502,7 +1557,7 @@
                             <td class="fluid-td font-mono-code text-zinc-400 text-xs">${r.discord_id}</td>
                             <td class="fluid-td font-bold text-white">${r.nombre}</td>
                             <td class="fluid-td">${deptoTag}</td>
-                            <td class="fluid-td font-semibold text-pink-300">${r.rango_actual}</td>
+                            <td class="fluid-td">${obtenerBadgeRango(r.rango_actual)}</td>
                             <td class="fluid-td font-semibold text-zinc-400">${r.rango_postular}</td>
                             <td class="fluid-td text-center">${celdaHoras}</td>
                             <td class="fluid-td text-center font-bold text-xs ${r.faltas === 'WARN' ? 'text-amber-400' : r.faltas === 'DESPIDO' ? 'text-rose-500' : 'text-zinc-500'}">
