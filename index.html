@@ -450,7 +450,7 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL (EDITABLE Y CON EMOJIS DE DOCTOR) -->
+        <!-- CENSO GENERAL (EDITABLE CON EMOJIS DE DOCTOR Y FILTRO ESTRICTO) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -1647,9 +1647,9 @@
             }
         }
 
-        // =========================================================================
+        // ==========================================
         // TESORERÍA & PAGOS
-        // =========================================================================
+        // ==========================================
         async function guardarRegistroPago() {
             const personal = document.getElementById('pagoPersonal').value.trim();
             const rango = document.getElementById('pagoRango').value;
@@ -1810,7 +1810,7 @@
         }
 
         // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (100% EDITABLE DE FORMA BIDIRECCIONAL)
+        // CENSO GENERAL DE DIRECCIÓN (100% EDITABLE Y CON FILTRO ESTRICTO)
         // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
