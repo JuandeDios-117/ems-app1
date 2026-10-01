@@ -30,15 +30,9 @@ const db = createClient({
       )
     `);
 
-    try {
-      await db.execute("ALTER TABLE usuarios ADD COLUMN discord_id TEXT DEFAULT 'N/A'");
-    } catch (e) {}
-    try {
-      await db.execute("ALTER TABLE usuarios ADD COLUMN horas_semana TEXT DEFAULT ''");
-    } catch (e) {}
-    try {
-      await db.execute("ALTER TABLE usuarios ADD COLUMN fecha_ingreso TEXT DEFAULT ''");
-    } catch (e) {}
+    try { await db.execute("ALTER TABLE usuarios ADD COLUMN discord_id TEXT DEFAULT 'N/A'"); } catch (e) {}
+    try { await db.execute("ALTER TABLE usuarios ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE usuarios ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_ascensos (
@@ -46,7 +40,7 @@ const db = createClient({
         jefatura TEXT NOT NULL,
         discord_id TEXT DEFAULT 'N/A',
         nombre_ems TEXT DEFAULT '',
-        nombre TEXT DEFAULT '',
+        nombre TEXT NOT NULL,
         rango_actual TEXT NOT NULL,
         rango_propuesto TEXT DEFAULT '',
         rango_postular TEXT DEFAULT '',
@@ -61,12 +55,8 @@ const db = createClient({
       )
     `);
 
-    try {
-      await db.execute("ALTER TABLE registro_ascensos ADD COLUMN estado TEXT DEFAULT 'Activo'");
-    } catch (e) {}
-    try {
-      await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''");
-    } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN estado TEXT DEFAULT 'Activo'"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_formaciones (
@@ -95,11 +85,25 @@ const db = createClient({
       )
     `);
 
-    try {
-      await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''");
-    } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
 
-    console.log("[DB] Tablas de EMS Origen Roleplay verificadas y actualizadas en Turso.");
+    // NUEVA TABLA: REGISTRO CENTRALIZADO DE PAGOS Y TESORERÍA
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS registro_pagos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        personal TEXT NOT NULL,
+        rango TEXT NOT NULL,
+        concepto TEXT NOT NULL,
+        cantidad REAL DEFAULT 0,
+        estado TEXT DEFAULT 'Pendiente',
+        pagado_por TEXT DEFAULT 'Pendiente',
+        fecha_pago TEXT DEFAULT '',
+        registrado_por TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log("[DB] Todas las tablas de EMS Origen Roleplay operativas en Turso.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

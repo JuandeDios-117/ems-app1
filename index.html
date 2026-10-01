@@ -160,6 +160,16 @@
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
+
+        /* Estilo de impresión limpia para PDF */
+        @media print {
+            body { background: #ffffff !important; color: #000000 !important; }
+            header, nav, #userInfo, .btn-origen, button { display: none !important; }
+            .card-ems { border: 1px solid #ccc !important; box-shadow: none !important; background: #fff !important; }
+            .fluid-th { background: #eee !important; color: #000 !important; border: 1px solid #ddd !important; }
+            .fluid-td { background: #fff !important; color: #000 !important; border: 1px solid #ddd !important; }
+            .cell-input { color: #000 !important; }
+        }
     </style>
 </head>
 <body class="p-3 md:p-6 text-sm">
@@ -178,7 +188,7 @@
                     <h1 class="text-xl md:text-2xl font-black uppercase text-white tracking-wider flex items-center gap-2">
                         EMS <span class="text-pink-400">ORIGEN</span> <span class="text-xs font-bold text-zinc-400">ROLEPLAY</span>
                     </h1>
-                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones y Supervisión</p>
+                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones, Supervisión y Finanzas</p>
                 </div>
             </div>
             <div id="userInfo" class="text-xs text-zinc-400 flex items-center gap-3"></div>
@@ -189,9 +199,7 @@
 
         <!-- PANTALLA PENDIENTE DE ASIGNACIÓN -->
         <div id="seccion-pendiente" class="max-w-lg mx-auto card-ems p-8 rounded-3xl text-center space-y-4 mt-12 border border-amber-500/30 hidden">
-            <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-3xl">
-                ⏳
-            </div>
+            <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-3xl">⏳</div>
             <h2 class="text-xl font-black text-amber-300 uppercase tracking-wide">Acceso en Espera de Autorización</h2>
             <p class="text-xs text-zinc-300 leading-relaxed">
                 Tu cuenta ha sido creada exitosamente. Por motivos de seguridad y privacidad departamental, 
@@ -233,13 +241,13 @@
         <!-- SECCIONES DEPARTAMENTALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN + CORTE SEMANAL) -->
+        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN + RANGOS AMPLIADOS) -->
         <section id="seccion-formaciones" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">📚 Jefatura de Formaciones · Nómina de Instructores</h2>
-                        <p class="text-xs text-zinc-400">Registro de capacitadores y liquidación semanal en tiempo real ($50,000 por instrucción).</p>
+                        <p class="text-xs text-zinc-400">Registro de capacitadores (incluye Supervisores y Jefaturas) y liquidación semanal en tiempo real ($50,000 por instrucción).</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Instrucción</span>
@@ -282,7 +290,7 @@
             </div>
         </section>
 
-        <!-- COORDINACIÓN Y SUPERVISIÓN -->
+        <!-- COORDINACIÓN Y SUPERVISIÓN (CON BOTÓN PDF Y RANGOS LIMPIOS) -->
         <section id="seccion-coordinacion" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-400">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -290,7 +298,12 @@
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
                         <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y feedback semanal.</p>
                     </div>
-                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
+                    <div class="flex items-center gap-3">
+                        <button onclick="imprimirReporteCoordinacion()" class="bg-zinc-800 hover:bg-zinc-700 text-pink-300 border border-pink-500/40 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
+                            📄 Exportar Reporte PDF
+                        </button>
+                        <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
+                    </div>
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
@@ -305,8 +318,8 @@
                     <div class="w-48">
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
                         <select id="coordRangoSel" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-xs">
-                            <option value="Supervisor">Supervisor (Rosa Fuerte)</option>
-                            <option value="Coordinador">Coordinador (Rosa Claro)</option>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Coordinador">Coordinador</option>
                         </select>
                     </div>
                     <div class="w-40">
@@ -327,7 +340,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
+                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl" id="bloqueTablaCoordinacion">
                     <table class="fluid-table">
                         <thead>
                             <tr class="bg-pink-950/40 text-pink-200">
@@ -342,6 +355,100 @@
                             </tr>
                         </thead>
                         <tbody id="cuerpoTablaCoordinacion"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- NUEVA SECCIÓN: TESORERÍA & REGISTRO DE PAGOS -->
+        <section id="seccion-pagos" class="hidden space-y-4">
+            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-emerald-500">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
+                            💰 TESORERÍA DEPARTAMENTAL · REGISTRO DE PAGOS
+                        </h2>
+                        <p class="text-xs text-zinc-400">Control centralizado y transparente de bonos semanales, incentivos, premios y liquidaciones.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="ejecutarCorteSemanalPagos()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
+                            💼 Corte Semanal (Liquidar Pendientes)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CONTADORES TOTALIZADORES EN LA CABECERA -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Total General Registrado</span>
+                            <div class="text-xl font-black font-mono-code text-white mt-0.5" id="totalPagosRegistrados">$0</div>
+                        </div>
+                        <span class="text-2xl">💵</span>
+                    </div>
+                    <div class="bg-black/60 p-4 rounded-2xl border border-emerald-500/30 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Total Liquidado (Pagado)</span>
+                            <div class="text-xl font-black font-mono-code text-emerald-400 mt-0.5" id="totalPagosLiquidados">$0</div>
+                        </div>
+                        <span class="text-2xl">✅</span>
+                    </div>
+                    <div class="bg-black/60 p-4 rounded-2xl border border-amber-500/30 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider">Total Pendiente de Cobro</span>
+                            <div class="text-xl font-black font-mono-code text-amber-300 mt-0.5" id="totalPagosPendientes">$0</div>
+                        </div>
+                        <span class="text-2xl">⏳</span>
+                    </div>
+                </div>
+
+                <!-- Formulario de Ingreso de Pagos -->
+                <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Personal (IC)</label>
+                        <input type="text" id="pagoPersonal" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
+                        <select id="pagoRango" class="w-full input-ems px-3 py-2 rounded-xl font-semibold"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Concepto de Pago</label>
+                        <input type="text" id="pagoConcepto" placeholder="Bono semanal, Premio..." class="w-full input-ems px-3 py-2 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Cantidad ($)</label>
+                        <input type="number" id="pagoCantidad" placeholder="50000" min="0" class="w-full input-ems px-3 py-2 rounded-xl font-mono-code font-bold text-emerald-400">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Inicial</label>
+                        <select id="pagoEstado" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                            <option value="Pendiente">⏳ Pendiente</option>
+                            <option value="Pagado">✅ Pagado</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="guardarRegistroPago()" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs tracking-wider font-extrabold">+ ASENTAR PAGO</button>
+                    </div>
+                </div>
+
+                <!-- Tabla de Tesorería -->
+                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
+                    <table class="fluid-table">
+                        <thead>
+                            <tr class="bg-emerald-950/40 text-emerald-200">
+                                <th class="fluid-th text-center w-12">#</th>
+                                <th class="fluid-th text-left w-1/5">PERSONAL</th>
+                                <th class="fluid-th text-left w-48">RANGO</th>
+                                <th class="fluid-th text-left w-1/4">CONCEPTO</th>
+                                <th class="fluid-th text-center w-36">CANTIDAD</th>
+                                <th class="fluid-th text-center w-36">ESTADO</th>
+                                <th class="fluid-th text-left w-44">PAGADO POR</th>
+                                <th class="fluid-th text-center w-32">FECHA DE PAGO</th>
+                                <th class="fluid-th text-right w-20">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaPagos"></tbody>
                     </table>
                 </div>
             </div>
@@ -479,6 +586,19 @@
             { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
 
+        // RANGOS AMPLIADOS PARA FORMACIONES Y PAGOS (INCLUYE MANDOS)
+        const TODOS_LOS_RANGOS = [
+            ...RANGOS_EVALUACION,
+            { id: "Supervisor", label: "📋 Supervisor", escala: "mando" },
+            { id: "Coordinador", label: "👔 Coordinador", escala: "mando" },
+            { id: "Jefe de Formaciones", label: "⭐ Jefe de Formaciones", escala: "jefatura" },
+            { id: "Director de Enfermería", label: "⭐ Director de Enfermería", escala: "jefatura" },
+            { id: "Jefe de Medicina", label: "⭐ Jefe de Medicina", escala: "jefatura" },
+            { id: "Jefa de Cirugía", label: "⭐ Jefa de Cirugía", escala: "jefatura" },
+            { id: "Subdirectora", label: "👑 Subdirectora", escala: "direccion" },
+            { id: "Director (Admin)", label: "👑 Director (Admin)", escala: "direccion" }
+        ];
+
         const RANGOS_ESCALA_BASICA = [
             { id: "Celador/a", label: "『👀』Celador/a" },
             { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" }
@@ -522,7 +642,6 @@
 
         function obtenerBadgeRango(rango) {
             const r = (rango || '').toLowerCase();
-            
             if (r.includes('director (admin)') || r.includes('subdirectora')) {
                 return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">👑 ${rango}</span>`;
             }
@@ -874,7 +993,17 @@
                 `;
             }).join('');
 
-            document.getElementById('formRango').innerHTML = RANGOS_EVALUACION.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
+            // Cargar selector de Formaciones con todos los rangos (incluye Supervisores y Jefaturas)
+            const selFormRango = document.getElementById('formRango');
+            if (selFormRango) {
+                selFormRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
+            }
+
+            // Cargar selector de Pagos con todos los rangos
+            const selPagoRango = document.getElementById('pagoRango');
+            if (selPagoRango) {
+                selPagoRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
+            }
         }
 
         inicializarEstructuraHtml();
@@ -969,6 +1098,13 @@
                 if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
             }
 
+            // NUEVA PESTAÑA: TESORERÍA & PAGOS
+            const tieneAccesoPagos = esAdmin || usuarioActual.rango.includes('Jefe') || usuarioActual.rango.includes('Jefa') || usuarioActual.rango === 'Coordinador';
+            if (tieneAccesoPagos) {
+                navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
+            }
+
             if (esAdmin) {
                 navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">👑 CENSO GENERAL</button>`;
                 navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">⚙️ PANEL CUENTAS</button>`;
@@ -979,13 +1115,14 @@
             cargarTablas();
             cargarFormaciones();
             cargarCoordinacion();
+            cargarPagos();
             if (pestanaAInicializar) cambiarPestana(pestanaAInicializar);
 
             socket.emit('user_connected', usuarioActual);
         }
 
         function cambiarPestana(pestana) {
-            const todas = [...JEFATURAS.map(j => j.id), 'formaciones', 'coordinacion', 'censo', 'admin'];
+            const todas = [...JEFATURAS.map(j => j.id), 'formaciones', 'coordinacion', 'pagos', 'censo', 'admin'];
             todas.forEach(p => {
                 const sec = document.getElementById(`seccion-${p}`);
                 if (sec) sec.classList.add('hidden');
@@ -999,6 +1136,7 @@
             const btnActivo = document.getElementById(`tab-${pestana}`);
             if (btnActivo) btnActivo.className = 'tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-origen text-white';
 
+            if (pestana === 'pagos') cargarPagos();
             if (pestana === 'censo') cargarCensoGeneral();
             if (pestana === 'admin') cargarGestionAdmin();
         }
@@ -1167,7 +1305,7 @@
         }
 
         // =========================================================================
-        // FORMACIONES ($50,000 POR INSTRUCCIÓN CON CÁLCULO INSTANTÁNEO EN VIVO)
+        // FORMACIONES ($50,000 POR INSTRUCCIÓN)
         // =========================================================================
         async function guardarNuevoInstructor() {
             const instructor = document.getElementById('formInstructor').value.trim();
@@ -1198,7 +1336,6 @@
             }
         }
 
-        // Multiplicador ajustado a $50,000 en tiempo real
         function calcularPagoInstantaneo(id, inputElement) {
             const cant = Math.max(0, parseInt(inputElement.value) || 0);
             const total = cant * 50000;
@@ -1266,7 +1403,7 @@
                         <td class="fluid-td font-bold text-white text-sm">${f.instructor}</td>
                         <td class="fluid-td">
                             <select onchange="editarFormacionEnTabla(${f.id}, 'rango', this.value)" class="cell-input text-pink-300 font-semibold">
-                                ${RANGOS_EVALUACION.map(r => `<option value="${r.id}" ${r.id === f.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
+                                ${TODOS_LOS_RANGOS.map(r => `<option value="${r.id}" ${r.id === f.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
                             </select>
                         </td>
                         <td class="fluid-td text-center">
@@ -1299,8 +1436,12 @@
         }
 
         // ==========================================
-        // COORDINACIÓN & SUPERVISIÓN (CON HORAS)
+        // COORDINACIÓN & SUPERVISIÓN (CON PDF Y RANGOS LIMPIOS)
         // ==========================================
+        function imprimirReporteCoordinacion() {
+            window.print();
+        }
+
         async function guardarSupervisorCoordinacion() {
             const discord_raw = document.getElementById('coordDiscord').value.trim();
             const discord_id = discord_raw.replace(/[^0-9]/g, '');
@@ -1388,8 +1529,8 @@
                         </td>
                         <td class="fluid-td">
                             <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango', this.value)" class="cell-input font-bold ${c.rango === 'Coordinador' ? 'text-pink-300' : 'text-fuchsia-300'}">
-                                <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>Supervisor (Rosa Fuerte)</option>
-                                <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>Coordinador (Rosa Claro)</option>
+                                <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>Supervisor</option>
+                                <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>Coordinador</option>
                             </select>
                         </td>
                         <td class="fluid-td text-center">
@@ -1431,7 +1572,169 @@
         }
 
         // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR CON COLORES OFICIALES)
+        // NUEVA SECCIÓN: TESORERÍA & REGISTRO DE PAGOS
+        // =========================================================================
+        async function guardarRegistroPago() {
+            const personal = document.getElementById('pagoPersonal').value.trim();
+            const rango = document.getElementById('pagoRango').value;
+            const concepto = document.getElementById('pagoConcepto').value.trim();
+            const cantidad = document.getElementById('pagoCantidad').value.trim();
+            const estado = document.getElementById('pagoEstado').value;
+
+            if (!personal) return alert("Ingresa el nombre del personal receptor.");
+            if (!concepto) return alert("Ingresa el concepto del pago (Bono, Incentivo, Premio, etc.).");
+
+            const monto = Math.max(0, parseFloat(cantidad) || 0);
+
+            try {
+                const res = await fetch('/api/pagos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        personal,
+                        rango,
+                        concepto,
+                        cantidad: monto,
+                        estado,
+                        pagado_por: estado === 'Pagado' ? (usuarioActual ? usuarioActual.nombre : 'Dirección') : 'Pendiente',
+                        fecha_pago: new Date().toISOString().split('T')[0],
+                        registrado_por: usuarioActual ? usuarioActual.nombre : 'Dirección'
+                    })
+                });
+
+                if (res.ok) {
+                    document.getElementById('pagoPersonal').value = '';
+                    document.getElementById('pagoConcepto').value = '';
+                    document.getElementById('pagoCantidad').value = '';
+                    await cargarPagos();
+                } else {
+                    const data = await res.json();
+                    alert("Error: " + (data.error || "No se pudo registrar el pago."));
+                }
+            } catch (e) {
+                alert("Error comunicando con el servidor.");
+            }
+        }
+
+        async function editarPagoEnTabla(id, campo, valor) {
+            let payload = { [campo]: valor };
+            if (campo === 'estado' && valor === 'Pagado') {
+                payload.pagado_por = usuarioActual ? usuarioActual.nombre : 'Dirección';
+                payload.fecha_pago = new Date().toISOString().split('T')[0];
+            } else if (campo === 'estado' && valor === 'Pendiente') {
+                payload.pagado_por = 'Pendiente';
+            }
+
+            try {
+                await fetch(`/api/pagos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                await cargarPagos();
+            } catch (e) {
+                console.error("Error al actualizar pago:", e);
+            }
+        }
+
+        async function ejecutarCorteSemanalPagos() {
+            const confirmar = confirm("💼 ¿Deseas procesar el CORTE SEMANAL de tesorería?\n\nEsta acción marcará todos los pagos pendientes como LIQUIDADOS y asentados para cerrar el balance semanal.");
+            if (!confirmar) return;
+
+            try {
+                const res = await fetch('/api/pagos/corte-semanal', { method: 'POST' });
+                if (res.ok) {
+                    alert("✅ Corte semanal de tesorería procesado con éxito.");
+                    await cargarPagos();
+                }
+            } catch (e) {
+                alert("Error al procesar el corte de tesorería.");
+            }
+        }
+
+        async function cargarPagos() {
+            try {
+                const res = await fetch('/api/pagos');
+                const data = await res.json();
+                const cuerpo = document.getElementById('cuerpoTablaPagos');
+
+                let totalGeneral = 0;
+                let totalLiquidado = 0;
+                let totalPendiente = 0;
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No hay registros de pagos ni bonos asentados.</td></tr>`;
+                    document.getElementById('totalPagosRegistrados').innerText = "$0";
+                    document.getElementById('totalPagosLiquidados').innerText = "$0";
+                    document.getElementById('totalPagosPendientes').innerText = "$0";
+                    return;
+                }
+
+                data.forEach(p => {
+                    const cant = parseFloat(p.cantidad) || 0;
+                    totalGeneral += cant;
+                    if (p.estado === 'Pagado') totalLiquidado += cant;
+                    else totalPendiente += cant;
+                });
+
+                document.getElementById('totalPagosRegistrados').innerText = `$${totalGeneral.toLocaleString()}`;
+                document.getElementById('totalPagosLiquidados').innerText = `$${totalLiquidado.toLocaleString()}`;
+                document.getElementById('totalPagosPendientes').innerText = `$${totalPendiente.toLocaleString()}`;
+
+                cuerpo.innerHTML = data.map((p, index) => {
+                    const esPagado = p.estado === 'Pagado';
+                    const badgeEstado = esPagado 
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+
+                    return `
+                        <tr class="fluid-row hover:bg-zinc-900/40 transition">
+                            <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                            <td class="fluid-td font-bold text-white text-sm">
+                                <input type="text" value="${p.personal}" onblur="editarPagoEnTabla(${p.id}, 'personal', this.value)" class="cell-input font-bold text-white">
+                            </td>
+                            <td class="fluid-td">
+                                <select onchange="editarPagoEnTabla(${p.id}, 'rango', this.value)" class="cell-input text-pink-300 font-semibold">
+                                    ${TODOS_LOS_RANGOS.map(r => `<option value="${r.id}" ${r.id === p.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td class="fluid-td">
+                                <input type="text" value="${p.concepto}" onblur="editarPagoEnTabla(${p.id}, 'concepto', this.value)" class="cell-input text-zinc-200">
+                            </td>
+                            <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-sm">
+                                <input type="number" value="${p.cantidad}" onblur="editarPagoEnTabla(${p.id}, 'cantidad', this.value)" class="cell-input text-center font-mono-code font-black text-emerald-400">
+                            </td>
+                            <td class="fluid-td text-center">
+                                <select onchange="editarPagoEnTabla(${p.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
+                                    <option value="Pendiente" ${!esPagado ? 'selected' : ''}>⏳ Pendiente</option>
+                                    <option value="Pagado" ${esPagado ? 'selected' : ''}>✅ Pagado</option>
+                                </select>
+                            </td>
+                            <td class="fluid-td text-zinc-300 text-xs font-semibold">
+                                <input type="text" value="${p.pagado_por || 'Pendiente'}" onblur="editarPagoEnTabla(${p.id}, 'pagado_por', this.value)" class="cell-input text-zinc-300 text-xs">
+                            </td>
+                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-400">
+                                <input type="date" value="${p.fecha_pago || ''}" onchange="editarPagoEnTabla(${p.id}, 'fecha_pago', this.value)" class="cell-input text-center font-mono-code text-xs text-zinc-400">
+                            </td>
+                            <td class="fluid-td text-right">
+                                <button onclick="eliminarPago(${p.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error("Error al cargar pagos:", e);
+            }
+        }
+
+        async function eliminarPago(id) {
+            if (!confirm("¿Deseas eliminar este registro de tesorería?")) return;
+            await fetch(`/api/pagos/${id}`, { method: 'DELETE' });
+            cargarPagos();
+        }
+
+        // =========================================================================
+        // CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR)
         // =========================================================================
         async function cargarCensoGeneral() {
             try {
@@ -1594,6 +1897,7 @@
             cargarTablas();
             cargarCoordinacion();
             cargarGestionAdmin();
+            cargarPagos();
         }
 
         // ==========================================
@@ -1655,10 +1959,12 @@
             cargarCensoGeneral();
         }
 
+        // TIEMPO REAL: ACTUALIZA LA VISTA AL RECIBIR NOTIFICACIONES DEL SERVIDOR
         socket.on('db_update', () => {
             cargarTablas();
             cargarFormaciones();
             cargarCoordinacion();
+            cargarPagos();
             if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
                 cargarCensoGeneral();
             }

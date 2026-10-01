@@ -116,7 +116,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 2. PANEL ADMIN / CUENTAS
+// 2. PANEL ADMIN
 app.get('/api/usuarios', async (req, res) => {
     try {
         const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
@@ -215,18 +215,13 @@ app.post('/api/ascensos', async (req, res) => {
         notificar('ascensos_actualizados', { jefatura });
         res.json({ message: "Personal ingresado con éxito." });
     } catch (e) {
-        console.error("[ERROR GUARDAR ASCENSO]:", e.message);
         res.status(500).json({ error: e.message });
     }
 });
 
 app.put('/api/ascensos/:id', async (req, res) => {
     const { jefatura, discord_id, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, estado, descripcion, fecha_ingreso } = req.body;
-    
-    let discordLimpio = null;
-    if (discord_id !== undefined && discord_id !== null) {
-        discordLimpio = String(discord_id).replace(/[^0-9]/g, '') || 'N/A';
-    }
+    let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') || 'N/A' : null;
 
     try {
         await db.execute({
@@ -265,7 +260,6 @@ app.put('/api/ascensos/:id', async (req, res) => {
         notificar('ascensos_actualizados');
         res.json({ message: "Actualizado correctamente." });
     } catch (e) {
-        console.error("[ERROR ACTUALIZAR ASCENSO]:", e.message);
         res.status(500).json({ error: e.message });
     }
 });
@@ -310,7 +304,7 @@ app.post('/api/formaciones', async (req, res) => {
 app.put('/api/formaciones/:id', async (req, res) => {
     const { instrucciones_hechas, notas, rango } = req.body;
     const cant = Math.max(0, parseInt(instrucciones_hechas) || 0);
-    const totalPago = cant * 50000; // Liquidación a $50,000 por instrucción
+    const totalPago = cant * 50000;
 
     try {
         await db.execute({
@@ -339,7 +333,7 @@ app.post('/api/formaciones/corte-semanal', async (req, res) => {
     try {
         await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
         notificar('formaciones_actualizadas');
-        res.json({ message: "Corte semanal procesado. Nómina reiniciada a $0." });
+        res.json({ message: "Corte semanal de nómina procesado ($0)." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -393,7 +387,7 @@ app.post('/api/coordinacion', async (req, res) => {
 });
 
 app.put('/api/coordinacion/:id', async (req, res) => {
-    const { estado, feedback_semanal, rango, horas_semana, discord_id } = req.body;
+    const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor } = req.body;
     let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
@@ -403,9 +397,10 @@ app.put('/api/coordinacion/:id', async (req, res) => {
                     feedback_semanal = COALESCE(?, feedback_semanal),
                     rango = COALESCE(?, rango),
                     horas_semana = COALESCE(?, horas_semana),
-                    discord_id = COALESCE(?, discord_id)
+                    discord_id = COALESCE(?, discord_id),
+                    supervisor = COALESCE(?, supervisor)
                   WHERE id = ?`,
-            args: [estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null, horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, req.params.id]
+            args: [estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null, horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null, req.params.id]
         });
         notificar('coordinacion_actualizada');
         res.json({ message: "Coordinación actualizada." });
@@ -419,6 +414,99 @@ app.delete('/api/coordinacion/:id', async (req, res) => {
         await db.execute({ sql: "DELETE FROM registro_coordinacion WHERE id = ?", args: [req.params.id] });
         notificar('coordinacion_actualizada');
         res.json({ message: "Registro retirado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 6. NUEVA SECCIÓN: TESORERÍA / REGISTRO DE PAGOS
+app.get('/api/pagos', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT * FROM registro_pagos ORDER BY id DESC");
+        res.json(result.rows || []);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/pagos', async (req, res) => {
+    const { personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por } = req.body;
+    if (!personal || !concepto) {
+        return res.status(400).json({ error: "Ingresa el nombre del personal y el concepto de pago." });
+    }
+
+    const monto = Math.max(0, parseFloat(cantidad) || 0);
+    const hoy = fecha_pago || new Date().toISOString().split('T')[0];
+
+    try {
+        await db.execute({
+            sql: `INSERT INTO registro_pagos (personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+                personal.trim(),
+                rango || 'Personal EMS',
+                concepto.trim(),
+                monto,
+                estado || 'Pendiente',
+                pagado_por || (estado === 'Pagado' ? (registrado_por || 'Dirección') : 'Pendiente'),
+                hoy,
+                registrado_por || 'Dirección'
+            ]
+        });
+        notificar('pagos_actualizados');
+        res.json({ message: "Registro de pago guardado exitosamente." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/pagos/:id', async (req, res) => {
+    const { personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago } = req.body;
+    try {
+        await db.execute({
+            sql: `UPDATE registro_pagos SET 
+                    personal = COALESCE(?, personal),
+                    rango = COALESCE(?, rango),
+                    concepto = COALESCE(?, concepto),
+                    cantidad = COALESCE(?, cantidad),
+                    estado = COALESCE(?, estado),
+                    pagado_por = COALESCE(?, pagado_por),
+                    fecha_pago = COALESCE(?, fecha_pago)
+                  WHERE id = ?`,
+            args: [
+                personal ? personal.trim() : null,
+                rango || null,
+                concepto ? concepto.trim() : null,
+                cantidad !== undefined ? Math.max(0, parseFloat(cantidad) || 0) : null,
+                estado || null,
+                pagado_por || null,
+                fecha_pago || null,
+                req.params.id
+            ]
+        });
+        notificar('pagos_actualizados');
+        res.json({ message: "Pago actualizado con éxito." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/pagos/corte-semanal', async (req, res) => {
+    try {
+        // Marca todos los pagos pendientes como pagados o archiva el corte semanal
+        await db.execute("UPDATE registro_pagos SET estado = 'Pagado', pagado_por = 'Corte Semanal' WHERE estado = 'Pendiente'");
+        notificar('pagos_actualizados');
+        res.json({ message: "Corte semanal de tesorería procesado con éxito." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/pagos/:id', async (req, res) => {
+    try {
+        await db.execute({ sql: "DELETE FROM registro_pagos WHERE id = ?", args: [req.params.id] });
+        notificar('pagos_actualizados');
+        res.json({ message: "Registro de pago eliminado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
