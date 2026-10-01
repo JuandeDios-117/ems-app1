@@ -57,38 +57,70 @@ function notificar(evento, data = {}) {
     io.emit('db_update', { evento, ...data });
 }
 
-// 1. REGISTRO & LOGIN
+// 1. REGISTRO CON DETECCIÓN AUTOMÁTICA POR DISCORD ID
 app.post('/api/register', async (req, res) => {
-    const { nombre, usuario, password } = req.body;
+    const { nombre, usuario, password, discord_id } = req.body;
     const userClean = (usuario || '').trim().toLowerCase();
+    const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '');
 
     if (!nombre || !userClean || !password) {
         return res.status(400).json({ error: "Faltan campos por completar." });
     }
 
     try {
-        const check = await db.execute({
+        const checkUser = await db.execute({
             sql: "SELECT id FROM usuarios WHERE LOWER(usuario) = ?",
             args: [userClean]
         });
 
-        if (check.rows && check.rows.length > 0) {
-            return res.status(400).json({ error: "El usuario ya existe." });
+        if (checkUser.rows && checkUser.rows.length > 0) {
+            return res.status(400).json({ error: "El nombre de usuario ya está registrado." });
+        }
+
+        if (discordLimpio) {
+            const checkDiscord = await db.execute({
+                sql: "SELECT id FROM usuarios WHERE discord_id = ?",
+                args: [discordLimpio]
+            });
+            if (checkDiscord.rows && checkDiscord.rows.length > 0) {
+                return res.status(400).json({ error: "Este Discord ID ya tiene una cuenta asociada." });
+            }
         }
 
         const count = await db.execute("SELECT COUNT(*) as total FROM usuarios");
         const esPrimero = Number(count.rows[0].total) === 0;
-        const rangoInicial = esPrimero ? 'Director (Admin)' : 'Sin Rango (Pendiente)';
-        const rolInicial = esPrimero ? 'admin' : 'empleado';
+
+        let rangoAsignado = esPrimero ? 'Director (Admin)' : 'Sin Rango (Pendiente)';
+        let rolAsignado = esPrimero ? 'admin' : 'empleado';
+
+        // DETECCIÓN AUTOMÁTICA DE RANGO SI YA EXISTE EN EL SISTEMA POR DISCORD ID
+        if (!esPrimero && discordLimpio) {
+            const matchAscensos = await db.execute({
+                sql: "SELECT rango_actual FROM registro_ascensos WHERE discord_id = ? LIMIT 1",
+                args: [discordLimpio]
+            });
+            if (matchAscensos.rows && matchAscensos.rows.length > 0) {
+                rangoAsignado = matchAscensos.rows[0].rango_actual;
+            } else {
+                const matchCoord = await db.execute({
+                    sql: "SELECT rango FROM registro_coordinacion WHERE discord_id = ? LIMIT 1",
+                    args: [discordLimpio]
+                });
+                if (matchCoord.rows && matchCoord.rows.length > 0) {
+                    rangoAsignado = matchCoord.rows[0].rango;
+                }
+            }
+        }
+
         const hoy = new Date().toISOString().split('T')[0];
 
         const result = await db.execute({
-            sql: "INSERT INTO usuarios (nombre, usuario, password, rango, rol, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?)",
-            args: [nombre.trim(), userClean, String(password), rangoInicial, rolInicial, hoy]
+            sql: "INSERT INTO usuarios (nombre, usuario, password, discord_id, rango, rol, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            args: [nombre.trim(), userClean, String(password), discordLimpio || 'N/A', rangoAsignado, rolAsignado, hoy]
         });
 
         notificar('nuevo_usuario');
-        res.json({ id: Number(result.lastInsertRowid), nombre: nombre.trim(), usuario: userClean, rango: rangoInicial, rol: rolInicial });
+        res.json({ id: Number(result.lastInsertRowid), nombre: nombre.trim(), usuario: userClean, rango: rangoAsignado, rol: rolAsignado });
     } catch (e) {
         res.status(500).json({ error: "Error registrando usuario." });
     }
@@ -103,7 +135,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const sql = `SELECT id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
+        const sql = `SELECT id, nombre, usuario, discord_id, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
         const result = await db.execute({ sql, args: [userClean, String(password)] });
         
         if (!result.rows || result.rows.length === 0) {
@@ -158,7 +190,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     }
 });
 
-// 3. REGISTROS DE EVALUACIÓN
+// 3. REGISTROS DE EVALUACIÓN (CON CONTADOR AUTOMÁTICO DE FORMADOR)
 app.get('/api/ascensos', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_ascensos ORDER BY id DESC");
@@ -169,7 +201,7 @@ app.get('/api/ascensos', async (req, res) => {
 });
 
 app.post('/api/ascensos', async (req, res) => {
-    const { jefatura, discord_id, nombre, fecha_ingreso, actualizado_por } = req.body;
+    const { jefatura, discord_id, nombre, fecha_ingreso, actualizado_por, es_aspirante_formacion } = req.body;
     if (!jefatura || !nombre) {
         return res.status(400).json({ error: "Ingresa el nombre del personal." });
     }
@@ -213,6 +245,31 @@ app.post('/api/ascensos', async (req, res) => {
                 actualizado_por || 'Jefatura'
             ]
         });
+
+        // INCREMENTAR CONTADOR AL FORMADOR SI EL REGISTRO VINO DE FORMACIONES
+        if (es_aspirante_formacion && actualizado_por) {
+            const formadorClean = actualizado_por.trim();
+            const formadorCheck = await db.execute({
+                sql: "SELECT id, instrucciones_hechas FROM registro_formaciones WHERE LOWER(TRIM(instructor)) = LOWER(?)",
+                args: [formadorClean]
+            });
+
+            if (formadorCheck.rows && formadorCheck.rows.length > 0) {
+                const fId = formadorCheck.rows[0].id;
+                const nuevas = Number(formadorCheck.rows[0].instrucciones_hechas || 0) + 1;
+                await db.execute({
+                    sql: "UPDATE registro_formaciones SET instrucciones_hechas = ?, total_pago = ? WHERE id = ?",
+                    args: [nuevas, nuevas * 50000, fId]
+                });
+            } else {
+                await db.execute({
+                    sql: "INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, total_pago, notas, actualizado_por) VALUES (?, 'Formador', 1, 50000, 'Ingreso de aspirante', ?)",
+                    args: [formadorClean, formadorClean]
+                });
+            }
+            notificar('formaciones_actualizadas');
+        }
+
         notificar('ascensos_actualizados', { jefatura });
         res.json({ message: "Personal ingresado con éxito." });
     } catch (e) {
@@ -265,7 +322,6 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSO CONGELADO / DESCONGELAR Y TRASLADAR
 app.post('/api/ascensos/:id/aplicar', async (req, res) => {
     try {
         const check = await db.execute({
@@ -282,7 +338,6 @@ app.post('/api/ascensos/:id/aplicar', async (req, res) => {
         let nuevaJefatura = item.jefatura;
         let nuevoRangoActual = postular;
 
-        // Traspasos de departamento
         if (postular.includes('(Cirugía)')) {
             nuevaJefatura = 'cirugia';
             nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
@@ -339,7 +394,7 @@ app.post('/api/formaciones', async (req, res) => {
         await db.execute({
             sql: `INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, total_pago, notas, actualizado_por)
                   VALUES (?, ?, 0, 0, '', ?)`,
-            args: [instructor.trim(), rango || 'Celador/a', actualizado_por || 'Jefe de Formaciones']
+            args: [instructor.trim(), rango || 'Formador', actualizado_por || 'Jefe de Formaciones']
         });
         notificar('formaciones_actualizadas');
         res.json({ message: "Instructor registrado." });
@@ -396,7 +451,7 @@ app.delete('/api/formaciones/:id', async (req, res) => {
     }
 });
 
-// 5. COORDINACIÓN (CON SUBIDA Y GESTIÓN DE PDF)
+// 5. COORDINACIÓN
 app.get('/api/coordinacion', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_coordinacion ORDER BY id DESC");

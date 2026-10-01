@@ -161,6 +161,37 @@
             backdrop-filter: blur(4px);
         }
 
+        .fila-en-prueba {
+            background: rgba(245, 158, 11, 0.05) !important;
+            box-shadow: inset 3px 0 0 #f59e0b;
+        }
+        .badge-prueba {
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fde68a;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+            letter-spacing: 0.5px;
+        }
+        .badge-formador-censo {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fde68a;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 1px 5px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
         @media print {
             body { background: #ffffff !important; color: #000000 !important; }
             header, nav, #userInfo, .btn-origen, button { display: none !important; }
@@ -212,18 +243,22 @@
             <button onclick="location.reload()" class="btn-origen w-full py-2.5 rounded-xl uppercase text-xs">Comprobar Acceso</button>
         </div>
 
-        <!-- AUTH -->
+        <!-- AUTH (CON DISCORD ID EN EL REGISTRO PARA DETECCIÓN AUTOMÁTICA DE RANGO) -->
         <div id="seccion-auth" class="max-w-md mx-auto card-ems p-8 rounded-3xl space-y-4 mt-10 border border-pink-500/30">
             <div class="text-center space-y-1">
                 <div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-pink-500/50 shadow-md">
                     <img src="/logo.png" onerror="this.src='/logo.png'" alt="Logo" class="w-full h-full object-cover">
                 </div>
                 <h2 class="text-lg font-black text-white uppercase pt-2" id="authTitle">Acceso San Andreas EMS</h2>
-                <p class="text-xs text-zinc-400">Autenticación de personal médico y directivo.</p>
+                <p class="text-xs text-zinc-400">Autenticación de personal médico, instructores y directivos.</p>
             </div>
             <div id="campoNombre" class="hidden">
                 <label class="block text-xs font-bold text-zinc-300 mb-1">Nombre Completo (IC)</label>
                 <input type="text" id="regNombre" placeholder="Dr. John Watson" class="w-full input-ems px-3 py-2 rounded-xl text-sm">
+            </div>
+            <div id="campoDiscordReg" class="hidden">
+                <label class="block text-xs font-bold text-zinc-300 mb-1">Discord ID (Detección Automática de Rango)</label>
+                <input type="text" id="regDiscord" placeholder="4239841..." oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full input-ems px-3 py-2 rounded-xl text-sm font-mono-code">
             </div>
             <div>
                 <label class="block text-xs font-bold text-zinc-300 mb-1">Usuario</label>
@@ -240,8 +275,47 @@
         <!-- SECCIONES DEPARTAMENTALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN) -->
-        <section id="seccion-formaciones" class="hidden space-y-4">
+        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN + INGRESO DE ASPIRANTES CON AUTO-CONTADOR) -->
+        <section id="seccion-formaciones" class="hidden space-y-5">
+            
+            <!-- PANEL: INGRESO DE ASPIRANTES (SUMA +1 AL CONTADOR DEL FORMADOR QUE LO INGRESA) -->
+            <div class="card-ems p-6 rounded-3xl space-y-4 border-l-4 border-emerald-500">
+                <div class="flex flex-wrap justify-between items-center gap-3 border-b border-zinc-800 pb-3">
+                    <div>
+                        <h2 class="text-xl font-black text-white uppercase flex items-center gap-2">
+                            🎓 Ingreso de Aspirantes / Nuevos Celadores
+                        </h2>
+                        <p class="text-xs text-zinc-400">Al ingresar un nuevo aspirante, se integrará automáticamente a la tabla de Enfermería como Celador en pruebas y <strong class="text-emerald-400">se te sumará +1 instrucción realizada automáticamente</strong>.</p>
+                    </div>
+                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
+                        Suma +1 Automático al Formador
+                    </span>
+                </div>
+
+                <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID (Solo Números)</label>
+                        <input type="text" id="aspDiscord" placeholder="4239841..." 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="w-full input-ems px-3 py-2.5 rounded-xl font-mono-code text-sm">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Nombre Completo (IC)</label>
+                        <input type="text" id="aspNombre" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-sm">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Fecha de Ingreso</label>
+                        <input type="date" id="aspFecha" class="w-full input-ems px-3 py-2.5 rounded-xl font-mono-code text-xs font-bold text-zinc-300">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="ingresarAspiranteCelador()" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs tracking-wider font-extrabold shadow-lg shadow-emerald-500/20">
+                            + INGRESAR CELADOR EN PRUEBAS
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL: LIQUIDACIÓN DE INSTRUCTORES -->
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
@@ -450,7 +524,7 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL (EDITABLE CON EMOJIS DE DOCTOR Y FILTRO ESTRICTO) -->
+        <!-- CENSO GENERAL (EDITABLE CON EMOJIS DE DOCTOR Y DISTINTIVO DE FORMADOR) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -458,7 +532,7 @@
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
                             🩺 CENSO GENERAL DEL PERSONAL · PANEL DE DIRECCIÓN
                         </h2>
-                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica. Solo incluye miembros con rango oficial asignado.</p>
+                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica. Los instructores cuentan con su distintivo de formador.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
@@ -545,7 +619,8 @@
             "Director de Enfermería",
             "Jefe de Formaciones",
             "Coordinador",
-            "Supervisor"
+            "Supervisor",
+            "Formador"
         ];
 
         const JERARQUIA_MENOR_A_MAYOR = {
@@ -559,6 +634,7 @@
             "Residente": 8,
             "Subespecialista": 9,
             "Especialista": 10,
+            "Formador": 10.5,
             "Supervisor": 11,
             "Coordinador": 12,
             "Jefe de Formaciones": 13,
@@ -584,6 +660,7 @@
 
         const TODOS_LOS_RANGOS = [
             ...RANGOS_EVALUACION,
+            { id: "Formador", label: "📚 Formador", escala: "mando" },
             { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" },
             { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" },
             { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" },
@@ -635,7 +712,25 @@
             }
         ];
 
-        // EMOJIS MÉDICOS OFICIALES PARA DIRECCIÓN Y JEFATURAS
+        function calcularEstadoPrueba(fechaIngresoStr) {
+            if (!fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') {
+                return { enPrueba: false, diasPasados: 99, diasRestantes: 0 };
+            }
+            const fechaIngreso = new Date(fechaIngresoStr + 'T00:00:00');
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            const difTiempo = hoy - fechaIngreso;
+            const diasPasados = Math.floor(difTiempo / (1000 * 60 * 60 * 24)) + 1;
+            const diasRestantes = 4 - diasPasados;
+
+            return {
+                enPrueba: diasPasados <= 4 && diasPasados >= 1,
+                diasPasados: Math.max(1, diasPasados),
+                diasRestantes: Math.max(0, diasRestantes)
+            };
+        }
+
         function obtenerBadgeRango(rango) {
             const r = (rango || '').toLowerCase();
             if (r.includes('director (admin)')) {
@@ -656,6 +751,9 @@
             if (r.includes('formaciones') || r.includes('formacion')) {
                 return `<span class="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼📚 ${rango}</span>`;
             }
+            if (r === 'formador') {
+                return `<span class="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📚 Formador</span>`;
+            }
             if (r.includes('coordinador')) {
                 return `<span class="inline-flex items-center gap-1 bg-pink-300/20 text-pink-200 border border-pink-300/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📋🩺 ${rango}</span>`;
             }
@@ -670,7 +768,7 @@
             if (r.includes('estudiante')) return `<span class="text-blue-300 font-bold">📑 『📗』 ${rango}</span>`;
             if (r.includes('enfermero/a especialista')) return `<span class="text-emerald-300 font-bold">💉 『🧵』 ${rango}</span>`;
             if (r.includes('enfermero/a general') || r === 'enfermero') return `<span class="text-teal-300 font-bold">💉 『💉』 ${rango}</span>`;
-            if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️ 『🧴』 ${rango}</span>`;
+            if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️️ 『🧴』 ${rango}</span>`;
             if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡️ 『👀』 ${rango}</span>`;
 
             return `<span class="text-zinc-300 font-semibold">${rango}</span>`;
@@ -775,9 +873,11 @@
 
             const maxFecha = new Date().toISOString().split('T')[0];
             const hayAscensoPropuesto = r.rango_postular && r.rango_postular !== r.rango_actual;
+            const prueba = calcularEstadoPrueba(r.fecha_ingreso);
+            const claseFilaPrueba = prueba.enPrueba ? 'fila-en-prueba' : '';
 
             return `
-                <tr class="fluid-row hover:bg-zinc-900/60 transition">
+                <tr class="fluid-row hover:bg-zinc-900/60 transition ${claseFilaPrueba}">
                     <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                     <td class="fluid-td font-mono-code text-zinc-400">
                         <input type="text" value="${r.discord_id || 'N/A'}" 
@@ -786,7 +886,14 @@
                                class="cell-input font-mono-code text-xs">
                     </td>
                     <td class="fluid-td font-semibold text-white">
-                        <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm flex-1">
+                            ${prueba.enPrueba ? `
+                                <span class="badge-prueba shrink-0" title="Aspirante en periodo de prueba de 4 días">
+                                    ⏳ PRUEBA (Día ${prueba.diasPasados}/4 - ${prueba.diasRestantes}d rest.)
+                                </span>
+                            ` : ''}
+                        </div>
                     </td>
                     <td class="fluid-td">
                         <select onchange="editarCampo(${r.id}, 'rango_actual', this.value, '${jefaturaId}')" class="cell-input font-bold ${colorTexto}">
@@ -832,8 +939,8 @@
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
                             <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
-                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
+                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
                         </select>
                     </td>
                     ` : ''}
@@ -1009,13 +1116,57 @@
             if (selPagoRango) {
                 selPagoRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
             }
+
+            const elAspFecha = document.getElementById('aspFecha');
+            if (elAspFecha) elAspFecha.value = hoy;
         }
 
         inicializarEstructuraHtml();
 
+        async function ingresarAspiranteCelador() {
+            const discord_raw = document.getElementById('aspDiscord').value.trim();
+            const discord_id = discord_raw.replace(/[^0-9]/g, '');
+            const nombre = document.getElementById('aspNombre').value.trim();
+            const fecha_ingreso = document.getElementById('aspFecha').value || new Date().toISOString().split('T')[0];
+
+            if (!nombre) return alert("Ingresa el Nombre Completo del aspirante.");
+
+            try {
+                const res = await fetch('/api/ascensos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jefatura: 'enfermeria',
+                        discord_id: discord_id || 'N/A',
+                        nombre,
+                        fecha_ingreso,
+                        es_aspirante_formacion: true,
+                        actualizado_por: usuarioActual ? usuarioActual.nombre : 'Jefe de Formaciones'
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`✅ ¡Aspirante ingresado con éxito! Se integró a ${nombre} como Celador/a en la Escala Básica con 4 días de prueba y se te sumó +1 instrucción realizada.`);
+                    document.getElementById('aspDiscord').value = '';
+                    document.getElementById('aspNombre').value = '';
+                    await cargarTablas();
+                    await cargarFormaciones();
+                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                        cargarCensoGeneral();
+                    }
+                } else {
+                    alert("Error: " + (data.error || "No se pudo registrar el aspirante"));
+                }
+            } catch (e) {
+                alert("Error de conexión al ingresar el aspirante.");
+            }
+        }
+
         function toggleAuth() {
             esRegistro = !esRegistro;
             document.getElementById('campoNombre').classList.toggle('hidden', !esRegistro);
+            document.getElementById('campoDiscordReg').classList.toggle('hidden', !esRegistro);
             document.getElementById('authTitle').innerText = esRegistro ? 'Registro Personal EMS' : 'Acceso San Andreas EMS';
             document.getElementById('btnAuth').innerText = esRegistro ? 'Crear Cuenta' : 'Ingresar';
             document.getElementById('toggleAuthTxt').innerText = esRegistro ? '¿Ya tienes cuenta? Ingresa' : '¿No tienes cuenta? Regístrate';
@@ -1027,10 +1178,11 @@
 
             if (esRegistro) {
                 const nombre = document.getElementById('regNombre').value.trim();
+                const discord_id = document.getElementById('regDiscord').value.trim();
                 const res = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, usuario, password })
+                    body: JSON.stringify({ nombre, usuario, password, discord_id })
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -1080,38 +1232,45 @@
             `;
 
             const esAdmin = esDirector();
+            const esSoloFormador = usuarioActual.rango === 'Formador';
             let pestanaAInicializar = null;
             let navBotonesHTML = '';
 
-            JEFATURAS.forEach(j => {
-                const tieneAcceso = esAdmin || j.rangosPermitidos.includes(usuarioActual.rango);
-                if (tieneAcceso) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
-                    if (!pestanaAInicializar) pestanaAInicializar = j.id;
-                }
-            });
-
-            const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones';
-            if (esFormador) {
+            // SI ES FORMADOR SOLO TIENE ACCESO A FORMACIONES
+            if (esSoloFormador) {
                 navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
-                if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
-            }
+                pestanaAInicializar = 'formaciones';
+            } else {
+                JEFATURAS.forEach(j => {
+                    const tieneAcceso = esAdmin || j.rangosPermitidos.includes(usuarioActual.rango);
+                    if (tieneAcceso) {
+                        navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
+                        if (!pestanaAInicializar) pestanaAInicializar = j.id;
+                    }
+                });
 
-            const esCoordinador = esAdmin || usuarioActual.rango === 'Coordinador' || usuarioActual.rango === 'Supervisor';
-            if (esCoordinador) {
-                navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-300">🛡️ COORDINACIÓN</button>`;
-                if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
-            }
+                const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones' || usuarioActual.rango === 'Formador';
+                if (esFormador) {
+                    navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
+                    if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
+                }
 
-            const tieneAccesoPagos = esAdmin || usuarioActual.rango.includes('Jefe') || usuarioActual.rango.includes('Jefa') || usuarioActual.rango === 'Coordinador';
-            if (tieneAccesoPagos) {
-                navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
-                if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
-            }
+                const esCoordinador = esAdmin || usuarioActual.rango === 'Coordinador' || usuarioActual.rango === 'Supervisor';
+                if (esCoordinador) {
+                    navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-300">🛡️ COORDINACIÓN</button>`;
+                    if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
+                }
 
-            if (esAdmin) {
-                navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">🩺 CENSO GENERAL</button>`;
-                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">⚙️ PANEL CUENTAS</button>`;
+                const tieneAccesoPagos = esAdmin || usuarioActual.rango.includes('Jefe') || usuarioActual.rango.includes('Jefa') || usuarioActual.rango === 'Coordinador';
+                if (tieneAccesoPagos) {
+                    navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
+                    if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
+                }
+
+                if (esAdmin) {
+                    navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">🩺 CENSO GENERAL</button>`;
+                    navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">⚙️ PANEL CUENTAS</button>`;
+                }
             }
 
             nav.innerHTML = navBotonesHTML;
@@ -1810,7 +1969,7 @@
         }
 
         // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (100% EDITABLE Y CON FILTRO ESTRICTO)
+        // CENSO GENERAL DE DIRECCIÓN (CON DISTINTIVO DE FORMADOR Y FILTRO DE RANGO)
         // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
@@ -1849,20 +2008,28 @@
 
         async function cargarCensoGeneral() {
             try {
-                const [resAsc, resCoord, resUsers] = await Promise.all([
+                const [resAsc, resCoord, resUsers, resForm] = await Promise.all([
                     fetch('/api/ascensos'),
                     fetch('/api/coordinacion'),
-                    fetch('/api/usuarios')
+                    fetch('/api/usuarios'),
+                    fetch('/api/formaciones')
                 ]);
 
                 const dataAsc = await resAsc.json();
                 const dataCoord = await resCoord.json();
                 const dataUsers = await resUsers.json();
+                const dataForm = await resForm.json();
+
+                // LISTA DE NOMBRES DE FORMADORES PARA ASIGNARLES EL DISTINTIVO
+                const instructoresSet = new Set(
+                    Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
+                );
 
                 let listaUnificada = [];
 
                 if (Array.isArray(dataAsc)) {
                     dataAsc.forEach(a => {
+                        const esForm = instructoresSet.has((a.nombre || '').toLowerCase().trim());
                         listaUnificada.push({
                             id_original: a.id,
                             tipo_origen: 'ascenso',
@@ -1876,61 +2043,83 @@
                             examen: a.examen,
                             fecha_ingreso: a.fecha_ingreso || '—',
                             descripcion: a.descripcion || '',
-                            esMando: false
+                            esMando: false,
+                            esFormador: esForm
                         });
                     });
                 }
 
                 if (Array.isArray(dataCoord)) {
                     dataCoord.forEach(c => {
-                        listaUnificada.push({
-                            id_original: c.id,
-                            tipo_origen: 'coordinacion',
-                            discord_id: c.discord_id || 'N/A',
-                            nombre: c.supervisor,
-                            departamento: 'coordinacion',
-                            rango_actual: c.rango || 'Supervisor',
-                            rango_postular: c.rango || 'Supervisor',
-                            horas_semana: c.horas_semana || '',
-                            faltas: '—',
-                            examen: '—',
-                            fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
-                            descripcion: c.feedback_semanal || '',
-                            esMando: true
-                        });
+                        const nombreCoord = (c.supervisor || '').trim();
+                        const yaExiste = listaUnificada.some(x => 
+                            x.nombre && x.nombre.toLowerCase().trim() === nombreCoord.toLowerCase()
+                        );
+
+                        if (!yaExiste && nombreCoord !== '') {
+                            const esForm = instructoresSet.has(nombreCoord.toLowerCase());
+                            listaUnificada.push({
+                                id_original: c.id,
+                                tipo_origen: 'coordinacion',
+                                discord_id: c.discord_id || 'N/A',
+                                nombre: nombreCoord,
+                                departamento: 'coordinacion',
+                                rango_actual: c.rango || 'Supervisor',
+                                rango_postular: c.rango || 'Supervisor',
+                                horas_semana: c.horas_semana || '',
+                                faltas: '—',
+                                examen: '—',
+                                fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
+                                descripcion: c.feedback_semanal || '',
+                                esMando: true,
+                                esFormador: esForm
+                            });
+                        }
                     });
                 }
 
-                // FILTRO ESTRICTO: NO INTEGRAR CUENTAS SIN RANGO ASIGNADO
                 if (Array.isArray(dataUsers)) {
                     dataUsers.forEach(u => {
                         const rangoLimpio = (u.rango || '').trim();
+                        const nombreUser = (u.nombre || '').trim();
+
                         const tieneRangoValido = rangoLimpio !== '' && 
                                                  rangoLimpio !== 'Sin Rango (Pendiente)' && 
                                                  rangoLimpio.toLowerCase() !== 'pendiente' &&
                                                  rangoLimpio.toLowerCase() !== 'sin rango';
 
-                        if (tieneRangoValido) {
-                            const yaExiste = listaUnificada.some(x => 
-                                (x.discord_id && x.discord_id !== 'N/A' && x.discord_id === u.discord_id) ||
-                                (x.nombre && x.nombre.toLowerCase().trim() === u.nombre.toLowerCase().trim())
-                            );
+                        if (tieneRangoValido && nombreUser !== '') {
+                            const yaExiste = listaUnificada.some(x => {
+                                const coincideNombre = x.nombre && x.nombre.toLowerCase().trim() === nombreUser.toLowerCase();
+                                const coincideDiscord = x.discord_id && x.discord_id !== 'N/A' && u.discord_id && u.discord_id !== 'N/A' && x.discord_id === u.discord_id;
+                                return coincideNombre || coincideDiscord;
+                            });
 
                             if (!yaExiste) {
+                                let depto = 'direccion';
+                                const rLow = rangoLimpio.toLowerCase();
+                                if (rLow.includes('cirug')) depto = 'cirugia';
+                                else if (rLow.includes('medicin')) depto = 'medicina';
+                                else if (rLow.includes('enferm')) depto = 'enfermeria';
+                                else if (rLow.includes('coord') || rLow.includes('supervis')) depto = 'coordinacion';
+
+                                const esForm = instructoresSet.has(nombreUser.toLowerCase());
+
                                 listaUnificada.push({
                                     id_original: u.id,
                                     tipo_origen: 'usuario',
                                     discord_id: u.discord_id || 'N/A',
-                                    nombre: u.nombre,
-                                    departamento: 'direccion',
-                                    rango_actual: u.rango,
-                                    rango_postular: u.rango,
+                                    nombre: nombreUser,
+                                    departamento: depto,
+                                    rango_actual: rangoLimpio,
+                                    rango_postular: rangoLimpio,
                                     horas_semana: u.horas_semana || '',
                                     faltas: '—',
                                     examen: '—',
                                     fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
-                                    descripcion: `Cuenta registrada @${u.usuario}`,
-                                    esMando: true
+                                    descripcion: `Cuenta institucional @${u.usuario}`,
+                                    esMando: true,
+                                    esFormador: esForm
                                 });
                             }
                         }
@@ -1965,9 +2154,11 @@
 
                     const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
                     const hayAscensoPropuesto = r.tipo_origen === 'ascenso' && r.rango_postular && r.rango_postular !== r.rango_actual;
+                    const prueba = calcularEstadoPrueba(r.fecha_ingreso);
+                    const claseFilaPrueba = prueba.enPrueba ? 'fila-en-prueba' : '';
 
                     return `
-                        <tr class="fluid-row hover:bg-zinc-900/40 transition">
+                        <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPrueba}">
                             <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                             <td class="fluid-td font-mono-code text-zinc-400 text-xs">
                                 <input type="text" value="${r.discord_id}" 
@@ -1976,9 +2167,21 @@
                                        class="cell-input font-mono-code text-xs">
                             </td>
                             <td class="fluid-td font-bold text-white">
-                                <input type="text" value="${r.nombre}" 
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
-                                       class="cell-input font-bold text-white text-sm">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <input type="text" value="${r.nombre}" 
+                                           onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
+                                           class="cell-input font-bold text-white text-sm flex-1">
+                                    ${r.esFormador ? `
+                                        <span class="badge-formador-censo shrink-0" title="Instructor oficial de Formaciones">
+                                            📚 FORMADOR
+                                        </span>
+                                    ` : ''}
+                                    ${prueba.enPrueba ? `
+                                        <span class="badge-prueba shrink-0" title="Aspirante en periodo de prueba de 4 días">
+                                            ⏳ PRUEBA (${prueba.diasPasados}/4)
+                                        </span>
+                                    ` : ''}
+                                </div>
                             </td>
                             <td class="fluid-td">${deptoTag}</td>
                             <td class="fluid-td font-semibold">
@@ -2010,7 +2213,7 @@
                             </td>
                             <td class="fluid-td text-center">
                                 ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
                                         <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
                                         <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-600 text-black">WARN</option>
                                         <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white">DESPIDO</option>
@@ -2019,7 +2222,7 @@
                             </td>
                             <td class="fluid-td text-center">
                                 ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
                                         <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
                                         <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                                         <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
@@ -2098,7 +2301,7 @@
                     </td>
                     <td class="fluid-td text-right flex items-center justify-end gap-1.5 py-3">
                         <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1 rounded-xl text-xs">Guardar</button>
-                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded-xl text-xs">Eliminar</button>
+                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded-xl text-xs">Eliminar</button>
                     </td>
                 </tr>
             `).join('');
