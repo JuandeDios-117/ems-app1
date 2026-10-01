@@ -11,8 +11,8 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 app.use(compression());
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ limit: '15mb', extended: true }));
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ limit: '30mb', extended: true }));
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -176,6 +176,7 @@ app.post('/api/ascensos', async (req, res) => {
 
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
     const fechaHoy = fecha_ingreso || new Date().toISOString().split('T')[0];
+    const rangoBase = jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante';
 
     try {
         await db.execute({
@@ -200,9 +201,9 @@ app.post('/api/ascensos', async (req, res) => {
                 discordLimpio,
                 nombre.trim(),
                 nombre.trim(),
-                jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante',
-                jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante',
-                jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante',
+                rangoBase,
+                rangoBase,
+                rangoBase,
                 'NINGUNA',
                 '',
                 'NO APLICA',
@@ -259,6 +260,52 @@ app.put('/api/ascensos/:id', async (req, res) => {
         });
         notificar('ascensos_actualizados');
         res.json({ message: "Actualizado correctamente." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// APLICAR ASCENSO CONGELADO / DESCONGELAR Y TRASLADAR
+app.post('/api/ascensos/:id/aplicar', async (req, res) => {
+    try {
+        const check = await db.execute({
+            sql: "SELECT * FROM registro_ascensos WHERE id = ?",
+            args: [req.params.id]
+        });
+
+        if (!check.rows || check.rows.length === 0) {
+            return res.status(404).json({ error: "Registro no encontrado." });
+        }
+
+        const item = check.rows[0];
+        let postular = item.rango_postular || item.rango_actual;
+        let nuevaJefatura = item.jefatura;
+        let nuevoRangoActual = postular;
+
+        // Traspasos de departamento
+        if (postular.includes('(Cirugía)')) {
+            nuevaJefatura = 'cirugia';
+            nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
+        } else if (postular.includes('(Medicina)')) {
+            nuevaJefatura = 'medicina';
+            nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').trim();
+        } else if (postular.includes('(Bajar)')) {
+            nuevaJefatura = 'enfermeria';
+            nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
+        }
+
+        await db.execute({
+            sql: `UPDATE registro_ascensos SET 
+                    rango_actual = ?, 
+                    rango_propuesto = ?, 
+                    rango_postular = ?, 
+                    jefatura = ? 
+                  WHERE id = ?`,
+            args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, req.params.id]
+        });
+
+        notificar('ascensos_actualizados');
+        res.json({ message: `Ascenso aplicado exitosamente a ${item.nombre}. Trasladado a ${nuevaJefatura} con rango ${nuevoRangoActual}.` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -349,7 +396,7 @@ app.delete('/api/formaciones/:id', async (req, res) => {
     }
 });
 
-// 5. COORDINACIÓN
+// 5. COORDINACIÓN (CON SUBIDA Y GESTIÓN DE PDF)
 app.get('/api/coordinacion', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_coordinacion ORDER BY id DESC");
@@ -360,15 +407,15 @@ app.get('/api/coordinacion', async (req, res) => {
 });
 
 app.post('/api/coordinacion', async (req, res) => {
-    const { discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por } = req.body;
+    const { discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, pdf_feedback, nombre_pdf, actualizado_por } = req.body;
     if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
 
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, pdf_feedback, nombre_pdf, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 discordLimpio,
                 supervisor.trim(),
@@ -376,6 +423,8 @@ app.post('/api/coordinacion', async (req, res) => {
                 horas_semana || '',
                 estado || 'Activo',
                 feedback_semanal || '',
+                pdf_feedback || '',
+                nombre_pdf || '',
                 actualizado_por || 'Coordinación'
             ]
         });
@@ -387,7 +436,7 @@ app.post('/api/coordinacion', async (req, res) => {
 });
 
 app.put('/api/coordinacion/:id', async (req, res) => {
-    const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor } = req.body;
+    const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor, pdf_feedback, nombre_pdf } = req.body;
     let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
@@ -398,9 +447,21 @@ app.put('/api/coordinacion/:id', async (req, res) => {
                     rango = COALESCE(?, rango),
                     horas_semana = COALESCE(?, horas_semana),
                     discord_id = COALESCE(?, discord_id),
-                    supervisor = COALESCE(?, supervisor)
+                    supervisor = COALESCE(?, supervisor),
+                    pdf_feedback = COALESCE(?, pdf_feedback),
+                    nombre_pdf = COALESCE(?, nombre_pdf)
                   WHERE id = ?`,
-            args: [estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null, horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null, req.params.id]
+            args: [
+                estado || null,
+                feedback_semanal !== undefined ? feedback_semanal.trim() : null,
+                rango || null,
+                horas_semana !== undefined ? horas_semana.trim() : null,
+                discordLimpio,
+                supervisor || null,
+                pdf_feedback !== undefined ? pdf_feedback : null,
+                nombre_pdf !== undefined ? nombre_pdf : null,
+                req.params.id
+            ]
         });
         notificar('coordinacion_actualizada');
         res.json({ message: "Coordinación actualizada." });
@@ -419,7 +480,7 @@ app.delete('/api/coordinacion/:id', async (req, res) => {
     }
 });
 
-// 6. NUEVA SECCIÓN: TESORERÍA / REGISTRO DE PAGOS
+// 6. TESORERÍA / PAGOS
 app.get('/api/pagos', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_pagos ORDER BY id DESC");
@@ -432,7 +493,7 @@ app.get('/api/pagos', async (req, res) => {
 app.post('/api/pagos', async (req, res) => {
     const { personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por } = req.body;
     if (!personal || !concepto) {
-        return res.status(400).json({ error: "Ingresa el nombre del personal y el concepto de pago." });
+        return res.status(400).json({ error: "Ingresa el personal y concepto." });
     }
 
     const monto = Math.max(0, parseFloat(cantidad) || 0);
@@ -493,7 +554,6 @@ app.put('/api/pagos/:id', async (req, res) => {
 
 app.post('/api/pagos/corte-semanal', async (req, res) => {
     try {
-        // Marca todos los pagos pendientes como pagados o archiva el corte semanal
         await db.execute("UPDATE registro_pagos SET estado = 'Pagado', pagado_por = 'Corte Semanal' WHERE estado = 'Pendiente'");
         notificar('pagos_actualizados');
         res.json({ message: "Corte semanal de tesorería procesado con éxito." });

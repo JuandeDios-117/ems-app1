@@ -161,19 +161,16 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Estilo de impresión limpia para PDF */
-        @media print {
-            body { background: #ffffff !important; color: #000000 !important; }
-            header, nav, #userInfo, .btn-origen, button { display: none !important; }
-            .card-ems { border: 1px solid #ccc !important; box-shadow: none !important; background: #fff !important; }
-            .fluid-th { background: #eee !important; color: #000 !important; border: 1px solid #ddd !important; }
-            .fluid-td { background: #fff !important; color: #000 !important; border: 1px solid #ddd !important; }
-            .cell-input { color: #000 !important; }
+        /* Indicador de ascenso congelado pendiente de aplicar */
+        .badge-congelado {
+            background: rgba(244, 114, 182, 0.15);
+            border: 1px dashed #f472b6;
+            color: #fbcfe8;
         }
     </style>
 </head>
 <body class="p-3 md:p-6 text-sm">
-    <div class="w-full max-w-[1750px] mx-auto space-y-4">
+    <div class="w-full max-w-[1780px] mx-auto space-y-4">
         
         <!-- HEADER EMS ORIGEN -->
         <header class="card-ems p-4 md:p-5 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500">
@@ -188,7 +185,7 @@
                     <h1 class="text-xl md:text-2xl font-black uppercase text-white tracking-wider flex items-center gap-2">
                         EMS <span class="text-pink-400">ORIGEN</span> <span class="text-xs font-bold text-zinc-400">ROLEPLAY</span>
                     </h1>
-                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones, Supervisión y Finanzas</p>
+                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones, Supervisión y Tesorería</p>
                 </div>
             </div>
             <div id="userInfo" class="text-xs text-zinc-400 flex items-center gap-3"></div>
@@ -241,13 +238,13 @@
         <!-- SECCIONES DEPARTAMENTALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN + RANGOS AMPLIADOS) -->
+        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN) -->
         <section id="seccion-formaciones" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">📚 Jefatura de Formaciones · Nómina de Instructores</h2>
-                        <p class="text-xs text-zinc-400">Registro de capacitadores (incluye Supervisores y Jefaturas) y liquidación semanal en tiempo real ($50,000 por instrucción).</p>
+                        <p class="text-xs text-zinc-400">Registro de capacitadores (incluye Supervisores y Jefaturas) y liquidación en tiempo real ($50,000 por instrucción).</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Instrucción</span>
@@ -290,20 +287,15 @@
             </div>
         </section>
 
-        <!-- COORDINACIÓN Y SUPERVISIÓN (CON BOTÓN PDF Y RANGOS LIMPIOS) -->
+        <!-- COORDINACIÓN Y SUPERVISIÓN (CON SUBIDA DE PDF EN FEEDBACK) -->
         <section id="seccion-coordinacion" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-400">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
-                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y feedback semanal.</p>
+                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y reportes PDF de feedback para Dirección.</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="imprimirReporteCoordinacion()" class="bg-zinc-800 hover:bg-zinc-700 text-pink-300 border border-pink-500/40 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
-                            📄 Exportar Reporte PDF
-                        </button>
-                        <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
-                    </div>
+                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
@@ -340,17 +332,17 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl" id="bloqueTablaCoordinacion">
+                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                     <table class="fluid-table">
                         <thead>
                             <tr class="bg-pink-950/40 text-pink-200">
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-36">DISCORD ID</th>
                                 <th class="fluid-th text-left w-1/4">SUPERVISOR A CARGO</th>
-                                <th class="fluid-th text-left w-40">RANGO</th>
-                                <th class="fluid-th text-center w-36">HORAS DE GUARDIA</th>
-                                <th class="fluid-th text-center w-40">ESTADO DE SERVICIO</th>
-                                <th class="fluid-th text-left w-1/3">FEEDBACK SEMANAL / DESEMPEÑO</th>
+                                <th class="fluid-th text-left w-36">RANGO</th>
+                                <th class="fluid-th text-center w-36">HORAS GUARDIA</th>
+                                <th class="fluid-th text-center w-36">ESTADO</th>
+                                <th class="fluid-th text-left w-1/3">FEEDBACK SEMANAL / ADJUNTAR PDF</th>
                                 <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
                         </thead>
@@ -360,7 +352,7 @@
             </div>
         </section>
 
-        <!-- NUEVA SECCIÓN: TESORERÍA & REGISTRO DE PAGOS -->
+        <!-- SECCIÓN TESORERÍA & PAGOS -->
         <section id="seccion-pagos" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -377,7 +369,6 @@
                     </div>
                 </div>
 
-                <!-- CONTADORES TOTALIZADORES EN LA CABECERA -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="bg-black/60 p-4 rounded-2xl border border-zinc-800 flex items-center justify-between">
                         <div>
@@ -402,7 +393,6 @@
                     </div>
                 </div>
 
-                <!-- Formulario de Ingreso de Pagos -->
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Personal (IC)</label>
@@ -432,7 +422,6 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Tesorería -->
                 <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                     <table class="fluid-table">
                         <thead>
@@ -454,15 +443,15 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR) -->
+        <!-- CENSO GENERAL (EDITABLE BIDIRECCIONALMENTE POR DIRECCIÓN) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
-                            👑 CENSO GENERAL DEL PERSONAL · DIRECCIÓN
+                            👑 CENSO GENERAL DEL PERSONAL · PANEL DE DIRECCIÓN
                         </h2>
-                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica (Dirección hasta Escala Básica) con panel de edición de Dirección.</p>
+                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía. Todos los campos son editables y se reflejan en tiempo real en las tablas departamentales.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
@@ -475,16 +464,16 @@
                             <tr class="bg-zinc-900 text-zinc-300">
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-32">DISCORD ID</th>
-                                <th class="fluid-th text-left w-1/4">PERSONAL (IC)</th>
+                                <th class="fluid-th text-left w-1/5">PERSONAL (IC)</th>
                                 <th class="fluid-th text-left w-40">DEPARTAMENTO</th>
                                 <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
-                                <th class="fluid-th text-left w-48">POSTULACIÓN / ESTADO</th>
+                                <th class="fluid-th text-left w-52">RANGO A POSTULAR</th>
                                 <th class="fluid-th text-center w-36">HORAS SEMANA</th>
                                 <th class="fluid-th text-center w-28">FALTAS</th>
                                 <th class="fluid-th text-center w-28">EXAMEN</th>
                                 <th class="fluid-th text-center w-32">INGRESO</th>
                                 <th class="fluid-th text-left w-1/4">OBSERVACIONES</th>
-                                <th class="fluid-th text-right w-20">ACCIÓN</th>
+                                <th class="fluid-th text-right w-28">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody id="cuerpoTablaCenso"></tbody>
@@ -586,7 +575,6 @@
             { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
 
-        // RANGOS AMPLIADOS PARA FORMACIONES Y PAGOS (INCLUYE MANDOS)
         const TODOS_LOS_RANGOS = [
             ...RANGOS_EVALUACION,
             { id: "Supervisor", label: "📋 Supervisor", escala: "mando" },
@@ -775,6 +763,7 @@
             if (estadoActual === 'Baja') claseEstadoBadge = 'badge-estado-baja';
 
             const maxFecha = new Date().toISOString().split('T')[0];
+            const hayAscensoPropuesto = r.rango_postular && r.rango_postular !== r.rango_actual;
 
             return `
                 <tr class="fluid-row hover:bg-zinc-900/60 transition">
@@ -794,9 +783,16 @@
                         </select>
                     </td>
                     <td class="fluid-td">
-                        <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${jefaturaId}')" class="cell-input font-bold text-pink-300">
-                            ${opcionesPostular}
-                        </select>
+                        <div class="flex items-center gap-1">
+                            <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${jefaturaId}')" class="cell-input font-bold text-pink-300">
+                                ${opcionesPostular}
+                            </select>
+                            ${hayAscensoPropuesto ? `
+                                <button onclick="aplicarAscensoOficial(${r.id})" title="Aplicar ascenso y mover de tabla" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] px-2 py-1 rounded-md shrink-0 shadow-md">
+                                    ⚡ Aplicar
+                                </button>
+                            ` : ''}
+                        </div>
                     </td>
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'estado', this.value, '${jefaturaId}')" 
@@ -993,13 +989,11 @@
                 `;
             }).join('');
 
-            // Cargar selector de Formaciones con todos los rangos (incluye Supervisores y Jefaturas)
             const selFormRango = document.getElementById('formRango');
             if (selFormRango) {
                 selFormRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
             }
 
-            // Cargar selector de Pagos con todos los rangos
             const selPagoRango = document.getElementById('pagoRango');
             if (selPagoRango) {
                 selPagoRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
@@ -1098,7 +1092,6 @@
                 if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
             }
 
-            // NUEVA PESTAÑA: TESORERÍA & PAGOS
             const tieneAccesoPagos = esAdmin || usuarioActual.rango.includes('Jefe') || usuarioActual.rango.includes('Jefa') || usuarioActual.rango === 'Coordinador';
             if (tieneAccesoPagos) {
                 navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
@@ -1180,43 +1173,12 @@
             }
         }
 
+        // EDICIÓN EN TIEMPO REAL (LOS ASCENSOS SE QUEDAN CONGELADOS COMO PROPUESTA HASTA DARLE AL BOTÓN)
         async function editarCampo(id, campo, valor, jefaturaActual) {
             let datosAEnviar = { [campo]: valor };
 
             if (campo === 'horas_semana') {
                 datosAEnviar[campo] = formatearTextoHoras(valor);
-            }
-
-            if (campo === 'rango_postular' && jefaturaActual === 'enfermeria') {
-                if (valor.includes('Cirugía')) {
-                    const rangoLimpio = valor.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
-                    datosAEnviar = {
-                        jefatura: 'cirugia',
-                        rango_actual: rangoLimpio,
-                        rango_postular: rangoLimpio
-                    };
-                    alert(`✅ ¡Personal promovido! Se transfirió de Enfermería a Cirugía con el rango de ${rangoLimpio}.`);
-                } else if (valor.includes('Medicina')) {
-                    const rangoLimpio = valor.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').trim();
-                    datosAEnviar = {
-                        jefatura: 'medicina',
-                        rango_actual: rangoLimpio,
-                        rango_postular: rangoLimpio
-                    };
-                    alert(`✅ ¡Personal promovido! Se transfirió de Enfermería a Medicina con el rango de ${rangoLimpio}.`);
-                }
-            }
-
-            if (campo === 'rango_postular' && (jefaturaActual === 'cirugia' || jefaturaActual === 'medicina')) {
-                if (valor.includes('Bajar')) {
-                    const rangoLimpio = valor.replace(' (Bajar)', '').trim();
-                    datosAEnviar = {
-                        jefatura: 'enfermeria',
-                        rango_actual: rangoLimpio,
-                        rango_postular: rangoLimpio
-                    };
-                    alert(`⬇️ Reasignación completada: El miembro ha descendido a la Escala de Enfermería (${rangoLimpio}).`);
-                }
             }
 
             try {
@@ -1226,8 +1188,32 @@
                     body: JSON.stringify(datosAEnviar)
                 });
                 await cargarTablas();
+                if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                    cargarCensoGeneral();
+                }
             } catch (e) {
                 console.error("Error al actualizar celda:", e);
+            }
+        }
+
+        // BOTÓN QUE DESCONGELA Y EJECUTA EL ASCENSO / TRASLADO DE TABLA OFICIALMENTE
+        async function aplicarAscensoOficial(id) {
+            if (!confirm("⚡ ¿Confirmas aplicar oficialmente este ascenso y transferir al miembro a su tabla correspondiente?")) return;
+
+            try {
+                const res = await fetch(`/api/ascensos/${id}/aplicar`, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("✅ " + data.message);
+                    await cargarTablas();
+                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                        cargarCensoGeneral();
+                    }
+                } else {
+                    alert("Error: " + (data.error || "No se pudo aplicar el ascenso."));
+                }
+            } catch (e) {
+                alert("Error de conexión al aplicar ascenso.");
             }
         }
 
@@ -1435,11 +1421,66 @@
             cargarFormaciones();
         }
 
-        // ==========================================
-        // COORDINACIÓN & SUPERVISIÓN (CON PDF Y RANGOS LIMPIOS)
-        // ==========================================
-        function imprimirReporteCoordinacion() {
-            window.print();
+        // =========================================================================
+        // COORDINACIÓN & SUPERVISIÓN (CON GESTIÓN Y VISOR DE PDF DE FEEDBACK)
+        // =========================================================================
+        function abrirSelectorPdfFeedback(id) {
+            const fileInput = document.getElementById(`filePdfFeedback_${id}`);
+            if (fileInput) fileInput.click();
+        }
+
+        async function procesarSubidaPdf(id, inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+
+            if (file.type !== 'application/pdf') {
+                return alert("Solo puedes adjuntar archivos en formato PDF.");
+            }
+
+            if (file.size > 15 * 1024 * 1024) {
+                return alert("El archivo PDF supera el tamaño máximo permitido de 15MB.");
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64Data = e.target.result;
+                try {
+                    const res = await fetch(`/api/coordinacion/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pdf_feedback: base64Data,
+                            nombre_pdf: file.name
+                        })
+                    });
+
+                    if (res.ok) {
+                        alert(`📄 Documento PDF "${file.name}" cargado exitosamente para Dirección y Subdirección.`);
+                        cargarCoordinacion();
+                    } else {
+                        alert("Error guardando el PDF en el servidor.");
+                    }
+                } catch (err) {
+                    alert("Error en la subida del archivo PDF.");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function verPdfFeedback(base64Data, nombrePdf) {
+            if (!base64Data) return alert("No hay ningún PDF adjunto para este supervisor.");
+            const win = window.open();
+            win.document.write(`<iframe src="${base64Data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        }
+
+        async function borrarPdfFeedback(id) {
+            if (!confirm("¿Deseas desvincular y eliminar el PDF adjunto de este feedback?")) return;
+            await fetch(`/api/coordinacion/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pdf_feedback: '', nombre_pdf: '' })
+            });
+            cargarCoordinacion();
         }
 
         async function guardarSupervisorCoordinacion() {
@@ -1514,6 +1555,7 @@
                     if (c.estado === 'Baja') badgeEstado = 'badge-estado-baja';
 
                     const semaforoHoras = obtenerClaseSemaforoCasilla(c.horas_semana);
+                    const tienePdf = !!c.pdf_feedback;
 
                     return `
                     <tr class="fluid-row hover:bg-zinc-900/40">
@@ -1548,9 +1590,30 @@
                             </select>
                         </td>
                         <td class="fluid-td">
-                            <textarea rows="1" onblur="editarCoordinacionEnTabla(${c.id}, 'feedback_semanal', this.value)" 
-                                      placeholder="Feedback semanal, rango de fechas de ausencia..." 
-                                      class="cell-input text-zinc-300 text-xs resize-y min-h-[34px]">${c.feedback_semanal || ''}</textarea>
+                            <div class="space-y-1.5">
+                                <textarea rows="1" onblur="editarCoordinacionEnTabla(${c.id}, 'feedback_semanal', this.value)" 
+                                          placeholder="Feedback semanal, rango de fechas de ausencia..." 
+                                          class="cell-input text-zinc-300 text-xs resize-y min-h-[30px]">${c.feedback_semanal || ''}</textarea>
+                                
+                                <div class="flex items-center gap-2">
+                                    <input type="file" id="filePdfFeedback_${c.id}" accept="application/pdf" class="hidden" onchange="procesarSubidaPdf(${c.id}, this)">
+                                    
+                                    <button onclick="abrirSelectorPdfFeedback(${c.id})" class="text-[10px] bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/40 px-2 py-0.5 rounded-md font-bold flex items-center gap-1 transition">
+                                        📎 ${tienePdf ? 'Cambiar PDF' : 'Subir PDF'}
+                                    </button>
+
+                                    ${tienePdf ? `
+                                        <button onclick="verPdfFeedback('${c.pdf_feedback}', '${c.nombre_pdf || 'reporte.pdf'}')" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-black flex items-center gap-1 transition">
+                                            📄 Ver PDF (${c.nombre_pdf || 'Adjunto'})
+                                        </button>
+                                        <button onclick="borrarPdfFeedback(${c.id})" title="Eliminar PDF" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold px-1">
+                                            ✕
+                                        </button>
+                                    ` : `
+                                        <span class="text-[10px] text-zinc-500 italic">Sin reporte PDF adjunto</span>
+                                    `}
+                                </div>
+                            </div>
                         </td>
                         <td class="fluid-td text-right">
                             <button onclick="eliminarCoordinacion(${c.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -1572,7 +1635,7 @@
         }
 
         // =========================================================================
-        // NUEVA SECCIÓN: TESORERÍA & REGISTRO DE PAGOS
+        // TESORERÍA & PAGOS
         // =========================================================================
         async function guardarRegistroPago() {
             const personal = document.getElementById('pagoPersonal').value.trim();
@@ -1581,8 +1644,8 @@
             const cantidad = document.getElementById('pagoCantidad').value.trim();
             const estado = document.getElementById('pagoEstado').value;
 
-            if (!personal) return alert("Ingresa el nombre del personal receptor.");
-            if (!concepto) return alert("Ingresa el concepto del pago (Bono, Incentivo, Premio, etc.).");
+            if (!personal) return alert("Ingresa el personal receptor.");
+            if (!concepto) return alert("Ingresa el concepto del pago.");
 
             const monto = Math.max(0, parseFloat(cantidad) || 0);
 
@@ -1612,7 +1675,7 @@
                     alert("Error: " + (data.error || "No se pudo registrar el pago."));
                 }
             } catch (e) {
-                alert("Error comunicando con el servidor.");
+                alert("Error de conexión al registrar pago.");
             }
         }
 
@@ -1638,7 +1701,7 @@
         }
 
         async function ejecutarCorteSemanalPagos() {
-            const confirmar = confirm("💼 ¿Deseas procesar el CORTE SEMANAL de tesorería?\n\nEsta acción marcará todos los pagos pendientes como LIQUIDADOS y asentados para cerrar el balance semanal.");
+            const confirmar = confirm("💼 ¿Deseas procesar el CORTE SEMANAL de tesorería?\n\nEsta acción marcará todos los pagos pendientes como LIQUIDADOS.");
             if (!confirmar) return;
 
             try {
@@ -1648,7 +1711,7 @@
                     await cargarPagos();
                 }
             } catch (e) {
-                alert("Error al procesar el corte de tesorería.");
+                alert("Error al procesar corte de tesorería.");
             }
         }
 
@@ -1734,8 +1797,43 @@
         }
 
         // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (ORDENADO DE MAYOR A MENOR)
+        // CENSO GENERAL DE DIRECCIÓN (100% EDITABLE DE FORMA BIDIRECCIONAL)
         // =========================================================================
+        async function editarDesdeCenso(tipo, id, campo, valor) {
+            let datosAEnviar = { [campo]: valor };
+            if (campo === 'horas_semana') {
+                datosAEnviar[campo] = formatearTextoHoras(valor);
+            }
+
+            try {
+                if (tipo === 'ascenso') {
+                    await fetch(`/api/ascensos/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+                    await cargarTablas();
+                } else if (tipo === 'coordinacion') {
+                    await fetch(`/api/coordinacion/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+                    await cargarCoordinacion();
+                } else if (tipo === 'usuario') {
+                    await fetch(`/api/usuarios/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+                    await cargarGestionAdmin();
+                }
+                cargarCensoGeneral();
+            } catch (err) {
+                console.error("Error editando desde censo:", err);
+            }
+        }
+
         async function cargarCensoGeneral() {
             try {
                 const [resAsc, resCoord, resUsers] = await Promise.all([
@@ -1759,12 +1857,12 @@
                             nombre: a.nombre,
                             departamento: a.jefatura,
                             rango_actual: a.rango_actual,
-                            rango_postular: a.rango_postular || '—',
+                            rango_postular: a.rango_postular || a.rango_actual,
                             horas_semana: a.horas_semana,
                             faltas: a.faltas,
                             examen: a.examen,
                             fecha_ingreso: a.fecha_ingreso || '—',
-                            descripcion: a.descripcion || '—',
+                            descripcion: a.descripcion || '',
                             esMando: false
                         });
                     });
@@ -1779,12 +1877,12 @@
                             nombre: c.supervisor,
                             departamento: 'coordinacion',
                             rango_actual: c.rango || 'Supervisor',
-                            rango_postular: `Estado: ${c.estado}`,
+                            rango_postular: c.rango || 'Supervisor',
                             horas_semana: c.horas_semana || '',
                             faltas: '—',
                             examen: '—',
                             fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
-                            descripcion: c.feedback_semanal || '—',
+                            descripcion: c.feedback_semanal || '',
                             esMando: true
                         });
                     });
@@ -1802,8 +1900,8 @@
                                     nombre: u.nombre,
                                     departamento: 'direccion',
                                     rango_actual: u.rango,
-                                    rango_postular: 'Cargo Oficial',
-                                    horas_semana: u.horas_semana || 'Mando Institucional',
+                                    rango_postular: u.rango,
+                                    horas_semana: u.horas_semana || '',
                                     faltas: '—',
                                     examen: '—',
                                     fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
@@ -1823,6 +1921,7 @@
                     return;
                 }
 
+                // ORDENAR DE MAYOR A MENOR (18 -> 1)
                 listaUnificada.sort((a, b) => {
                     const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
                     const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
@@ -1831,6 +1930,7 @@
                 });
 
                 document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos Totales`;
+                const maxFecha = new Date().toISOString().split('T')[0];
 
                 cuerpo.innerHTML = listaUnificada.map((r, index) => {
                     let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
@@ -1839,40 +1939,82 @@
                     if (r.departamento === 'coordinacion') deptoTag = '<span class="text-pink-300 font-bold">Coordinación</span>';
                     if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
 
-                    let celdaHoras = '';
-                    if (r.departamento === 'direccion') {
-                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-rose-950/60 text-rose-300 border border-rose-500/30">Mando Institucional</span>`;
-                    } else if (r.departamento === 'coordinacion') {
-                        if (r.horas_semana) {
-                            const sc = obtenerClaseSemaforoCasilla(r.horas_semana);
-                            celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${sc}">${r.horas_semana}</span>`;
-                        } else {
-                            celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-[10px] bg-pink-950/60 text-pink-300 border border-pink-400/30">Mando / Supervisión</span>`;
-                        }
-                    } else {
-                        const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
-                        celdaHoras = `<span class="px-2 py-0.5 rounded font-mono-code font-bold text-xs ${semaforo}">${r.horas_semana || '00:00 HRS'}</span>`;
-                    }
+                    const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
+                    const hayAscensoPropuesto = r.tipo_origen === 'ascenso' && r.rango_postular && r.rango_postular !== r.rango_actual;
 
                     return `
-                        <tr class="fluid-row hover:bg-zinc-900/40">
+                        <tr class="fluid-row hover:bg-zinc-900/40 transition">
                             <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">${r.discord_id}</td>
-                            <td class="fluid-td font-bold text-white">${r.nombre}</td>
+                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">
+                                <input type="text" value="${r.discord_id}" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'discord_id', this.value)" 
+                                       class="cell-input font-mono-code text-xs">
+                            </td>
+                            <td class="fluid-td font-bold text-white">
+                                <input type="text" value="${r.nombre}" 
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
+                                       class="cell-input font-bold text-white text-sm">
+                            </td>
                             <td class="fluid-td">${deptoTag}</td>
-                            <td class="fluid-td">${obtenerBadgeRango(r.rango_actual)}</td>
-                            <td class="fluid-td font-semibold text-zinc-400">${r.rango_postular}</td>
-                            <td class="fluid-td text-center">${celdaHoras}</td>
-                            <td class="fluid-td text-center font-bold text-xs ${r.faltas === 'WARN' ? 'text-amber-400' : r.faltas === 'DESPIDO' ? 'text-rose-500' : 'text-zinc-500'}">
-                                ${r.faltas}
+                            <td class="fluid-td font-semibold">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
+                                    ${TODOS_LOS_RANGOS.map(x => `<option value="${x.id}" ${x.id === r.rango_actual ? 'selected' : ''}>${x.label}</option>`).join('')}
+                                </select>
                             </td>
-                            <td class="fluid-td text-center font-bold text-xs ${r.examen === 'REALIZADO' ? 'text-emerald-400' : 'text-zinc-400'}">
-                                ${r.examen}
+                            <td class="fluid-td font-semibold">
+                                ${r.tipo_origen === 'ascenso' ? `
+                                    <div class="flex items-center gap-1">
+                                        <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                            ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
+                                        </select>
+                                        ${hayAscensoPropuesto ? `
+                                            <button onclick="aplicarAscensoOficial(${r.id_original})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] px-2 py-1 rounded-md shrink-0 shadow-md">
+                                                ⚡ Aplicar
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                ` : `
+                                    <span class="text-xs text-zinc-400">${r.rango_postular}</span>
+                                `}
                             </td>
-                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">${r.fecha_ingreso}</td>
-                            <td class="fluid-td text-zinc-400 text-xs">${r.descripcion}</td>
+                            <td class="fluid-td text-center">
+                                <input type="text" value="${r.horas_semana || ''}" 
+                                       placeholder="00:00 HRS"
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'horas_semana', this.value)" 
+                                       class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforo}">
+                            </td>
+                            <td class="fluid-td text-center">
+                                ${r.tipo_origen === 'ascenso' ? `
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                        <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
+                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-600 text-black">WARN</option>
+                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white">DESPIDO</option>
+                                    </select>
+                                ` : `<span class="text-zinc-500">—</span>`}
+                            </td>
+                            <td class="fluid-td text-center">
+                                ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
+                                        <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
+                                        <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                        <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
+                                    </select>
+                                ` : `<span class="text-zinc-500">—</span>`}
+                            </td>
+                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">
+                                <input type="date" value="${r.fecha_ingreso || ''}" 
+                                       max="${maxFecha}"
+                                       onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'fecha_ingreso', this.value)" 
+                                       class="cell-input text-center font-mono-code text-xs text-zinc-300">
+                            </td>
+                            <td class="fluid-td text-zinc-400 text-xs">
+                                <input type="text" value="${r.descripcion}" 
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
+                                       class="cell-input text-zinc-300 text-xs">
+                            </td>
                             <td class="fluid-td text-right">
-                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-xs">Eliminar</button>
+                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
                             </td>
                         </tr>
                     `;
@@ -1959,7 +2101,6 @@
             cargarCensoGeneral();
         }
 
-        // TIEMPO REAL: ACTUALIZA LA VISTA AL RECIBIR NOTIFICACIONES DEL SERVIDOR
         socket.on('db_update', () => {
             cargarTablas();
             cargarFormaciones();

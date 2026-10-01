@@ -80,14 +80,17 @@ const db = createClient({
         horas_semana TEXT DEFAULT '',
         estado TEXT DEFAULT 'Activo',
         feedback_semanal TEXT DEFAULT '',
+        pdf_feedback TEXT DEFAULT '',
+        nombre_pdf TEXT DEFAULT '',
         actualizado_por TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN pdf_feedback TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN nombre_pdf TEXT DEFAULT ''"); } catch (e) {}
 
-    // NUEVA TABLA: REGISTRO CENTRALIZADO DE PAGOS Y TESORERÍA
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_pagos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -103,7 +106,7 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Todas las tablas de EMS Origen Roleplay operativas en Turso.");
+    console.log("[DB] Todas las tablas y campos para PDF y congelamiento configurados en Turso.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }
