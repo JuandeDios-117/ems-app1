@@ -148,15 +148,28 @@
             border: 1px solid rgba(239, 68, 68, 0.25);
         }
 
-        /* Resaltado amarillo sutil en Censo para miembros con pago pendiente */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Resaltado amarillo nítido en el Censo General si tiene pago pendiente en Tesorería */
         .fila-pago-pendiente {
-            background: rgba(245, 158, 11, 0.14) !important;
-            border-left: 3px solid #f59e0b !important;
+            background: rgba(245, 158, 11, 0.2) !important;
+            box-shadow: inset 4px 0 0 #f59e0b, 0 0 15px rgba(245, 158, 11, 0.15) !important;
         }
     </style>
 </head>
 <body class="p-3 md:p-6 text-sm">
-    <div class="w-full max-w-[1850px] mx-auto space-y-4">
+    <div class="w-full max-w-[1920px] mx-auto space-y-4">
         
         <!-- HEADER EMS ORIGEN CON RELOJES INTERNACIONALES (MX, AR, ES) -->
         <header class="card-ems p-4 md:p-5 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500">
@@ -175,6 +188,7 @@
                 </div>
             </div>
 
+            <!-- RELOJES INTERNACIONALES EN VIVO -->
             <div class="flex flex-wrap items-center gap-2 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
                 <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
                     <span>🇲🇽</span>
@@ -398,7 +412,7 @@
             </div>
         </section>
 
-        <!-- SECCIÓN TESORERÍA & PAGOS (SUBDIRECCIÓN Y DIRECCIÓN CON BUSCADOR) -->
+        <!-- SECCIÓN TESORERÍA & PAGOS (CENTRALIZADA, INTELIGENTE Y EXCLUSIVA PARA SUBDIRECCIÓN Y DIRECCIÓN) -->
         <section id="seccion-pagos" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -406,7 +420,7 @@
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
                             💰 TESORERÍA DEPARTAMENTAL · REGISTRO DE PAGOS
                         </h2>
-                        <p class="text-xs text-zinc-400">Control confidencial exclusivo para Subdirección y Dirección General.</p>
+                        <p class="text-xs text-zinc-400">Selecciona o busca a cualquier miembro del Censo General para autocompletar su rango y asentar pagos o bonificaciones.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="ejecutarCorteSemanalPagos()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
@@ -439,24 +453,21 @@
                     </div>
                 </div>
 
-                <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3">
-                    <span class="text-zinc-500 text-base">🔍</span>
-                    <input type="text" id="filtroBuscadorPagos" oninput="filtrarTablaPagos()" placeholder="Buscar por personal (lee todo el Censo General) o concepto..." class="bg-transparent w-full text-white text-xs outline-none">
-                </div>
-
+                <!-- FORMULARIO DE INGRESO INTELIGENTE QUE LEE AL CENSO GENERAL -->
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
                     <div>
-                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Personal (IC)</label>
-                        <input type="text" id="pagoPersonal" list="listaSugerenciasCenso" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
-                        <datalist id="listaSugerenciasCenso"></datalist>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Personal del Censo</label>
+                        <select id="pagoSelectCenso" onchange="seleccionarPersonalDesdeCenso(this.value)" class="w-full input-ems px-3 py-2 rounded-xl font-bold text-white">
+                            <option value="">-- Seleccionar Personal --</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
-                        <select id="pagoRango" class="w-full input-ems px-3 py-2 rounded-xl font-semibold"></select>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango Detectado</label>
+                        <input type="text" id="pagoRango" readonly placeholder="Auto-detectado del censo" class="w-full input-ems px-3 py-2 rounded-xl font-semibold text-pink-300 bg-zinc-900/60 cursor-not-allowed">
                     </div>
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Concepto de Pago</label>
-                        <input type="text" id="pagoConcepto" placeholder="Bono semanal, Premio..." class="w-full input-ems px-3 py-2 rounded-xl">
+                        <input type="text" id="pagoConcepto" placeholder="Bono semanal, Guardia, Premio..." class="w-full input-ems px-3 py-2 rounded-xl">
                     </div>
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Cantidad ($)</label>
@@ -465,13 +476,19 @@
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Inicial</label>
                         <select id="pagoEstado" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
-                            <option value="Pendiente">⏳ Pendiente</option>
+                            <option value="Pendiente">⏳ Pendiente (Marca Censo)</option>
                             <option value="Pagado">✅ Pagado</option>
                         </select>
                     </div>
                     <div class="flex items-end">
                         <button onclick="guardarRegistroPago()" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs tracking-wider font-extrabold">+ ASENTAR PAGO</button>
                     </div>
+                </div>
+
+                <!-- BUSCADOR EN VIVO DE PAGOS REGISTRADOS -->
+                <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3">
+                    <span class="text-zinc-500 text-base">🔍</span>
+                    <input type="text" id="filtroBuscadorPagos" oninput="filtrarTablaPagos()" placeholder="Filtrar por nombre de personal receptor o concepto de pago..." class="bg-transparent w-full text-white text-xs outline-none">
                 </div>
 
                 <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
@@ -495,15 +512,15 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL (RESALTADO AMARILLO AUTOMÁTICO SI TIENE PAGO PENDIENTE) -->
+        <!-- CENSO GENERAL (COMPLETO CON TODA LA INFORMACIÓN 1:1 DE CADA TABLA) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
-                            🩺 CENSO GENERAL DEL PERSONAL · PANEL DE DIRECCIÓN
+                            🩺 CENSO GENERAL DEL PERSONAL · FICHA INTEGRAL 1:1
                         </h2>
-                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica. Los miembros con pagos pendientes en tesorería se resaltan en amarillo.</p>
+                        <p class="text-xs text-zinc-400">Reúne en tiempo real toda la información de cada tabla (Estado, Faltas, Exámenes, Días de Prueba y Pagos pendientes resaltados en amarillo).</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
@@ -519,13 +536,14 @@
                                 <th class="fluid-th text-left w-1/5">PERSONAL (IC)</th>
                                 <th class="fluid-th text-left w-40">DEPARTAMENTO</th>
                                 <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
-                                <th class="fluid-th text-left w-52">RANGO A POSTULAR</th>
+                                <th class="fluid-th text-left w-48">POSTULACIÓN</th>
+                                <th class="fluid-th text-center w-36">ESTADO SERVICIO</th>
                                 <th class="fluid-th text-center w-36">HORAS SEMANA</th>
                                 <th class="fluid-th text-center w-28">FALTAS</th>
                                 <th class="fluid-th text-center w-28">EXAMEN</th>
                                 <th class="fluid-th text-center w-32">INGRESO</th>
                                 <th class="fluid-th text-left w-1/4">OBSERVACIONES</th>
-                                <th class="fluid-th text-right w-28">ACCIÓN</th>
+                                <th class="fluid-th text-right w-24">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody id="cuerpoTablaCenso"></tbody>
@@ -572,7 +590,7 @@
         let usuarioActual = null;
         let esRegistro = false;
         let cachePagosGlobal = [];
-        let cacheCensoNombresGlobal = [];
+        let cacheCensoGlobal = [];
 
         function actualizarRelojes() {
             const ahora = new Date();
@@ -667,7 +685,7 @@
             { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" },
             { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" },
             { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" },
-            { id: "Jefe de Cirugía", label: "🥼✂️ Jefe de Cirugía", escala: "jefatura" },
+            { id: "Jefe de Cirugía", label: "🥼✂️️ Jefe de Cirugía", escala: "jefatura" },
             { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" },
             { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" }
         ];
@@ -713,7 +731,7 @@
             }
         ];
 
-        // CÁLCULO DE PERIODO DE PRUEBA: SOLO APLICA A ASPIRANTES INGRESADOS CON MARCA DE PRUEBA
+        // Periodo de prueba: solo para celadores ingresados como aspirantes en formaciones
         function calcularEstadoPrueba(fechaIngresoStr, descripcion) {
             const esNuevoAspirante = descripcion && descripcion.includes('PRUEBA_ACTIVA');
             if (!esNuevoAspirante || !fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') {
@@ -737,33 +755,15 @@
 
         function obtenerBadgeRango(rango) {
             const r = (rango || '').toLowerCase();
-            if (r.includes('director (admin)')) {
-                return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🩺🏥 ${rango}</span>`;
-            }
-            if (r.includes('subdirectora')) {
-                return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🩺🏢 ${rango}</span>`;
-            }
-            if (r.includes('cirugía') || r.includes('cirugia')) {
-                return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼✂️ ${rango}</span>`;
-            }
-            if (r.includes('medicina')) {
-                return `<span class="inline-flex items-center gap-1 bg-blue-600/25 text-blue-200 border border-blue-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼💊 ${rango}</span>`;
-            }
-            if (r.includes('enfermería') || r.includes('enfermeria')) {
-                return `<span class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼💉 ${rango}</span>`;
-            }
-            if (r.includes('formaciones') || r.includes('formacion')) {
-                return `<span class="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼📚 ${rango}</span>`;
-            }
-            if (r === 'formador') {
-                return `<span class="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📚 Formador</span>`;
-            }
-            if (r.includes('coordinador')) {
-                return `<span class="inline-flex items-center gap-1 bg-pink-300/20 text-pink-200 border border-pink-300/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📋🩺 ${rango}</span>`;
-            }
-            if (r.includes('supervisor')) {
-                return `<span class="inline-flex items-center gap-1 bg-fuchsia-600/25 text-fuchsia-200 border border-fuchsia-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📋🥼 ${rango}</span>`;
-            }
+            if (r.includes('director (admin)')) return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🩺🏥 ${rango}</span>`;
+            if (r.includes('subdirectora')) return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🩺🏢 ${rango}</span>`;
+            if (r.includes('cirugía') || r.includes('cirugia')) return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼✂️ ${rango}</span>`;
+            if (r.includes('medicina')) return `<span class="inline-flex items-center gap-1 bg-blue-600/25 text-blue-200 border border-blue-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼💊 ${rango}</span>`;
+            if (r.includes('enfermería') || r.includes('enfermeria')) return `<span class="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼💉 ${rango}</span>`;
+            if (r.includes('formaciones') || r.includes('formacion')) return `<span class="inline-flex items-center gap-1 bg-amber-400/20 text-amber-300 border border-amber-400/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼📚 ${rango}</span>`;
+            if (r === 'formador') return `<span class="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📚 Formador</span>`;
+            if (r.includes('coordinador')) return `<span class="inline-flex items-center gap-1 bg-pink-300/20 text-pink-200 border border-pink-300/40 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📋🩺 ${rango}</span>`;
+            if (r.includes('supervisor')) return `<span class="inline-flex items-center gap-1 bg-fuchsia-600/25 text-fuchsia-200 border border-fuchsia-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">📋🥼 ${rango}</span>`;
 
             if (r.includes('subespecialista')) return `<span class="text-cyan-300 font-bold">🩺 『🔬』 ${rango}</span>`;
             if (r.includes('especialista')) return `<span class="text-sky-300 font-bold">🩺 『🥼』 ${rango}</span>`;
@@ -802,9 +802,7 @@
 
             if (!val.includes(':')) {
                 const num = Math.max(0, parseInt(val));
-                if (!isNaN(num)) {
-                    val = String(num).padStart(2, '0') + ':00';
-                }
+                if (!isNaN(num)) val = String(num).padStart(2, '0') + ':00';
             } else {
                 const [h, m] = val.split(':');
                 const horas = Math.max(0, parseInt(h) || 0);
@@ -1101,20 +1099,14 @@
                 selFormRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
             }
 
-            const selPagoRango = document.getElementById('pagoRango');
-            if (selPagoRango) {
-                selPagoRango.innerHTML = TODOS_LOS_RANGOS.map(r => `<option value="${r.id}">${r.label}</option>`).join('');
-            }
-
             const elAspFecha = document.getElementById('aspFecha');
             if (elAspFecha) elAspFecha.value = hoy;
         }
 
         inicializarEstructuraHtml();
 
-        // ACCIÓN MAESTRA GENERAL: APLICAR ASCENSOS EN LAS 3 TABLAS Y REINICIAR HORAS A 0
         async function aplicarTodosLosAscensosGlobal() {
-            const confirmar = confirm(`⚡ ¿Confirmas aplicar oficialmente TODOS los ascensos de Enfermería, Medicina y Cirugía?\n\n- Los rangos propuestos pasarán a ser sus nuevos rangos actuales.\n- Si cambian de escala, se moverán a su respectiva tabla.\n- TODAS las horas semanales se reiniciarán a 00:00 HRS para arrancar el nuevo ciclo.`);
+            const confirmar = confirm(`⚡ ¿Confirmas aplicar oficialmente TODOS los ascensos de Enfermería, Medicina y Cirugía?\n\n- Los rangos propuestos pasarán a ser sus nuevos rangos actuales.\n- Si cambian de escala, se moverán a su respectiva tabla.\n- TODAS las horas semanales se reiniciarán a 00:00 HRS.`);
             if (!confirmar) return;
 
             try {
@@ -1339,6 +1331,7 @@
             cargarFormaciones();
             cargarCoordinacion();
             cargarEstadosTablasListas();
+            cargarCensoGeneral();
             if (tieneAccesoTesoreria()) cargarPagos();
             if (pestanaAInicializar) cambiarPestana(pestanaAInicializar);
 
@@ -1396,6 +1389,7 @@
                     document.getElementById(`discord_${jefaturaId}`).value = '';
                     document.getElementById(`nombre_${jefaturaId}`).value = '';
                     await cargarTablas();
+                    await cargarCensoGeneral();
                 } else {
                     alert("Error: " + (data.error || "No se pudo agregar"));
                 }
@@ -1486,7 +1480,7 @@
             }
         }
 
-        // FORMACIONES ($50K POR INSTRUCCIÓN)
+        // FORMACIONES
         async function guardarNuevoInstructor() {
             const instructor = document.getElementById('formInstructor').value.trim();
             const rango = document.getElementById('formRango').value;
@@ -1702,6 +1696,7 @@
                     document.getElementById('coordSupervisor').value = '';
                     document.getElementById('coordHoras').value = '';
                     await cargarCoordinacion();
+                    await cargarCensoGeneral();
                 }
             } catch (e) {
                 alert("Error al registrar en coordinación.");
@@ -1721,6 +1716,7 @@
                     body: JSON.stringify(datosAEnviar)
                 });
                 await cargarCoordinacion();
+                await cargarCensoGeneral();
             } catch (e) {
                 console.error("Error al actualizar coordinación:", e);
             }
@@ -1823,15 +1819,41 @@
             }
         }
 
-        // TESORERÍA & PAGOS
+        // =========================================================================
+        // TESORERÍA INTELIGENTE: AUTO-COMPLETADO DESDE EL CENSO GENERAL
+        // =========================================================================
+        function poblarSelectorPersonalCenso() {
+            const select = document.getElementById('pagoSelectCenso');
+            if (!select) return;
+
+            const valorPrevio = select.value;
+            select.innerHTML = '<option value="">-- Seleccionar Personal del Censo --</option>' + 
+                cacheCensoGlobal.map(p => `
+                    <option value="${p.nombre}" data-rango="${p.rango_actual}">${p.nombre} (${p.rango_actual})</option>
+                `).join('');
+
+            if (valorPrevio) select.value = valorPrevio;
+        }
+
+        function seleccionarPersonalDesdeCenso(nombreSeleccionado) {
+            if (!nombreSeleccionado) {
+                document.getElementById('pagoRango').value = '';
+                return;
+            }
+            const persona = cacheCensoGlobal.find(p => p.nombre.toLowerCase().trim() === nombreSeleccionado.toLowerCase().trim());
+            if (persona) {
+                document.getElementById('pagoRango').value = persona.rango_actual;
+            }
+        }
+
         async function guardarRegistroPago() {
-            const personal = document.getElementById('pagoPersonal').value.trim();
-            const rango = document.getElementById('pagoRango').value;
+            const personal = document.getElementById('pagoSelectCenso').value.trim();
+            const rango = document.getElementById('pagoRango').value.trim();
             const concepto = document.getElementById('pagoConcepto').value.trim();
             const cantidad = document.getElementById('pagoCantidad').value.trim();
             const estado = document.getElementById('pagoEstado').value;
 
-            if (!personal) return alert("Ingresa el personal receptor.");
+            if (!personal) return alert("Por favor selecciona un miembro del Censo General.");
             if (!concepto) return alert("Ingresa el concepto del pago.");
 
             const monto = Math.max(0, parseFloat(cantidad) || 0);
@@ -1842,7 +1864,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         personal,
-                        rango,
+                        rango: rango || 'Personal EMS',
                         concepto,
                         cantidad: monto,
                         estado,
@@ -1853,13 +1875,12 @@
                 });
 
                 if (res.ok) {
-                    document.getElementById('pagoPersonal').value = '';
+                    document.getElementById('pagoSelectCenso').value = '';
+                    document.getElementById('pagoRango').value = '';
                     document.getElementById('pagoConcepto').value = '';
                     document.getElementById('pagoCantidad').value = '';
                     await cargarPagos();
-                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                        cargarCensoGeneral();
-                    }
+                    await cargarCensoGeneral();
                 } else {
                     const data = await res.json();
                     alert("Error: " + (data.error || "No se pudo registrar el pago."));
@@ -1885,16 +1906,14 @@
                     body: JSON.stringify(payload)
                 });
                 await cargarPagos();
-                if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                    cargarCensoGeneral();
-                }
+                await cargarCensoGeneral();
             } catch (e) {
                 console.error("Error al actualizar pago:", e);
             }
         }
 
         async function ejecutarCorteSemanalPagos() {
-            const confirmar = confirm("💼 ¿Deseas procesar el CORTE SEMANAL de tesorería?\n\nEsta acción marcará todos los pagos pendientes como LIQUIDADOS.");
+            const confirmar = confirm("💼 ¿Deseas procesar el CORTE SEMANAL de tesorería?\n\nEsta acción marcará todos los pagos pendientes como LIQUIDADOS y retirará los resaltados amarillos en el Censo.");
             if (!confirmar) return;
 
             try {
@@ -1902,9 +1921,7 @@
                 if (res.ok) {
                     alert("✅ Corte semanal de tesorería procesado con éxito.");
                     await cargarPagos();
-                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                        cargarCensoGeneral();
-                    }
+                    await cargarCensoGeneral();
                 }
             } catch (e) {
                 alert("Error al procesar corte de tesorería.");
@@ -1913,13 +1930,10 @@
 
         function filtrarTablaPagos() {
             const q = (document.getElementById('filtroBuscadorPagos').value || '').toLowerCase().trim();
-            const cuerpo = document.getElementById('cuerpoTablaPagos');
-
             const filtrados = cachePagosGlobal.filter(p => 
                 (p.personal || '').toLowerCase().includes(q) ||
                 (p.concepto || '').toLowerCase().includes(q)
             );
-
             renderizarPagosFiltrados(filtrados);
         }
 
@@ -2004,12 +2018,12 @@
             if (!confirm("¿Deseas eliminar este registro de tesorería?")) return;
             await fetch(`/api/pagos/${id}`, { method: 'DELETE' });
             cargarPagos();
-            if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                cargarCensoGeneral();
-            }
+            cargarCensoGeneral();
         }
 
-        // CENSO GENERAL DE DIRECCIÓN (RESALTADO AMARILLO SI TIENE PAGO PENDIENTE)
+        // =========================================================================
+        // CENSO GENERAL DE DIRECCIÓN (INFORMACIÓN 1:1 COMPLETA + RESALTADO AMARILLO)
+        // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
             if (campo === 'horas_semana') {
@@ -2084,9 +2098,10 @@
                             departamento: a.jefatura,
                             rango_actual: a.rango_actual,
                             rango_postular: a.rango_postular || a.rango_actual,
+                            estado: a.estado || 'Activo',
                             horas_semana: a.horas_semana,
-                            faltas: a.faltas,
-                            examen: a.examen,
+                            faltas: a.faltas || 'NINGUNA',
+                            examen: a.examen || 'NO APLICA',
                             fecha_ingreso: a.fecha_ingreso || '—',
                             descripcion: a.descripcion || '',
                             esMando: false,
@@ -2112,9 +2127,10 @@
                                 departamento: 'coordinacion',
                                 rango_actual: c.rango || 'Supervisor',
                                 rango_postular: c.rango || 'Supervisor',
+                                estado: c.estado || 'Activo',
                                 horas_semana: c.horas_semana || '',
-                                faltas: '—',
-                                examen: '—',
+                                faltas: 'NINGUNA',
+                                examen: 'NO APLICA',
                                 fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
                                 descripcion: c.feedback_semanal || '',
                                 esMando: true,
@@ -2159,9 +2175,10 @@
                                     departamento: depto,
                                     rango_actual: rangoLimpio,
                                     rango_postular: rangoLimpio,
+                                    estado: 'Activo',
                                     horas_semana: u.horas_semana || '',
-                                    faltas: '—',
-                                    examen: '—',
+                                    faltas: 'NINGUNA',
+                                    examen: 'NO APLICA',
                                     fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
                                     descripcion: `Cuenta institucional @${u.usuario}`,
                                     esMando: true,
@@ -2172,17 +2189,13 @@
                     });
                 }
 
-                // Actualizar lista global de sugerencias para autocompletar en tesorería
-                cacheCensoNombresGlobal = listaUnificada.map(x => x.nombre);
-                const dl = document.getElementById('listaSugerenciasCenso');
-                if (dl) {
-                    dl.innerHTML = cacheCensoNombresGlobal.map(n => `<option value="${n}">`).join('');
-                }
+                cacheCensoGlobal = listaUnificada;
+                poblarSelectorPersonalCenso();
 
                 const cuerpo = document.getElementById('cuerpoTablaCenso');
 
                 if (listaUnificada.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="12" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
                     document.getElementById('txtTotalCenso').innerText = "0 Efectivos";
                     return;
                 }
@@ -2207,9 +2220,14 @@
                     const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
                     const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
-                    // Resaltar fila completa en amarillo si tiene pago pendiente en tesorería
+                    // Resaltado amarillo prominente si tiene cobro pendiente en tesorería
                     const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
                     const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
+
+                    let claseEstadoBadge = 'badge-estado-activo';
+                    if (r.estado === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
+                    if (r.estado === 'Excedencia') claseEstadoBadge = 'badge-estado-excedencia';
+                    if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
 
                     return `
                         <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPago}">
@@ -2226,7 +2244,7 @@
                                            onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
                                            class="cell-input font-bold text-white text-sm flex-1">
                                     ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
-                                    ${tienePagoPendiente ? `<span class="text-amber-300 text-xs font-black px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/40" title="Pago pendiente por cobrar en Tesorería">💵 Pendiente</span>` : ''}
+                                    ${tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
                                     ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
                                 </div>
                             </td>
@@ -2238,12 +2256,20 @@
                             </td>
                             <td class="fluid-td font-semibold">
                                 ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
                                         ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
                                     </select>
                                 ` : `
                                     <span class="text-xs text-zinc-400 font-semibold">${r.rango_postular}</span>
                                 `}
+                            </td>
+                            <td class="fluid-td text-center">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${claseEstadoBadge}">
+                                    <option value="Activo" ${r.estado === 'Activo' ? 'selected' : ''}>🟢 Activo</option>
+                                    <option value="Ausencia" ${r.estado === 'Ausencia' ? 'selected' : ''}>🟡 Ausencia</option>
+                                    <option value="Excedencia" ${r.estado === 'Excedencia' ? 'selected' : ''}>🟠 Excedencia</option>
+                                    <option value="Baja" ${r.estado === 'Baja' ? 'selected' : ''}>🔴 Baja</option>
+                                </select>
                             </td>
                             <td class="fluid-td text-center">
                                 <input type="text" value="${r.horas_semana || ''}" 
@@ -2281,7 +2307,7 @@
                                        class="cell-input text-zinc-300 text-xs">
                             </td>
                             <td class="fluid-td text-right">
-                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-xs">Eliminar</button>
                             </td>
                         </tr>
                     `;
@@ -2371,10 +2397,8 @@
             cargarFormaciones();
             cargarCoordinacion();
             cargarEstadosTablasListas();
+            cargarCensoGeneral();
             if (tieneAccesoTesoreria()) cargarPagos();
-            if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                cargarCensoGeneral();
-            }
         });
 
     </script>
