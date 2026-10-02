@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const compression = require('compression');
 const { Server } = require('socket.io');
-const db = require('./db'); // Ajustado a './db' asumiendo que así se llama tu archivo
+const db = require('./database'); // <-- Corregido para que coincida con database.js
 const path = require('path');
 
 const app = express();
@@ -153,7 +153,7 @@ app.get('/api/usuarios', async (req, res) => {
         const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
-        res.json([]); // Prevents array.map errors in frontend
+        res.json([]);
     }
 });
 
