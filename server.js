@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const compression = require('compression');
 const { Server } = require('socket.io');
-const db = require('./database'); // <-- Corregido para que coincida con database.js
+const db = require('./database'); 
 const path = require('path');
 
 const app = express();
@@ -451,7 +451,10 @@ app.delete('/api/formaciones/:id', async (req, res) => {
 // 5. COORDINACIÓN
 app.get('/api/coordinacion', async (req, res) => {
     try {
-        const result = await db.execute("SELECT * FROM registro_coordinacion ORDER BY id DESC");
+        // EXCLUIMOS pdf_feedback para evitar bloqueos masivos de memoria
+        const sql = `SELECT id, discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por, updated_at 
+                     FROM registro_coordinacion ORDER BY id DESC`;
+        const result = await db.execute(sql);
         res.json(result.rows || []);
     } catch (e) {
         res.json([]);
@@ -459,18 +462,18 @@ app.get('/api/coordinacion', async (req, res) => {
 });
 
 app.post('/api/coordinacion', async (req, res) => {
-    const { discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, pdf_feedback, nombre_pdf, actualizado_por } = req.body;
+    const { discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por } = req.body;
     if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
 
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, pdf_feedback, nombre_pdf, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 discordLimpio, supervisor.trim(), rango || 'Supervisor', horas_semana || '',
-                estado || 'Activo', feedback_semanal || '', pdf_feedback || '', nombre_pdf || '', actualizado_por || 'Coordinación'
+                estado || 'Activo', feedback_semanal || '', actualizado_por || 'Coordinación'
             ]
         });
         notificar('coordinacion_actualizada');
@@ -481,7 +484,7 @@ app.post('/api/coordinacion', async (req, res) => {
 });
 
 app.put('/api/coordinacion/:id', async (req, res) => {
-    const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor, pdf_feedback, nombre_pdf } = req.body;
+    const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor } = req.body;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
@@ -492,14 +495,11 @@ app.put('/api/coordinacion/:id', async (req, res) => {
                     rango = COALESCE(?, rango),
                     horas_semana = COALESCE(?, horas_semana),
                     discord_id = COALESCE(?, discord_id),
-                    supervisor = COALESCE(?, supervisor),
-                    pdf_feedback = COALESCE(?, pdf_feedback),
-                    nombre_pdf = COALESCE(?, nombre_pdf)
+                    supervisor = COALESCE(?, supervisor)
                   WHERE id = ?`,
             args: [
                 estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null,
-                horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null,
-                pdf_feedback !== undefined ? pdf_feedback : null, nombre_pdf !== undefined ? nombre_pdf : null, req.params.id
+                horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null, req.params.id
             ]
         });
         notificar('coordinacion_actualizada');

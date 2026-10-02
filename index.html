@@ -200,7 +200,6 @@
                 </div>
             </div>
 
-            <!-- RELOJES CON BANDERAS REALES -->
             <div class="flex flex-wrap items-center gap-2.5 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
                 <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
                     <span class="text-base">🇲🇽</span>
@@ -626,6 +625,18 @@
         let cachePagosGlobal = [];
         let cacheCensoGlobal = [];
 
+        // ESCUDO ANTI-CRASHEOS: Fetch seguro que nunca rompe el código si hay un error en la BD.
+        async function apiFetch(url) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) return [];
+                return await res.json();
+            } catch (error) {
+                console.error("Error en la ruta " + url, error);
+                return [];
+            }
+        }
+
         // Notificaciones visuales estéticas con SweetAlert2
         const Notif = {
             exito: (msg, titulo = "¡Operación Exitosa!") => {
@@ -1022,7 +1033,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] bg-black/40 border border-zinc-800 rounded-lg p-2">${r.descripcion || ''}</textarea>
+                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -1222,10 +1233,7 @@
 
         async function cargarEstadosTablasListas() {
             try {
-                const res = await fetch('/api/control-tablas');
-                if (!res.ok) return;
-                const data = await res.json();
-
+                const data = await apiFetch('/api/control-tablas');
                 if (Array.isArray(data)) {
                     data.forEach(item => {
                         const badge = document.getElementById(`badgeEstadoTabla_${item.jefatura}`);
@@ -1505,8 +1513,7 @@
 
         async function cargarTablas() {
             try {
-                const res = await fetch('/api/ascensos');
-                const data = await res.json();
+                const data = await apiFetch('/api/ascensos');
 
                 JEFATURAS.forEach(j => {
                     let filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
@@ -1658,8 +1665,7 @@
 
         async function cargarFormaciones() {
             try {
-                const res = await fetch('/api/formaciones');
-                const data = await res.json();
+                const data = await apiFetch('/api/formaciones');
                 const cuerpo = document.getElementById('cuerpoTablaFormaciones');
                 if (!cuerpo) return;
 
@@ -1773,8 +1779,7 @@
 
         async function cargarCoordinacion() {
             try {
-                const res = await fetch('/api/coordinacion');
-                const data = await res.json();
+                const data = await apiFetch('/api/coordinacion');
                 const cuerpo = document.getElementById('cuerpoTablaCoordinacion');
                 if (!cuerpo) return;
 
@@ -2026,9 +2031,7 @@
 
         async function cargarPagos() {
             try {
-                const res = await fetch('/api/pagos');
-                if (!res.ok) return;
-                const data = await res.json();
+                const data = await apiFetch('/api/pagos');
                 cachePagosGlobal = Array.isArray(data) ? data : [];
 
                 let totalGeneral = 0;
@@ -2101,19 +2104,14 @@
 
         async function cargarCensoGeneral() {
             try {
-                const [resAsc, resCoord, resUsers, resForm, resPagos] = await Promise.all([
-                    fetch('/api/ascensos').catch(() => ({ json: () => [] })),
-                    fetch('/api/coordinacion').catch(() => ({ json: () => [] })),
-                    fetch('/api/usuarios').catch(() => ({ json: () => [] })),
-                    fetch('/api/formaciones').catch(() => ({ json: () => [] })),
-                    fetch('/api/pagos').catch(() => ({ json: () => [] }))
+                // ESCUDO ANTI-CRASH: apiFetch siempre devuelve [] si algo sale mal
+                const [dataAsc, dataCoord, dataUsers, dataForm, dataPagos] = await Promise.all([
+                    apiFetch('/api/ascensos'),
+                    apiFetch('/api/coordinacion'),
+                    apiFetch('/api/usuarios'),
+                    apiFetch('/api/formaciones'),
+                    apiFetch('/api/pagos')
                 ]);
-
-                const dataAsc = await resAsc.json().catch(() => []);
-                const dataCoord = await resCoord.json().catch(() => []);
-                const dataUsers = await resUsers.json().catch(() => []);
-                const dataForm = await resForm.json().catch(() => []);
-                const dataPagos = await resPagos.json().catch(() => []);
 
                 const instructoresSet = new Set(
                     Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
@@ -2345,7 +2343,7 @@
                             </td>
                             <td class="fluid-td text-zinc-400 text-xs">
                                 <textarea rows="2" onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
-                                          class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] w-full bg-black/40 border border-zinc-800 rounded-lg p-2">${r.descripcion || ''}</textarea>
+                                          class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] w-full bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
                             </td>
                             <td class="fluid-td text-right">
                                 <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -2379,8 +2377,7 @@
 
         // PANEL ADMIN DE CUENTAS WEB
         async function cargarGestionAdmin() {
-            const res = await fetch('/api/usuarios');
-            const data = await res.json();
+            const data = await apiFetch('/api/usuarios');
             const cuerpo = document.getElementById('cuerpoTablaAdmin');
             if (!cuerpo) return;
 
