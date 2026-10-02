@@ -74,7 +74,7 @@ app.post('/api/register', async (req, res) => {
         });
 
         if (checkUser.rows && checkUser.rows.length > 0) {
-            return res.status(400).json({ error: "El usuario ya existe." });
+            return res.status(400).json({ error: "El nombre de usuario ya está registrado." });
         }
 
         if (discordLimpio) {
@@ -208,6 +208,7 @@ app.post('/api/ascensos', async (req, res) => {
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
     const fechaHoy = fecha_ingreso || new Date().toISOString().split('T')[0];
     const rangoBase = jefatura === 'enfermeria' ? 'Celador/a' : 'Estudiante';
+    const marcaPrueba = es_aspirante_formacion ? 'PRUEBA_ACTIVA' : '';
 
     try {
         await db.execute({
@@ -239,13 +240,12 @@ app.post('/api/ascensos', async (req, res) => {
                 '',
                 'NO APLICA',
                 'Activo',
-                '',
+                marcaPrueba,
                 fechaHoy,
                 actualizado_por || 'Jefatura'
             ]
         });
 
-        // Sumar +1 instrucción semanal y +1 total al formador
         if (es_aspirante_formacion && actualizado_por) {
             const formadorClean = actualizado_por.trim();
             const formadorCheck = await db.execute({
@@ -322,16 +322,10 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR TODOS LOS ASCENSOS DE UNA JEFATURA Y REINICIAR HORAS A 00:00
-app.post('/api/ascensos/aplicar-todos', async (req, res) => {
-    const { jefatura } = req.body;
-    if (!jefatura) return res.status(400).json({ error: "Especifica la jefatura." });
-
+// APLICAR TODOS LOS ASCENSOS DE ENFERMERÍA, CIRUGÍA Y MEDICINA SIMULTÁNEAMENTE Y REINICIAR HORAS A 00:00
+app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
-        const registros = await db.execute({
-            sql: "SELECT * FROM registro_ascensos WHERE jefatura = ?",
-            args: [jefatura]
-        });
+        const registros = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
 
         let aplicados = 0;
         for (const item of registros.rows) {
@@ -350,7 +344,6 @@ app.post('/api/ascensos/aplicar-todos', async (req, res) => {
                 nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
             }
 
-            // Asignar nuevo rango, igualar postulación y reiniciar horas a 0
             await db.execute({
                 sql: `UPDATE registro_ascensos SET 
                         rango_actual = ?, 
@@ -365,7 +358,7 @@ app.post('/api/ascensos/aplicar-todos', async (req, res) => {
         }
 
         notificar('ascensos_actualizados');
-        res.json({ message: `Se aplicaron los rangos y se reiniciaron las horas a 0 en ${aplicados} miembros.` });
+        res.json({ message: `Se aplicaron los rangos y se reiniciaron las horas en las 3 tablas (${aplicados} efectivos procesados).` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -381,7 +374,7 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// CONTROL DE ESTADO DE TABLA LISTA (CIRUGÍA, MEDICINA, ENFERMERÍA)
+// CONTROL DE TABLAS LISTAS
 app.get('/api/control-tablas', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM control_tablas_listas");
@@ -404,7 +397,6 @@ app.post('/api/control-tablas/toggle', async (req, res) => {
         const yaEstaLista = current.rows && current.rows.length > 0 && current.rows[0].esta_lista === 1;
         const nuevoEstado = yaEstaLista ? 0 : 1;
 
-        // Fecha y hora México CST en tiempo real
         const ahoraMex = new Intl.DateTimeFormat('es-MX', {
             timeZone: 'America/Mexico_City',
             year: 'numeric',
@@ -431,7 +423,7 @@ app.post('/api/control-tablas/toggle', async (req, res) => {
     }
 });
 
-// 4. FORMACIONES ($50,000 POR INSTRUCCIÓN)
+// 4. FORMACIONES
 app.get('/api/formaciones', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
@@ -491,7 +483,6 @@ app.put('/api/formaciones/:id', async (req, res) => {
 
 app.post('/api/formaciones/corte-semanal', async (req, res) => {
     try {
-        // Reinicia las semanales a 0 y mantiene las totales acumuladas
         await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
         notificar('formaciones_actualizadas');
         res.json({ message: "Corte semanal de nómina procesado ($0 semanal, acumulado total preservado)." });

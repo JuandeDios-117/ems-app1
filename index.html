@@ -148,19 +148,6 @@
             border: 1px solid rgba(239, 68, 68, 0.25);
         }
 
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
         /* Resaltado amarillo sutil en Censo para miembros con pago pendiente */
         .fila-pago-pendiente {
             background: rgba(245, 158, 11, 0.14) !important;
@@ -188,7 +175,6 @@
                 </div>
             </div>
 
-            <!-- RELOJES INTERNACIONALES EN VIVO -->
             <div class="flex flex-wrap items-center gap-2 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
                 <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
                     <span>🇲🇽</span>
@@ -299,7 +285,6 @@
                 </div>
             </div>
 
-            <!-- TABLA DE FORMACIONES CON INSTRUCCIONES SEMANALES Y TOTALES -->
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
@@ -413,7 +398,7 @@
             </div>
         </section>
 
-        <!-- SECCIÓN TESORERÍA & PAGOS (SOLO SUBDIRECCIÓN Y DIRECCIÓN CON BUSCADOR) -->
+        <!-- SECCIÓN TESORERÍA & PAGOS (SUBDIRECCIÓN Y DIRECCIÓN CON BUSCADOR) -->
         <section id="seccion-pagos" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -454,16 +439,16 @@
                     </div>
                 </div>
 
-                <!-- BUSCADOR EN VIVO DE PAGOS -->
                 <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3">
                     <span class="text-zinc-500 text-base">🔍</span>
-                    <input type="text" id="filtroBuscadorPagos" oninput="filtrarTablaPagos()" placeholder="Buscar por nombre de personal o concepto de pago..." class="bg-transparent w-full text-white text-xs outline-none">
+                    <input type="text" id="filtroBuscadorPagos" oninput="filtrarTablaPagos()" placeholder="Buscar por personal (lee todo el Censo General) o concepto..." class="bg-transparent w-full text-white text-xs outline-none">
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Personal (IC)</label>
-                        <input type="text" id="pagoPersonal" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                        <input type="text" id="pagoPersonal" list="listaSugerenciasCenso" placeholder="Dr. Mark Sloan" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                        <datalist id="listaSugerenciasCenso"></datalist>
                     </div>
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Rango</label>
@@ -510,7 +495,7 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL (EDITABLE CON EMOJIS DE DOCTOR Y RESALTADO DE PAGO PENDIENTE) -->
+        <!-- CENSO GENERAL (RESALTADO AMARILLO AUTOMÁTICO SI TIENE PAGO PENDIENTE) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -549,10 +534,20 @@
             </div>
         </section>
 
-        <!-- PANEL ADMIN (USUARIOS DE LA WEB) -->
+        <!-- PANEL ADMIN (CON BOTÓN GENERAL DE APLICAR ASCENSOS PARA LAS 3 TABLAS) -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
-            <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas y Asignación de Rangos</h2>
-            <p class="text-xs text-zinc-400">Otorga el rango oficial a los nuevos usuarios. Al asignarse un rango médico o directivo, se integran de inmediato al Censo General.</p>
+            <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
+                <div>
+                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas y Asignación de Rangos</h2>
+                    <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas y procesa ascensos masivos para el cierre semanal.</p>
+                </div>
+                
+                <!-- BOTÓN MAESTRO GENERAL: APLICA TODOS LOS ASCENSOS EN LAS 3 TABLAS Y PONE HORAS A CERO -->
+                <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
+                    ⚡ Aplicar Todos los Ascensos (Enfermería, Cirugía y Medicina)
+                </button>
+            </div>
+
             <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
                 <table class="fluid-table">
                     <thead>
@@ -577,8 +572,8 @@
         let usuarioActual = null;
         let esRegistro = false;
         let cachePagosGlobal = [];
+        let cacheCensoNombresGlobal = [];
 
-        // RELOJES INTERNACIONALES EN VIVO (MX, AR, ES)
         function actualizarRelojes() {
             const ahora = new Date();
             const fmtMX = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
@@ -645,6 +640,7 @@
             "Jefe de Formaciones": 13,
             "Director de Enfermería": 14,
             "Jefe de Medicina": 15,
+            "Jefe de Cirugía": 16,
             "Jefa de Cirugía": 16,
             "Subdirectora": 17,
             "Director (Admin)": 18
@@ -663,7 +659,6 @@
             { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
 
-        // CORRECCIÓN: "Jefe de Cirugía" en lugar de "Jefa de Cirugía" para Formaciones
         const TODOS_LOS_RANGOS = [
             ...RANGOS_EVALUACION,
             { id: "Formador", label: "📚 Formador", escala: "mando" },
@@ -718,10 +713,13 @@
             }
         ];
 
-        function calcularEstadoPrueba(fechaIngresoStr) {
-            if (!fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') {
+        // CÁLCULO DE PERIODO DE PRUEBA: SOLO APLICA A ASPIRANTES INGRESADOS CON MARCA DE PRUEBA
+        function calcularEstadoPrueba(fechaIngresoStr, descripcion) {
+            const esNuevoAspirante = descripcion && descripcion.includes('PRUEBA_ACTIVA');
+            if (!esNuevoAspirante || !fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') {
                 return { enPrueba: false, diasPasados: 99, diasRestantes: 0 };
             }
+
             const fechaIngreso = new Date(fechaIngresoStr + 'T00:00:00');
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
@@ -746,7 +744,7 @@
                 return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🩺🏢 ${rango}</span>`;
             }
             if (r.includes('cirugía') || r.includes('cirugia')) {
-                return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼✂️️ ${rango}</span>`;
+                return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼✂️ ${rango}</span>`;
             }
             if (r.includes('medicina')) {
                 return `<span class="inline-flex items-center gap-1 bg-blue-600/25 text-blue-200 border border-blue-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼💊 ${rango}</span>`;
@@ -784,7 +782,6 @@
             return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora');
         }
 
-        // CONTROL DE ACCESO ESTRICTO A TESORERÍA (SUBDIRECCIÓN PARA ARRIBA)
         function tieneAccesoTesoreria() {
             return usuarioActual && (usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora' || usuarioActual.rol === 'admin');
         }
@@ -866,7 +863,6 @@
             `).join('');
         }
 
-        // RENDERIZADO LIMPIO DE FILA (INSIGNIAS DISCRETAS SIN AMONTONAR)
         function renderizarFilaEvaluacion(r, index, jefaturaId, colorTexto) {
             const esEnfermeria = jefaturaId === 'enfermeria';
             const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, jefaturaId, r.rango_postular);
@@ -884,7 +880,7 @@
             if (estadoActual === 'Baja') claseEstadoBadge = 'badge-estado-baja';
 
             const maxFecha = new Date().toISOString().split('T')[0];
-            const prueba = calcularEstadoPrueba(r.fecha_ingreso);
+            const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
             return `
                 <tr class="fluid-row hover:bg-zinc-900/60 transition">
@@ -942,8 +938,8 @@
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
                             <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
-                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
+                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
                         </select>
                     </td>
                     ` : ''}
@@ -963,7 +959,6 @@
             `;
         }
 
-        // INICIALIZADOR CON BOTÓN "APLICAR TODOS LOS ASCENSOS" Y "TABLA LISTA (HORA MÉXICO)"
         function inicializarEstructuraHtml() {
             const container = document.getElementById('contenedor-secciones');
             const hoy = new Date().toISOString().split('T')[0];
@@ -985,13 +980,9 @@
                                 </div>
                             </div>
                             
-                            <!-- BOTÓN TABLA LISTA (HORA MX) Y APLICAR TODOS LOS ASCENSOS -->
                             <div class="flex flex-wrap items-center gap-3">
                                 <button onclick="toggleTablaLista('${j.id}')" id="btnTablaLista_${j.id}" class="bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
                                     ✅ Marcar Tabla Lista
-                                </button>
-                                <button onclick="aplicarTodosLosAscensos('${j.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
-                                    ⚡ Aplicar Todos los Ascensos (Reinicia Horas a 0)
                                 </button>
                             </div>
                         </div>
@@ -1018,7 +1009,6 @@
 
                         ${esEnfermeria ? `
                         <div class="space-y-6 pt-2">
-                            <!-- TABLA 1: ESCALA BÁSICA -->
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between px-2">
                                     <h3 class="text-sm font-black text-emerald-300 uppercase tracking-widest flex items-center gap-2">
@@ -1049,7 +1039,6 @@
                                 </div>
                             </div>
 
-                            <!-- TABLA 2: ESCALA ENFERMERÍA -->
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between px-2">
                                     <h3 class="text-sm font-black text-teal-300 uppercase tracking-widest flex items-center gap-2">
@@ -1123,17 +1112,13 @@
 
         inicializarEstructuraHtml();
 
-        // ACCIÓN: APLICAR TODOS LOS ASCENSOS Y REINICIAR HORAS A 0
-        async function aplicarTodosLosAscensos(jefaturaId) {
-            const confirmar = confirm(`⚡ ¿Confirmas aplicar oficialmente TODOS los ascensos propuestos en esta escala?\n\n- Los rangos a postular pasarán a ser sus nuevos rangos actuales.\n- Si cambian de escala, se moverán a su respectiva tabla.\n- TODAS LAS HORAS se reiniciarán a 00:00 HRS para el nuevo ciclo.`);
+        // ACCIÓN MAESTRA GENERAL: APLICAR ASCENSOS EN LAS 3 TABLAS Y REINICIAR HORAS A 0
+        async function aplicarTodosLosAscensosGlobal() {
+            const confirmar = confirm(`⚡ ¿Confirmas aplicar oficialmente TODOS los ascensos de Enfermería, Medicina y Cirugía?\n\n- Los rangos propuestos pasarán a ser sus nuevos rangos actuales.\n- Si cambian de escala, se moverán a su respectiva tabla.\n- TODAS las horas semanales se reiniciarán a 00:00 HRS para arrancar el nuevo ciclo.`);
             if (!confirmar) return;
 
             try {
-                const res = await fetch('/api/ascensos/aplicar-todos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ jefatura: jefaturaId })
-                });
+                const res = await fetch('/api/ascensos/aplicar-todos-global', { method: 'POST' });
                 const data = await res.json();
                 if (res.ok) {
                     alert("✅ " + data.message);
@@ -1142,14 +1127,13 @@
                         cargarCensoGeneral();
                     }
                 } else {
-                    alert("Error: " + (data.error || "No se pudo procesar."));
+                    alert("Error: " + (data.error || "No se pudo procesar"));
                 }
             } catch (e) {
-                alert("Error de conexión al aplicar los ascensos.");
+                alert("Error de conexión al aplicar ascensos globales.");
             }
         }
 
-        // CONTROL DE "TABLA LISTA" CON HORA DE MÉXICO
         async function toggleTablaLista(jefaturaId) {
             try {
                 const res = await fetch('/api/control-tablas/toggle', {
@@ -1164,7 +1148,7 @@
                     await cargarEstadosTablasListas();
                 }
             } catch (e) {
-                alert("Error al actualizar estado de la tabla.");
+                alert("Error al actualizar estado de tabla.");
             }
         }
 
@@ -1338,7 +1322,6 @@
                     if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
                 }
 
-                // TESORERÍA EXCLUSIVA: SUBDIRECCIÓN Y DIRECCIÓN
                 if (tieneAccesoTesoreria()) {
                     navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
                     if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
@@ -1503,9 +1486,7 @@
             }
         }
 
-        // =========================================================================
-        // FORMACIONES ($50,000 POR INSTRUCCIÓN + TOTALES EDITABLES)
-        // =========================================================================
+        // FORMACIONES ($50K POR INSTRUCCIÓN)
         async function guardarNuevoInstructor() {
             const instructor = document.getElementById('formInstructor').value.trim();
             const rango = document.getElementById('formRango').value;
@@ -1640,9 +1621,7 @@
             cargarFormaciones();
         }
 
-        // ==========================================
         // COORDINACIÓN & SUPERVISIÓN
-        // ==========================================
         function abrirSelectorPdfFeedback(id) {
             const fileInput = document.getElementById(`filePdfFeedback_${id}`);
             if (fileInput) fileInput.click();
@@ -1844,9 +1823,7 @@
             }
         }
 
-        // ==========================================
-        // TESORERÍA & PAGOS (CON BUSCADOR EN VIVO)
-        // ==========================================
+        // TESORERÍA & PAGOS
         async function guardarRegistroPago() {
             const personal = document.getElementById('pagoPersonal').value.trim();
             const rango = document.getElementById('pagoRango').value;
@@ -2032,9 +2009,7 @@
             }
         }
 
-        // =========================================================================
         // CENSO GENERAL DE DIRECCIÓN (RESALTADO AMARILLO SI TIENE PAGO PENDIENTE)
-        // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
             if (campo === 'horas_semana') {
@@ -2090,7 +2065,6 @@
                     Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
                 );
 
-                // Set de personas que tienen un pago PENDIENTE para resaltarlos en amarillo
                 const personasConPagoPendiente = new Set(
                     Array.isArray(dataPagos) 
                         ? dataPagos.filter(p => p.estado === 'Pendiente').map(p => (p.personal || '').toLowerCase().trim())
@@ -2198,6 +2172,13 @@
                     });
                 }
 
+                // Actualizar lista global de sugerencias para autocompletar en tesorería
+                cacheCensoNombresGlobal = listaUnificada.map(x => x.nombre);
+                const dl = document.getElementById('listaSugerenciasCenso');
+                if (dl) {
+                    dl.innerHTML = cacheCensoNombresGlobal.map(n => `<option value="${n}">`).join('');
+                }
+
                 const cuerpo = document.getElementById('cuerpoTablaCenso');
 
                 if (listaUnificada.length === 0) {
@@ -2224,9 +2205,9 @@
                     if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
 
                     const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
-                    const prueba = calcularEstadoPrueba(r.fecha_ingreso);
+                    const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
-                    // Resaltar en amarillo suave si tiene un pago pendiente en tesorería
+                    // Resaltar fila completa en amarillo si tiene pago pendiente en tesorería
                     const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
                     const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
 
@@ -2272,7 +2253,7 @@
                             </td>
                             <td class="fluid-td text-center">
                                 ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
                                         <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
                                         <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-600 text-black">WARN</option>
                                         <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white">DESPIDO</option>
@@ -2281,7 +2262,7 @@
                             </td>
                             <td class="fluid-td text-center">
                                 ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
                                         <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
                                         <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                                         <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
@@ -2311,7 +2292,7 @@
         }
 
         async function eliminarDesdeCenso(tipo, id) {
-            if (!confirm("⚠️️ ¿Estás seguro de que deseas eliminar este registro del censo y de su respectivo departamento?")) return;
+            if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar este registro del censo y de su respectivo departamento?")) return;
 
             if (tipo === 'ascenso') {
                 await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
@@ -2328,9 +2309,7 @@
             if (tieneAccesoTesoreria()) cargarPagos();
         }
 
-        // ==========================================
         // PANEL ADMIN DE CUENTAS WEB
-        // ==========================================
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
             const data = await res.json();
