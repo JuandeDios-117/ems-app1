@@ -6,6 +6,7 @@
     <title>EMS Origen Roleplay - Sistema Central de Evaluación</title>
     <link id="dynamic-favicon" rel="icon" type="image/png" href="/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
@@ -20,6 +21,22 @@
             min-height: 100vh;
         }
         .font-mono-code { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Animación suave entre pestañas */
+        @keyframes tabFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .tab-animada {
+            animation: tabFadeIn 0.28s ease-out forwards;
+        }
+
         .card-ems {
             background: linear-gradient(180deg, rgba(16, 17, 24, 0.96) 0%, rgba(10, 11, 15, 0.98) 100%);
             box-shadow: 0 14px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 114, 182, 0.04);
@@ -166,6 +183,22 @@
             background: rgba(245, 158, 11, 0.2) !important;
             box-shadow: inset 4px 0 0 #f59e0b, 0 0 15px rgba(245, 158, 11, 0.15) !important;
         }
+
+        /* Modales estéticos con SweetAlert2 */
+        div:where(.swal2-container).swal2-backdrop-show {
+            background: rgba(4, 5, 8, 0.85) !important;
+            backdrop-filter: blur(6px) !important;
+        }
+        .swal2-popup.swal-dark-ems {
+            background: linear-gradient(180deg, #12141f 0%, #090a10 100%) !important;
+            border: 1px solid rgba(244, 114, 182, 0.3) !important;
+            border-radius: 24px !important;
+            color: #f3f4f6 !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(244, 114, 182, 0.15) !important;
+            font-family: 'Montserrat', system-ui, sans-serif !important;
+        }
+        .swal2-title { color: #ffffff !important; font-weight: 900 !important; font-size: 18px !important; }
+        .swal2-html-container { color: #d1d5db !important; font-size: 13px !important; }
     </style>
 </head>
 <body class="p-3 md:p-6 text-sm">
@@ -188,21 +221,21 @@
                 </div>
             </div>
 
-            <!-- RELOJES INTERNACIONALES EN VIVO -->
-            <div class="flex flex-wrap items-center gap-2 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
-                <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
-                    <span>🇲🇽</span>
-                    <span class="text-zinc-400 font-bold">MX:</span>
+            <!-- RELOJES CON BANDERAS REALES -->
+            <div class="flex flex-wrap items-center gap-2.5 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
+                    <span class="text-base">🇲🇽</span>
+                    <span class="text-zinc-400 font-bold">MÉXICO:</span>
                     <span class="text-emerald-300 font-black" id="clockMX">--:--:--</span>
                 </div>
-                <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
-                    <span>🇦🇷</span>
-                    <span class="text-zinc-400 font-bold">AR:</span>
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
+                    <span class="text-base">🇦🇷</span>
+                    <span class="text-zinc-400 font-bold">ARGENTINA:</span>
                     <span class="text-sky-300 font-black" id="clockAR">--:--:--</span>
                 </div>
-                <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
-                    <span>🇪🇸</span>
-                    <span class="text-zinc-400 font-bold">ES:</span>
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
+                    <span class="text-base">🇪🇸</span>
+                    <span class="text-zinc-400 font-bold">ESPAÑA:</span>
                     <span class="text-amber-300 font-black" id="clockES">--:--:--</span>
                 </div>
             </div>
@@ -353,7 +386,7 @@
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
-                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y reportes PDF de feedback para Dirección.</p>
+                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y reportes PDF de feedback con visor integrado.</p>
                     </div>
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
                 </div>
@@ -552,11 +585,11 @@
             </div>
         </section>
 
-        <!-- PANEL ADMIN (CON BOTÓN GENERAL DE APLICAR ASCENSOS PARA LAS 3 TABLAS) -->
+        <!-- PANEL ADMIN (CON GESTOR DE JERARQUÍAS Y APLICAR ASCENSOS) -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
-                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas y Asignación de Rangos</h2>
+                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas, Rangos y Jerarquías</h2>
                     <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas y procesa ascensos masivos para el cierre semanal.</p>
                 </div>
                 
@@ -564,6 +597,32 @@
                 <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
                     ⚡ Aplicar Todos los Ascensos (Enfermería, Cirugía y Medicina)
                 </button>
+            </div>
+
+            <!-- GESTOR DE JERARQUÍAS Y RANGOS PERSONALIZADOS -->
+            <div class="bg-black/50 p-5 rounded-2xl border border-zinc-800 space-y-3">
+                <h3 class="text-sm font-black text-pink-300 uppercase flex items-center gap-2">
+                    🛠️ Creador & Gestor de Rangos Institucionales
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1">Nombre del Rango</label>
+                        <input type="text" id="nuevoRangoNombre" placeholder="Ej. Paramédico Avanzado" class="w-full input-ems px-3 py-2 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1">Emoji / Símbolo</label>
+                        <input type="text" id="nuevoRangoEmoji" placeholder="Ej. 🚑" class="w-full input-ems px-3 py-2 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1">Jerarquía (1 menor a 18 mayor)</label>
+                        <input type="number" id="nuevoRangoPeso" placeholder="Ej. 5" min="1" max="25" class="w-full input-ems px-3 py-2 rounded-xl font-mono-code font-bold text-yellow-400">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="crearNuevoRangoPersonalizado()" class="w-full btn-origen py-2.5 rounded-xl uppercase text-xs font-black">
+                            + Añadir Rango
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
@@ -585,12 +644,171 @@
 
     </div>
 
+    <!-- MODAL INTEGRADO PARA VISUALIZACIÓN DE PDF IN-APP -->
+    <div id="modalVisorPdf" class="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md hidden">
+        <div class="bg-zinc-950 border border-pink-500/40 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📄</span>
+                    <span class="font-black text-white text-sm" id="modalPdfTitulo">Reporte de Feedback</span>
+                </div>
+                <button onclick="cerrarModalVisorPdf()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-rose-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+            <div class="flex-1 w-full bg-zinc-900">
+                <iframe id="modalPdfIframe" class="w-full h-full border-0" src="" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
     <script>
         const socket = io();
         let usuarioActual = null;
         let esRegistro = false;
         let cachePagosGlobal = [];
         let cacheCensoGlobal = [];
+
+        // Notificaciones visuales estéticas con SweetAlert2
+        const Notif = {
+            exito: (msg, titulo = "¡Operación Exitosa!") => {
+                Swal.fire({
+                    icon: 'success',
+                    title: titulo,
+                    text: msg,
+                    customClass: { popup: 'swal-dark-ems' },
+                    confirmButtonColor: '#ec4899'
+                });
+            },
+            error: (msg, titulo = "Atención") => {
+                Swal.fire({
+                    icon: 'error',
+                    title: titulo,
+                    text: msg,
+                    customClass: { popup: 'swal-dark-ems' },
+                    confirmButtonColor: '#e11d48'
+                });
+            },
+            confirmar: async (pregunta, textoDetalle = "") => {
+                const res = await Swal.fire({
+                    title: pregunta,
+                    text: textoDetalle,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#e11d48',
+                    confirmButtonText: 'Sí, confirmar',
+                    cancelButtonText: 'Cancelar',
+                    customClass: { popup: 'swal-dark-ems' }
+                });
+                return res.isConfirmed;
+            }
+        };
+
+        function verPdfFeedback(base64Data, nombrePdf) {
+            if (!base64Data) return Notif.error("No hay ningún PDF adjunto para este supervisor.");
+            document.getElementById('modalPdfTitulo').innerText = nombrePdf || "Reporte de Feedback";
+            document.getElementById('modalPdfIframe').src = base64Data;
+            document.getElementById('modalVisorPdf').classList.remove('hidden');
+        }
+
+        function cerrarModalVisorPdf() {
+            document.getElementById('modalVisorPdf').classList.add('hidden');
+            document.getElementById('modalPdfIframe').src = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') cerrarModalVisorPdf();
+        });
+
+        // EDICIÓN DE MI PROPIO PERFIL
+        async function abrirModalMiPerfil() {
+            if (!usuarioActual) return;
+            const { value: formValues } = await Swal.fire({
+                title: '👤 Mi Perfil de Usuario',
+                html: `
+                    <div class="space-y-3 text-left text-xs font-semibold p-1">
+                        <div>
+                            <label class="block text-zinc-400 mb-1">Nombre Completo (IC)</label>
+                            <input id="swalPerfilNombre" class="w-full input-ems px-3 py-2 rounded-xl text-sm" value="${usuarioActual.nombre}">
+                        </div>
+                        <div>
+                            <label class="block text-zinc-400 mb-1">Discord ID (Sólo Números)</label>
+                            <input id="swalPerfilDiscord" class="w-full input-ems px-3 py-2 rounded-xl text-sm font-mono-code" value="${usuarioActual.discord_id || ''}">
+                        </div>
+                        <div>
+                            <label class="block text-zinc-400 mb-1">Cambiar Contraseña (opcional)</label>
+                            <input id="swalPerfilPass" type="password" placeholder="••••••••" class="w-full input-ems px-3 py-2 rounded-xl text-sm">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar Cambios',
+                cancelButtonText: 'Cancelar',
+                customClass: { popup: 'swal-dark-ems' },
+                confirmButtonColor: '#ec4899',
+                cancelButtonColor: '#374151',
+                preConfirm: () => {
+                    return {
+                        nombre: document.getElementById('swalPerfilNombre').value.trim(),
+                        discord_id: document.getElementById('swalPerfilDiscord').value.replace(/[^0-9]/g, ''),
+                        password: document.getElementById('swalPerfilPass').value.trim()
+                    };
+                }
+            });
+
+            if (formValues) {
+                if (!formValues.nombre) return Notif.error("El nombre no puede estar vacío.");
+
+                try {
+                    const payload = {
+                        nombre: formValues.nombre,
+                        discord_id: formValues.discord_id
+                    };
+                    if (formValues.password) payload.password = formValues.password;
+
+                    const res = await fetch(`/api/usuarios/${usuarioActual.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        usuarioActual.nombre = formValues.nombre;
+                        usuarioActual.discord_id = formValues.discord_id;
+                        actualizarUIUsuario();
+                        Notif.exito("Tus datos han sido actualizados con éxito.");
+                    } else {
+                        Notif.error("No se pudo actualizar tu perfil.");
+                    }
+                } catch (e) {
+                    Notif.error("Error de conexión al guardar.");
+                }
+            }
+        }
+
+        // CREADOR DE RANGOS DINÁMICO
+        function crearNuevoRangoPersonalizado() {
+            const nombre = document.getElementById('nuevoRangoNombre').value.trim();
+            const emoji = document.getElementById('nuevoRangoEmoji').value.trim() || '🩺';
+            const peso = parseInt(document.getElementById('nuevoRangoPeso').value) || 5;
+
+            if (!nombre) return Notif.error("Ingresa el nombre del rango.");
+
+            TODOS_LOS_RANGOS.push({ id: nombre, label: `${emoji} ${nombre}`, escala: "personalizado" });
+            JERARQUIA_MENOR_A_MAYOR[nombre] = peso;
+
+            document.getElementById('nuevoRangoNombre').value = '';
+            document.getElementById('nuevoRangoEmoji').value = '';
+            document.getElementById('nuevoRangoPeso').value = '';
+
+            inicializarEstructuraHtml();
+            cargarTablas();
+            cargarCensoGeneral();
+
+            Notif.exito(`Rango "${nombre}" añadido con jerarquía ${peso}.`);
+        }
 
         function actualizarRelojes() {
             const ahora = new Date();
@@ -685,7 +903,7 @@
             { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" },
             { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" },
             { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" },
-            { id: "Jefe de Cirugía", label: "🥼✂️️ Jefe de Cirugía", escala: "jefatura" },
+            { id: "Jefe de Cirugía", label: "🥼✂️ Jefe de Cirugía", escala: "jefatura" },
             { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" },
             { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" }
         ];
@@ -731,7 +949,6 @@
             }
         ];
 
-        // Periodo de prueba: solo para celadores ingresados como aspirantes en formaciones
         function calcularEstadoPrueba(fechaIngresoStr, descripcion) {
             const esNuevoAspirante = descripcion && descripcion.includes('PRUEBA_ACTIVA');
             if (!esNuevoAspirante || !fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') {
@@ -965,7 +1182,7 @@
                 const esEnfermeria = j.id === 'enfermeria';
 
                 return `
-                <section id="seccion-${j.id}" class="hidden space-y-4">
+                <section id="seccion-${j.id}" class="hidden space-y-4 tab-animada">
                     <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 ${j.colorBorde}">
                         
                         <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -1106,23 +1323,26 @@
         inicializarEstructuraHtml();
 
         async function aplicarTodosLosAscensosGlobal() {
-            const confirmar = confirm(`⚡ ¿Confirmas aplicar oficialmente TODOS los ascensos de Enfermería, Medicina y Cirugía?\n\n- Los rangos propuestos pasarán a ser sus nuevos rangos actuales.\n- Si cambian de escala, se moverán a su respectiva tabla.\n- TODAS las horas semanales se reiniciarán a 00:00 HRS.`);
+            const confirmar = await Notif.confirmar(
+                "⚡ ¿Aplicar Todos los Ascensos Globalmente?",
+                "Se aplicarán los ascensos en Enfermería, Medicina y Cirugía, y todas las horas se reiniciarán a 00:00 HRS."
+            );
             if (!confirmar) return;
 
             try {
                 const res = await fetch('/api/ascensos/aplicar-todos-global', { method: 'POST' });
                 const data = await res.json();
                 if (res.ok) {
-                    alert("✅ " + data.message);
+                    Notif.exito(data.message);
                     await cargarTablas();
                     if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
                         cargarCensoGeneral();
                     }
                 } else {
-                    alert("Error: " + (data.error || "No se pudo procesar"));
+                    Notif.error(data.error || "No se pudo procesar");
                 }
             } catch (e) {
-                alert("Error de conexión al aplicar ascensos globales.");
+                Notif.error("Error de conexión al aplicar ascensos globales.");
             }
         }
 
@@ -1138,9 +1358,10 @@
                 });
                 if (res.ok) {
                     await cargarEstadosTablasListas();
+                    Notif.exito("Estado de tabla actualizado.");
                 }
             } catch (e) {
-                alert("Error al actualizar estado de tabla.");
+                Notif.error("Error al actualizar estado de tabla.");
             }
         }
 
@@ -1183,7 +1404,7 @@
             const nombre = document.getElementById('aspNombre').value.trim();
             const fecha_ingreso = document.getElementById('aspFecha').value || new Date().toISOString().split('T')[0];
 
-            if (!nombre) return alert("Ingresa el Nombre Completo del aspirante.");
+            if (!nombre) return Notif.error("Ingresa el Nombre Completo del aspirante.");
 
             try {
                 const res = await fetch('/api/ascensos', {
@@ -1201,7 +1422,7 @@
 
                 const data = await res.json();
                 if (res.ok) {
-                    alert(`✅ ¡Aspirante ingresado con éxito! Se integró a ${nombre} como Celador/a en la Escala Básica en pruebas y se te sumó +1 instrucción.`);
+                    Notif.exito(`Se integró a ${nombre} como Celador/a en la Escala Básica en pruebas y se sumó +1 instrucción al formador.`);
                     document.getElementById('aspDiscord').value = '';
                     document.getElementById('aspNombre').value = '';
                     await cargarTablas();
@@ -1210,10 +1431,10 @@
                         cargarCensoGeneral();
                     }
                 } else {
-                    alert("Error: " + (data.error || "No se pudo registrar el aspirante"));
+                    Notif.error(data.error || "No se pudo registrar el aspirante");
                 }
             } catch (e) {
-                alert("Error de conexión al ingresar el aspirante.");
+                Notif.error("Error de conexión al ingresar el aspirante.");
             }
         }
 
@@ -1240,9 +1461,9 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert("Cuenta creada. Ahora inicia sesión.");
+                    Notif.exito("Cuenta creada. Ahora inicia sesión.");
                     toggleAuth();
-                } else alert(data.error);
+                } else Notif.error(data.error);
             } else {
                 const res = await fetch('/api/login', {
                     method: 'POST',
@@ -1253,7 +1474,7 @@
                 if (res.ok) {
                     usuarioActual = data;
                     actualizarUIUsuario();
-                } else alert(data.error);
+                } else Notif.error(data.error);
             }
         }
 
@@ -1282,6 +1503,9 @@
                     <span class="text-white font-bold">${usuarioActual.nombre}</span>
                     ${obtenerBadgeRango(usuarioActual.rango)}
                 </div>
+                <button onclick="abrirModalMiPerfil()" class="bg-zinc-800 hover:bg-zinc-700 text-pink-300 px-3 py-1 rounded-xl font-bold text-xs border border-pink-500/30 transition shadow">
+                    👤 Mi Perfil
+                </button>
                 <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2">Salir</button>
             `;
 
@@ -1342,13 +1566,19 @@
             const todas = [...JEFATURAS.map(j => j.id), 'formaciones', 'coordinacion', 'pagos', 'censo', 'admin'];
             todas.forEach(p => {
                 const sec = document.getElementById(`seccion-${p}`);
-                if (sec) sec.classList.add('hidden');
+                if (sec) {
+                    sec.classList.add('hidden');
+                    sec.classList.remove('tab-animada');
+                }
                 const btn = document.getElementById(`tab-${p}`);
                 if (btn) btn.className = 'tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive';
             });
 
             const secActiva = document.getElementById(`seccion-${pestana}`);
-            if (secActiva) secActiva.classList.remove('hidden');
+            if (secActiva) {
+                secActiva.classList.remove('hidden');
+                secActiva.classList.add('tab-animada');
+            }
 
             const btnActivo = document.getElementById(`tab-${pestana}`);
             if (btnActivo) btnActivo.className = 'tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-origen text-white';
@@ -1364,11 +1594,11 @@
             const nombre = document.getElementById(`nombre_${jefaturaId}`).value.trim();
             const fecha_ingreso = document.getElementById(`fechaIngreso_${jefaturaId}`).value;
 
-            if (!nombre) return alert("Ingresa el Nombre Completo.");
+            if (!nombre) return Notif.error("Ingresa el Nombre Completo.");
 
             const hoy = new Date().toISOString().split('T')[0];
             if (fecha_ingreso > hoy) {
-                return alert("No puedes ingresar una fecha posterior al día de hoy.");
+                return Notif.error("No puedes ingresar una fecha posterior al día de hoy.");
             }
 
             try {
@@ -1390,11 +1620,12 @@
                     document.getElementById(`nombre_${jefaturaId}`).value = '';
                     await cargarTablas();
                     await cargarCensoGeneral();
+                    Notif.exito("Personal ingresado correctamente.");
                 } else {
-                    alert("Error: " + (data.error || "No se pudo agregar"));
+                    Notif.error(data.error || "No se pudo agregar");
                 }
             } catch (e) {
-                alert("Error de conexión al agregar.");
+                Notif.error("Error de conexión al agregar.");
             }
         }
 
@@ -1472,7 +1703,8 @@
         }
 
         async function eliminarRegistro(id) {
-            if (!confirm("¿Deseas eliminar este registro de la evaluación?")) return;
+            const confirmar = await Notif.confirmar("¿Deseas eliminar este registro?", "Esta acción retirará permanentemente al miembro de esta tabla.");
+            if (!confirmar) return;
             await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
             cargarTablas();
             if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
@@ -1485,7 +1717,7 @@
             const instructor = document.getElementById('formInstructor').value.trim();
             const rango = document.getElementById('formRango').value;
 
-            if (!instructor) return alert("Ingresa el nombre del instructor.");
+            if (!instructor) return Notif.error("Ingresa el nombre del instructor.");
 
             try {
                 const res = await fetch('/api/formaciones', {
@@ -1501,12 +1733,13 @@
                 if (res.ok) {
                     document.getElementById('formInstructor').value = '';
                     await cargarFormaciones();
+                    Notif.exito("Instructor registrado.");
                 } else {
                     const data = await res.json();
-                    alert("Error: " + (data.error || "No se pudo guardar"));
+                    Notif.error(data.error || "No se pudo guardar");
                 }
             } catch (e) {
-                alert("Error al registrar instructor.");
+                Notif.error("Error al registrar instructor.");
             }
         }
 
@@ -1546,17 +1779,20 @@
         }
 
         async function ejecutarCorteSemanalFormaciones() {
-            const confirmar = confirm("⚠️ ¿Confirmas realizar el CORTE SEMANAL de nómina?\n\nEsta acción reiniciará a 0 las instrucciones semanales ($50,000 por instrucción), pero preservará el histórico acumulado de instrucciones totales.");
+            const confirmar = await Notif.confirmar(
+                "⚠️ ¿Realizar Corte Semanal de Nómina?",
+                "Se reiniciarán a 0 las instrucciones semanales ($50,000 por instrucción), preservando el histórico total acumulado."
+            );
             if (!confirmar) return;
 
             try {
                 const res = await fetch('/api/formaciones/corte-semanal', { method: 'POST' });
                 if (res.ok) {
-                    alert("✅ Corte semanal completado exitosamente. Cuentas semanales reiniciadas a $0.");
+                    Notif.exito("Corte semanal completado. Cuentas semanales reiniciadas a $0.");
                     await cargarFormaciones();
                 }
             } catch (e) {
-                alert("Error al procesar el corte semanal.");
+                Notif.error("Error al procesar el corte semanal.");
             }
         }
 
@@ -1610,7 +1846,8 @@
         }
 
         async function eliminarFormacion(id) {
-            if (!confirm("¿Eliminar registro de instructor?")) return;
+            const confirmar = await Notif.confirmar("¿Eliminar instructor?", "Esta acción retirará permanentemente al instructor.");
+            if (!confirmar) return;
             await fetch(`/api/formaciones/${id}`, { method: 'DELETE' });
             cargarFormaciones();
         }
@@ -1625,8 +1862,8 @@
             const file = inputElement.files[0];
             if (!file) return;
 
-            if (file.type !== 'application/pdf') return alert("Solo puedes adjuntar archivos en formato PDF.");
-            if (file.size > 15 * 1024 * 1024) return alert("El archivo PDF supera el tamaño máximo permitido de 15MB.");
+            if (file.type !== 'application/pdf') return Notif.error("Solo puedes adjuntar archivos en formato PDF.");
+            if (file.size > 15 * 1024 * 1024) return Notif.error("El archivo PDF supera el tamaño máximo permitido de 15MB.");
 
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -1638,26 +1875,21 @@
                         body: JSON.stringify({ pdf_feedback: base64Data, nombre_pdf: file.name })
                     });
                     if (res.ok) {
-                        alert(`📄 Documento PDF "${file.name}" cargado exitosamente.`);
+                        Notif.exito(`Documento PDF "${file.name}" cargado exitosamente.`);
                         cargarCoordinacion();
                     } else {
-                        alert("Error guardando el PDF en el servidor.");
+                        Notif.error("Error guardando el PDF en el servidor.");
                     }
                 } catch (err) {
-                    alert("Error en la subida del archivo PDF.");
+                    Notif.error("Error en la subida del archivo PDF.");
                 }
             };
             reader.readAsDataURL(file);
         }
 
-        function verPdfFeedback(base64Data, nombrePdf) {
-            if (!base64Data) return alert("No hay ningún PDF adjunto para este supervisor.");
-            const win = window.open();
-            win.document.write(`<iframe src="${base64Data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-        }
-
         async function borrarPdfFeedback(id) {
-            if (!confirm("¿Deseas desvincular y eliminar el PDF adjunto de este feedback?")) return;
+            const confirmar = await Notif.confirmar("¿Eliminar PDF adjunto?", "Se desvinculará el documento de este feedback.");
+            if (!confirmar) return;
             await fetch(`/api/coordinacion/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -1675,7 +1907,7 @@
             const horas_semana = formatearTextoHoras(horas_raw);
             const estado = document.getElementById('coordEstado').value;
 
-            if (!supervisor) return alert("Ingresa el nombre del supervisor.");
+            if (!supervisor) return Notif.error("Ingresa el nombre del supervisor.");
 
             try {
                 const res = await fetch('/api/coordinacion', {
@@ -1697,9 +1929,10 @@
                     document.getElementById('coordHoras').value = '';
                     await cargarCoordinacion();
                     await cargarCensoGeneral();
+                    Notif.exito("Supervisor registrado.");
                 }
             } catch (e) {
-                alert("Error al registrar en coordinación.");
+                Notif.error("Error al registrar en coordinación.");
             }
         }
 
@@ -1811,528 +2044,13 @@
         }
 
         async function eliminarCoordinacion(id) {
-            if (!confirm("¿Eliminar registro de coordinación?")) return;
+            const confirmar = await Notif.confirmar("¿Eliminar registro de coordinación?", "Esta acción retirará permanentemente al supervisor.");
+            if (!confirmar) return;
             await fetch(`/api/coordinacion/${id}`, { method: 'DELETE' });
             cargarCoordinacion();
             if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
                 cargarCensoGeneral();
             }
-        }
-
-        // =========================================================================
-        // TESORERÍA INTELIGENTE: AUTO-COMPLETADO DESDE EL CENSO GENERAL
-        // =========================================================================
-        function poblarSelectorPersonalCenso() {
-            const select = document.getElementById('pagoSelectCenso');
-            if (!select) return;
-
-            const valorPrevio = select.value;
-            select.innerHTML = '<option value="">-- Seleccionar Personal del Censo --</option>' + 
-                cacheCensoGlobal.map(p => `
-                    <option value="${p.nombre}" data-rango="${p.rango_actual}">${p.nombre} (${p.rango_actual})</option>
-                `).join('');
-
-            if (valorPrevio) select.value = valorPrevio;
-        }
-
-        function seleccionarPersonalDesdeCenso(nombreSeleccionado) {
-            if (!nombreSeleccionado) {
-                document.getElementById('pagoRango').value = '';
-                return;
-            }
-            const persona = cacheCensoGlobal.find(p => p.nombre.toLowerCase().trim() === nombreSeleccionado.toLowerCase().trim());
-            if (persona) {
-                document.getElementById('pagoRango').value = persona.rango_actual;
-            }
-        }
-
-        async function guardarRegistroPago() {
-            const personal = document.getElementById('pagoSelectCenso').value.trim();
-            const rango = document.getElementById('pagoRango').value.trim();
-            const concepto = document.getElementById('pagoConcepto').value.trim();
-            const cantidad = document.getElementById('pagoCantidad').value.trim();
-            const estado = document.getElementById('pagoEstado').value;
-
-            if (!personal) return alert("Por favor selecciona un miembro del Censo General.");
-            if (!concepto) return alert("Ingresa el concepto del pago.");
-
-            const monto = Math.max(0, parseFloat(cantidad) || 0);
-
-            try {
-                const res = await fetch('/api/pagos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        personal,
-                        rango: rango || 'Personal EMS',
-                        concepto,
-                        cantidad: monto,
-                        estado,
-                        pagado_por: estado === 'Pagado' ? (usuarioActual ? usuarioActual.nombre : 'Dirección') : 'Pendiente',
-                        fecha_pago: new Date().toISOString().split('T')[0],
-                        registrado_por: usuarioActual ? usuarioActual.nombre : 'Dirección'
-                    })
-                });
-
-                if (res.ok) {
-                    document.getElementById('pagoSelectCenso').value = '';
-                    document.getElementById('pagoRango').value = '';
-                    document.getElementById('pagoConcepto').value = '';
-                    document.getElementById('pagoCantidad').value = '';
-                    await cargarPagos();
-                    await cargarCensoGeneral();
-                } else {
-                    const data = await res.json();
-                    alert("Error: " + (data.error || "No se pudo registrar el pago."));
-                }
-            } catch (e) {
-                alert("Error de conexión al registrar pago.");
-            }
-        }
-
-        async function editarPagoEnTabla(id, campo, valor) {
-            let payload = { [campo]: valor };
-            if (campo === 'estado' && valor === 'Pagado') {
-                payload.pagado_por = usuarioActual ? usuarioActual.nombre : 'Dirección';
-                payload.fecha_pago = new Date().toISOString().split('T')[0];
-            } else if (campo === 'estado' && valor === 'Pendiente') {
-                payload.pagado_por = 'Pendiente';
-            }
-
-            try {
-                await fetch(`/api/pagos/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                await cargarPagos();
-                await cargarCensoGeneral();
-            } catch (e) {
-                console.error("Error al actualizar pago:", e);
-            }
-        }
-
-        async function ejecutarCorteSemanalPagos() {
-            const confirmar = confirm("💼 ¿Deseas procesar el CORTE SEMANAL de tesorería?\n\nEsta acción marcará todos los pagos pendientes como LIQUIDADOS y retirará los resaltados amarillos en el Censo.");
-            if (!confirmar) return;
-
-            try {
-                const res = await fetch('/api/pagos/corte-semanal', { method: 'POST' });
-                if (res.ok) {
-                    alert("✅ Corte semanal de tesorería procesado con éxito.");
-                    await cargarPagos();
-                    await cargarCensoGeneral();
-                }
-            } catch (e) {
-                alert("Error al procesar corte de tesorería.");
-            }
-        }
-
-        function filtrarTablaPagos() {
-            const q = (document.getElementById('filtroBuscadorPagos').value || '').toLowerCase().trim();
-            const filtrados = cachePagosGlobal.filter(p => 
-                (p.personal || '').toLowerCase().includes(q) ||
-                (p.concepto || '').toLowerCase().includes(q)
-            );
-            renderizarPagosFiltrados(filtrados);
-        }
-
-        function renderizarPagosFiltrados(lista) {
-            const cuerpo = document.getElementById('cuerpoTablaPagos');
-            if (!lista || lista.length === 0) {
-                cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No se encontraron pagos con ese criterio de búsqueda.</td></tr>`;
-                return;
-            }
-
-            cuerpo.innerHTML = lista.map((p, index) => {
-                const esPagado = p.estado === 'Pagado';
-                const badgeEstado = esPagado 
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
-
-                return `
-                    <tr class="fluid-row hover:bg-zinc-900/40 transition">
-                        <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                        <td class="fluid-td font-bold text-white text-sm">
-                            <input type="text" value="${p.personal}" onblur="editarPagoEnTabla(${p.id}, 'personal', this.value)" class="cell-input font-bold text-white">
-                        </td>
-                        <td class="fluid-td">
-                            <select onchange="editarPagoEnTabla(${p.id}, 'rango', this.value)" class="cell-input text-pink-300 font-semibold">
-                                ${TODOS_LOS_RANGOS.map(r => `<option value="${r.id}" ${r.id === p.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
-                            </select>
-                        </td>
-                        <td class="fluid-td">
-                            <input type="text" value="${p.concepto}" onblur="editarPagoEnTabla(${p.id}, 'concepto', this.value)" class="cell-input text-zinc-200">
-                        </td>
-                        <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-sm">
-                            <input type="number" value="${p.cantidad}" onblur="editarPagoEnTabla(${p.id}, 'cantidad', this.value)" class="cell-input text-center font-mono-code font-black text-emerald-400">
-                        </td>
-                        <td class="fluid-td text-center">
-                            <select onchange="editarPagoEnTabla(${p.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
-                                <option value="Pendiente" ${!esPagado ? 'selected' : ''}>⏳ Pendiente</option>
-                                <option value="Pagado" ${esPagado ? 'selected' : ''}>✅ Pagado</option>
-                            </select>
-                        </td>
-                        <td class="fluid-td text-zinc-300 text-xs font-semibold">
-                            <input type="text" value="${p.pagado_por || 'Pendiente'}" onblur="editarPagoEnTabla(${p.id}, 'pagado_por', this.value)" class="cell-input text-zinc-300 text-xs">
-                        </td>
-                        <td class="fluid-td text-center font-mono-code text-xs text-zinc-400">
-                            <input type="date" value="${p.fecha_pago || ''}" onchange="editarPagoEnTabla(${p.id}, 'fecha_pago', this.value)" class="cell-input text-center font-mono-code text-xs text-zinc-400">
-                        </td>
-                        <td class="fluid-td text-right">
-                            <button onclick="eliminarPago(${p.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function cargarPagos() {
-            try {
-                const res = await fetch('/api/pagos');
-                const data = await res.json();
-                cachePagosGlobal = Array.isArray(data) ? data : [];
-
-                let totalGeneral = 0;
-                let totalLiquidado = 0;
-                let totalPendiente = 0;
-
-                cachePagosGlobal.forEach(p => {
-                    const cant = parseFloat(p.cantidad) || 0;
-                    totalGeneral += cant;
-                    if (p.estado === 'Pagado') totalLiquidado += cant;
-                    else totalPendiente += cant;
-                });
-
-                document.getElementById('totalPagosRegistrados').innerText = `$${totalGeneral.toLocaleString()}`;
-                document.getElementById('totalPagosLiquidados').innerText = `$${totalLiquidado.toLocaleString()}`;
-                document.getElementById('totalPagosPendientes').innerText = `$${totalPendiente.toLocaleString()}`;
-
-                filtrarTablaPagos();
-            } catch (e) {
-                console.error("Error al cargar pagos:", e);
-            }
-        }
-
-        async function eliminarPago(id) {
-            if (!confirm("¿Deseas eliminar este registro de tesorería?")) return;
-            await fetch(`/api/pagos/${id}`, { method: 'DELETE' });
-            cargarPagos();
-            cargarCensoGeneral();
-        }
-
-        // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (INFORMACIÓN 1:1 COMPLETA + RESALTADO AMARILLO)
-        // =========================================================================
-        async function editarDesdeCenso(tipo, id, campo, valor) {
-            let datosAEnviar = { [campo]: valor };
-            if (campo === 'horas_semana') {
-                datosAEnviar[campo] = formatearTextoHoras(valor);
-            }
-
-            try {
-                if (tipo === 'ascenso') {
-                    await fetch(`/api/ascensos/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(datosAEnviar)
-                    });
-                    await cargarTablas();
-                } else if (tipo === 'coordinacion') {
-                    await fetch(`/api/coordinacion/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(datosAEnviar)
-                    });
-                    await cargarCoordinacion();
-                } else if (tipo === 'usuario') {
-                    await fetch(`/api/usuarios/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(datosAEnviar)
-                    });
-                    await cargarGestionAdmin();
-                }
-                cargarCensoGeneral();
-            } catch (err) {
-                console.error("Error editando desde censo:", err);
-            }
-        }
-
-        async function cargarCensoGeneral() {
-            try {
-                const [resAsc, resCoord, resUsers, resForm, resPagos] = await Promise.all([
-                    fetch('/api/ascensos'),
-                    fetch('/api/coordinacion'),
-                    fetch('/api/usuarios'),
-                    fetch('/api/formaciones'),
-                    fetch('/api/pagos')
-                ]);
-
-                const dataAsc = await resAsc.json();
-                const dataCoord = await resCoord.json();
-                const dataUsers = await resUsers.json();
-                const dataForm = await resForm.json();
-                const dataPagos = await resPagos.json();
-
-                const instructoresSet = new Set(
-                    Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
-                );
-
-                const personasConPagoPendiente = new Set(
-                    Array.isArray(dataPagos) 
-                        ? dataPagos.filter(p => p.estado === 'Pendiente').map(p => (p.personal || '').toLowerCase().trim())
-                        : []
-                );
-
-                let listaUnificada = [];
-
-                if (Array.isArray(dataAsc)) {
-                    dataAsc.forEach(a => {
-                        const esForm = instructoresSet.has((a.nombre || '').toLowerCase().trim());
-                        listaUnificada.push({
-                            id_original: a.id,
-                            tipo_origen: 'ascenso',
-                            discord_id: a.discord_id || 'N/A',
-                            nombre: a.nombre,
-                            departamento: a.jefatura,
-                            rango_actual: a.rango_actual,
-                            rango_postular: a.rango_postular || a.rango_actual,
-                            estado: a.estado || 'Activo',
-                            horas_semana: a.horas_semana,
-                            faltas: a.faltas || 'NINGUNA',
-                            examen: a.examen || 'NO APLICA',
-                            fecha_ingreso: a.fecha_ingreso || '—',
-                            descripcion: a.descripcion || '',
-                            esMando: false,
-                            esFormador: esForm
-                        });
-                    });
-                }
-
-                if (Array.isArray(dataCoord)) {
-                    dataCoord.forEach(c => {
-                        const nombreCoord = (c.supervisor || '').trim();
-                        const yaExiste = listaUnificada.some(x => 
-                            x.nombre && x.nombre.toLowerCase().trim() === nombreCoord.toLowerCase()
-                        );
-
-                        if (!yaExiste && nombreCoord !== '') {
-                            const esForm = instructoresSet.has(nombreCoord.toLowerCase());
-                            listaUnificada.push({
-                                id_original: c.id,
-                                tipo_origen: 'coordinacion',
-                                discord_id: c.discord_id || 'N/A',
-                                nombre: nombreCoord,
-                                departamento: 'coordinacion',
-                                rango_actual: c.rango || 'Supervisor',
-                                rango_postular: c.rango || 'Supervisor',
-                                estado: c.estado || 'Activo',
-                                horas_semana: c.horas_semana || '',
-                                faltas: 'NINGUNA',
-                                examen: 'NO APLICA',
-                                fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
-                                descripcion: c.feedback_semanal || '',
-                                esMando: true,
-                                esFormador: esForm
-                            });
-                        }
-                    });
-                }
-
-                if (Array.isArray(dataUsers)) {
-                    dataUsers.forEach(u => {
-                        const rangoLimpio = (u.rango || '').trim();
-                        const nombreUser = (u.nombre || '').trim();
-
-                        const tieneRangoValido = rangoLimpio !== '' && 
-                                                 rangoLimpio !== 'Sin Rango (Pendiente)' && 
-                                                 rangoLimpio.toLowerCase() !== 'pendiente' &&
-                                                 rangoLimpio.toLowerCase() !== 'sin rango';
-
-                        if (tieneRangoValido && nombreUser !== '') {
-                            const yaExiste = listaUnificada.some(x => {
-                                const coincideNombre = x.nombre && x.nombre.toLowerCase().trim() === nombreUser.toLowerCase();
-                                const coincideDiscord = x.discord_id && x.discord_id !== 'N/A' && u.discord_id && u.discord_id !== 'N/A' && x.discord_id === u.discord_id;
-                                return coincideNombre || coincideDiscord;
-                            });
-
-                            if (!yaExiste) {
-                                let depto = 'direccion';
-                                const rLow = rangoLimpio.toLowerCase();
-                                if (rLow.includes('cirug')) depto = 'cirugia';
-                                else if (rLow.includes('medicin')) depto = 'medicina';
-                                else if (rLow.includes('enferm')) depto = 'enfermeria';
-                                else if (rLow.includes('coord') || rLow.includes('supervis')) depto = 'coordinacion';
-
-                                const esForm = instructoresSet.has(nombreUser.toLowerCase());
-
-                                listaUnificada.push({
-                                    id_original: u.id,
-                                    tipo_origen: 'usuario',
-                                    discord_id: u.discord_id || 'N/A',
-                                    nombre: nombreUser,
-                                    departamento: depto,
-                                    rango_actual: rangoLimpio,
-                                    rango_postular: rangoLimpio,
-                                    estado: 'Activo',
-                                    horas_semana: u.horas_semana || '',
-                                    faltas: 'NINGUNA',
-                                    examen: 'NO APLICA',
-                                    fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
-                                    descripcion: `Cuenta institucional @${u.usuario}`,
-                                    esMando: true,
-                                    esFormador: esForm
-                                });
-                            }
-                        }
-                    });
-                }
-
-                cacheCensoGlobal = listaUnificada;
-                poblarSelectorPersonalCenso();
-
-                const cuerpo = document.getElementById('cuerpoTablaCenso');
-
-                if (listaUnificada.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
-                    document.getElementById('txtTotalCenso').innerText = "0 Efectivos";
-                    return;
-                }
-
-                listaUnificada.sort((a, b) => {
-                    const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
-                    const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
-                    if (pesoA !== pesoB) return pesoB - pesoA;
-                    return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
-                });
-
-                document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos Totales`;
-                const maxFecha = new Date().toISOString().split('T')[0];
-
-                cuerpo.innerHTML = listaUnificada.map((r, index) => {
-                    let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
-                    if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
-                    if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
-                    if (r.departamento === 'coordinacion') deptoTag = '<span class="text-pink-300 font-bold">Coordinación</span>';
-                    if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
-
-                    const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
-                    const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
-
-                    // Resaltado amarillo prominente si tiene cobro pendiente en tesorería
-                    const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
-                    const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
-
-                    let claseEstadoBadge = 'badge-estado-activo';
-                    if (r.estado === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
-                    if (r.estado === 'Excedencia') claseEstadoBadge = 'badge-estado-excedencia';
-                    if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
-
-                    return `
-                        <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPago}">
-                            <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">
-                                <input type="text" value="${r.discord_id}" 
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'discord_id', this.value)" 
-                                       class="cell-input font-mono-code text-xs">
-                            </td>
-                            <td class="fluid-td font-bold text-white">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <input type="text" value="${r.nombre}" 
-                                           onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
-                                           class="cell-input font-bold text-white text-sm flex-1">
-                                    ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
-                                    ${tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
-                                    ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
-                                </div>
-                            </td>
-                            <td class="fluid-td">${deptoTag}</td>
-                            <td class="fluid-td font-semibold">
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
-                                    ${TODOS_LOS_RANGOS.map(x => `<option value="${x.id}" ${x.id === r.rango_actual ? 'selected' : ''}>${x.label}</option>`).join('')}
-                                </select>
-                            </td>
-                            <td class="fluid-td font-semibold">
-                                ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
-                                        ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
-                                    </select>
-                                ` : `
-                                    <span class="text-xs text-zinc-400 font-semibold">${r.rango_postular}</span>
-                                `}
-                            </td>
-                            <td class="fluid-td text-center">
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${claseEstadoBadge}">
-                                    <option value="Activo" ${r.estado === 'Activo' ? 'selected' : ''}>🟢 Activo</option>
-                                    <option value="Ausencia" ${r.estado === 'Ausencia' ? 'selected' : ''}>🟡 Ausencia</option>
-                                    <option value="Excedencia" ${r.estado === 'Excedencia' ? 'selected' : ''}>🟠 Excedencia</option>
-                                    <option value="Baja" ${r.estado === 'Baja' ? 'selected' : ''}>🔴 Baja</option>
-                                </select>
-                            </td>
-                            <td class="fluid-td text-center">
-                                <input type="text" value="${r.horas_semana || ''}" 
-                                       placeholder="00:00 HRS"
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'horas_semana', this.value)" 
-                                       class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforo}">
-                            </td>
-                            <td class="fluid-td text-center">
-                                ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
-                                        <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
-                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-600 text-black">WARN</option>
-                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white">DESPIDO</option>
-                                    </select>
-                                ` : `<span class="text-zinc-500">—</span>`}
-                            </td>
-                            <td class="fluid-td text-center">
-                                ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
-                                        <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                                        <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
-                                        <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
-                                    </select>
-                                ` : `<span class="text-zinc-500">—</span>`}
-                            </td>
-                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">
-                                <input type="date" value="${r.fecha_ingreso || ''}" 
-                                       max="${maxFecha}"
-                                       onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'fecha_ingreso', this.value)" 
-                                       class="cell-input text-center font-mono-code text-xs text-zinc-300">
-                            </td>
-                            <td class="fluid-td text-zinc-400 text-xs">
-                                <input type="text" value="${r.descripcion}" 
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
-                                       class="cell-input text-zinc-300 text-xs">
-                            </td>
-                            <td class="fluid-td text-right">
-                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-0.5 rounded text-xs">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            } catch (e) {
-                console.error("Error al cargar censo:", e);
-            }
-        }
-
-        async function eliminarDesdeCenso(tipo, id) {
-            if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar este registro del censo y de su respectivo departamento?")) return;
-
-            if (tipo === 'ascenso') {
-                await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
-            } else if (tipo === 'coordinacion') {
-                await fetch(`/api/coordinacion/${id}`, { method: 'DELETE' });
-            } else if (tipo === 'usuario') {
-                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-            }
-
-            cargarCensoGeneral();
-            cargarTablas();
-            cargarCoordinacion();
-            cargarGestionAdmin();
-            if (tieneAccesoTesoreria()) cargarPagos();
         }
 
         // PANEL ADMIN DE CUENTAS WEB
@@ -2381,12 +2099,13 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rango, rol, discord_id }) 
             });
-            alert("Cuenta actualizada y rango reflejado en el Censo General.");
+            Notif.exito("Cuenta actualizada y rango reflejado en el Censo General.");
             cargarCensoGeneral();
         }
 
         async function eliminarAdminUsuario(id) {
-            if (!confirm("¿Deseas dar de baja y eliminar esta cuenta del sistema?")) return;
+            const confirmar = await Notif.confirmar("¿Dar de baja esta cuenta?", "La cuenta será eliminada permanentemente del sistema.");
+            if (!confirmar) return;
             await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
             cargarGestionAdmin();
             cargarCensoGeneral();
