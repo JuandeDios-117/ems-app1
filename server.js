@@ -11,8 +11,8 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 app.use(compression());
-app.use(express.json({ limit: '30mb' }));
-app.use(express.urlencoded({ limit: '30mb', extended: true }));
+app.use(express.json({ limit: '35mb' }));
+app.use(express.urlencoded({ limit: '35mb', extended: true }));
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -74,7 +74,7 @@ app.post('/api/register', async (req, res) => {
         });
 
         if (checkUser.rows && checkUser.rows.length > 0) {
-            return res.status(400).json({ error: "El nombre de usuario ya está registrado." });
+            return res.status(400).json({ error: "El usuario ya existe." });
         }
 
         if (discordLimpio) {
@@ -83,7 +83,7 @@ app.post('/api/register', async (req, res) => {
                 args: [discordLimpio]
             });
             if (checkDiscord.rows && checkDiscord.rows.length > 0) {
-                return res.status(400).json({ error: "Este Discord ID ya tiene una cuenta." });
+                return res.status(400).json({ error: "Este Discord ID ya tiene cuenta." });
             }
         }
 
@@ -130,7 +130,7 @@ app.post('/api/login', async (req, res) => {
     const userClean = (usuario || '').trim().toLowerCase();
 
     if (!userClean || !password) {
-        return res.status(400).json({ error: "Ingresa usuario y contraseña." });
+        return res.status(400).json({ error: "Ingresa credenciales." });
     }
 
     try {
@@ -143,7 +143,7 @@ app.post('/api/login', async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (e) {
-        res.status(500).json({ error: "Error al validar credenciales." });
+        res.status(500).json({ error: "Error de autenticación." });
     }
 });
 
@@ -158,7 +158,7 @@ app.get('/api/usuarios', async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', async (req, res) => {
-    const { rango, rol, discord_id, horas_semana, fecha_ingreso } = req.body;
+    const { rango, rol, discord_id, horas_semana, fecha_ingreso, nombre, password } = req.body;
     let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
@@ -168,12 +168,14 @@ app.put('/api/usuarios/:id', async (req, res) => {
                     rol = COALESCE(?, rol),
                     discord_id = COALESCE(?, discord_id),
                     horas_semana = COALESCE(?, horas_semana),
-                    fecha_ingreso = COALESCE(?, fecha_ingreso)
+                    fecha_ingreso = COALESCE(?, fecha_ingreso),
+                    nombre = COALESCE(?, nombre),
+                    password = COALESCE(?, password)
                   WHERE id = ?`,
-            args: [rango || null, rol || null, discordLimpio, horas_semana || null, fecha_ingreso || null, req.params.id]
+            args: [rango || null, rol || null, discordLimpio, horas_semana || null, fecha_ingreso || null, nombre ? nombre.trim() : null, password ? String(password) : null, req.params.id]
         });
         notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango, rol });
-        res.json({ message: "Cuenta actualizada." });
+        res.json({ message: "Actualizado con éxito." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -218,22 +220,20 @@ app.post('/api/ascensos', async (req, res) => {
                     nombre_ems, 
                     nombre, 
                     rango_actual, 
-                    rango_propuesto, 
                     rango_postular, 
                     faltas, 
                     horas_semana, 
                     examen, 
-                    estado,
+                    estado, 
                     descripcion, 
-                    fecha_ingreso,
+                    fecha_ingreso, 
                     actualizado_por
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 jefatura,
                 discordLimpio,
                 nombre.trim(),
                 nombre.trim(),
-                rangoBase,
                 rangoBase,
                 rangoBase,
                 'NINGUNA',
@@ -290,7 +290,6 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     nombre_ems = COALESCE(?, nombre_ems),
                     rango_actual = COALESCE(?, rango_actual),
                     rango_postular = COALESCE(?, rango_postular),
-                    rango_propuesto = COALESCE(?, rango_propuesto),
                     faltas = COALESCE(?, faltas),
                     horas_semana = COALESCE(?, horas_semana),
                     examen = COALESCE(?, examen),
@@ -304,7 +303,6 @@ app.put('/api/ascensos/:id', async (req, res) => {
                 nombre ? nombre.trim() : null,
                 nombre ? nombre.trim() : null,
                 rango_actual || null,
-                rango_postular || null,
                 rango_postular || null,
                 faltas || null,
                 horas_semana !== undefined ? horas_semana.trim() : null,
@@ -322,7 +320,7 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR TODOS LOS ASCENSOS DE ENFERMERÍA, CIRUGÍA Y MEDICINA SIMULTÁNEAMENTE Y REINICIAR HORAS A 00:00
+// APLICAR ASCENSOS GLOBALES Y REINICIAR HORAS A CERO
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
         const registros = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
@@ -347,12 +345,11 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             await db.execute({
                 sql: `UPDATE registro_ascensos SET 
                         rango_actual = ?, 
-                        rango_propuesto = ?, 
                         rango_postular = ?, 
                         jefatura = ?,
                         horas_semana = '00:00 HRS'
                       WHERE id = ?`,
-                args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
+                args: [nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
             });
             aplicados++;
         }
@@ -485,7 +482,7 @@ app.post('/api/formaciones/corte-semanal', async (req, res) => {
     try {
         await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
         notificar('formaciones_actualizadas');
-        res.json({ message: "Corte semanal de nómina procesado ($0 semanal, acumulado total preservado)." });
+        res.json({ message: "Corte semanal procesado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -620,7 +617,7 @@ app.post('/api/pagos', async (req, res) => {
             ]
         });
         notificar('pagos_actualizados');
-        res.json({ message: "Registro de pago guardado exitosamente." });
+        res.json({ message: "Pago registrado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -651,7 +648,7 @@ app.put('/api/pagos/:id', async (req, res) => {
             ]
         });
         notificar('pagos_actualizados');
-        res.json({ message: "Pago actualizado con éxito." });
+        res.json({ message: "Pago modificado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -661,7 +658,7 @@ app.post('/api/pagos/corte-semanal', async (req, res) => {
     try {
         await db.execute("UPDATE registro_pagos SET estado = 'Pagado', pagado_por = 'Corte Semanal' WHERE estado = 'Pendiente'");
         notificar('pagos_actualizados');
-        res.json({ message: "Corte semanal de tesorería procesado con éxito." });
+        res.json({ message: "Corte semanal de tesorería completado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -671,7 +668,7 @@ app.delete('/api/pagos/:id', async (req, res) => {
     try {
         await db.execute({ sql: "DELETE FROM registro_pagos WHERE id = ?", args: [req.params.id] });
         notificar('pagos_actualizados');
-        res.json({ message: "Registro de pago eliminado." });
+        res.json({ message: "Registro eliminado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

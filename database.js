@@ -15,6 +15,7 @@ const db = createClient({
 
 (async function initDB() {
   try {
+    // 1. USUARIOS
     await db.execute(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,6 +35,7 @@ const db = createClient({
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
 
+    // 2. ASCENSOS & EVALUACIONES
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_ascensos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +44,6 @@ const db = createClient({
         nombre_ems TEXT DEFAULT '',
         nombre TEXT NOT NULL,
         rango_actual TEXT NOT NULL,
-        rango_propuesto TEXT DEFAULT '',
         rango_postular TEXT DEFAULT '',
         faltas TEXT DEFAULT 'NINGUNA',
         horas_semana TEXT DEFAULT '',
@@ -57,7 +58,9 @@ const db = createClient({
 
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN estado TEXT DEFAULT 'Activo'"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN descripcion TEXT DEFAULT ''"); } catch (e) {}
 
+    // 3. FORMACIONES
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_formaciones (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,6 +77,7 @@ const db = createClient({
 
     try { await db.execute("ALTER TABLE registro_formaciones ADD COLUMN instrucciones_totales INTEGER DEFAULT 0"); } catch (e) {}
 
+    // 4. COORDINACIÓN
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_coordinacion (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,6 +94,11 @@ const db = createClient({
       )
     `);
 
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN pdf_feedback TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN nombre_pdf TEXT DEFAULT ''"); } catch (e) {}
+
+    // 5. TESORERÍA & PAGOS
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_pagos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,7 +114,7 @@ const db = createClient({
       )
     `);
 
-    // TABLA PARA EL ESTADO DE TABLA LISTA (CIRUGÍA, MEDICINA, ENFERMERÍA)
+    // 6. ESTADO DE TABLAS LISTAS
     await db.execute(`
       CREATE TABLE IF NOT EXISTS control_tablas_listas (
         jefatura TEXT PRIMARY KEY,
@@ -115,7 +124,6 @@ const db = createClient({
       )
     `);
 
-    // Inicializar estados de tablas si no existen
     const jefaturas = ['cirugia', 'medicina', 'enfermeria'];
     for (const j of jefaturas) {
       await db.execute({
@@ -124,7 +132,7 @@ const db = createClient({
       });
     }
 
-    console.log("[DB] Base de datos Turso lista con control de horas, totales de formación y estados de tabla.");
+    console.log("[DB] Base de datos verificada y sincronizada.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }
