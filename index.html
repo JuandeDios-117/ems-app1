@@ -88,6 +88,7 @@
             border-bottom: 1px solid #1f2333;
             padding: 8px 8px;
             background: #090b10;
+            vertical-align: middle;
         }
         .fluid-row:nth-child(even) .fluid-td {
             background: #0d0f17;
@@ -364,7 +365,7 @@
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
-                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y reportes PDF de feedback con visor integrado.</p>
+                        <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales y registro del feedback de los supervisores.</p>
                     </div>
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
                 </div>
@@ -409,11 +410,11 @@
                             <tr class="bg-pink-950/40 text-pink-200">
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-36">DISCORD ID</th>
-                                <th class="fluid-th text-left w-1/4">SUPERVISOR A CARGO</th>
+                                <th class="fluid-th text-left w-1/5">SUPERVISOR A CARGO</th>
                                 <th class="fluid-th text-left w-36">RANGO</th>
                                 <th class="fluid-th text-center w-36">HORAS GUARDIA</th>
                                 <th class="fluid-th text-center w-36">ESTADO</th>
-                                <th class="fluid-th text-left w-1/3">FEEDBACK SEMANAL / ADJUNTAR PDF</th>
+                                <th class="fluid-th text-left w-1/3">FEEDBACK SEMANAL Y RENDIMIENTO</th>
                                 <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
                         </thead>
@@ -616,24 +617,6 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- MODAL INTEGRADO PARA VISUALIZACIÓN DE PDF IN-APP -->
-    <div id="modalVisorPdf" class="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md hidden">
-        <div class="bg-zinc-950 border border-pink-500/40 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">📄</span>
-                    <span class="font-black text-white text-sm" id="modalPdfTitulo">Reporte de Feedback</span>
-                </div>
-                <button onclick="cerrarModalVisorPdf()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-rose-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition">
-                    ✕
-                </button>
-            </div>
-            <div class="flex-1 w-full bg-zinc-900">
-                <iframe id="modalPdfIframe" class="w-full h-full border-0" src="" allowfullscreen></iframe>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -1039,7 +1022,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <input type="text" value="${r.descripcion || ''}" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs">
+                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] bg-black/40 border border-zinc-800 rounded-lg p-2">${r.descripcion || ''}</textarea>
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -1709,9 +1692,9 @@
                             $${(f.total_pago || 0).toLocaleString()}
                         </td>
                         <td class="fluid-td">
-                            <input type="text" value="${f.notas || ''}" placeholder="Notas de capacitación..." 
+                            <textarea rows="2" placeholder="Notas de capacitación..." 
                                    onblur="editarFormacionEnTabla(${f.id}, 'notas', this.value)" 
-                                   class="cell-input text-zinc-300 text-xs">
+                                   class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] w-full bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${f.notas || ''}</textarea>
                         </td>
                         <td class="fluid-td text-right">
                             <button onclick="eliminarFormacion(${f.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -1731,51 +1714,6 @@
         }
 
         // COORDINACIÓN & SUPERVISIÓN
-        function abrirSelectorPdfFeedback(id) {
-            const fileInput = document.getElementById(`filePdfFeedback_${id}`);
-            if (fileInput) fileInput.click();
-        }
-
-        async function procesarSubidaPdf(id, inputElement) {
-            const file = inputElement.files[0];
-            if (!file) return;
-
-            if (file.type !== 'application/pdf') return Notif.error("Solo puedes adjuntar archivos en formato PDF.");
-            if (file.size > 15 * 1024 * 1024) return Notif.error("El archivo PDF supera el tamaño máximo permitido de 15MB.");
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const base64Data = e.target.result;
-                try {
-                    const res = await fetch(`/api/coordinacion/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ pdf_feedback: base64Data, nombre_pdf: file.name })
-                    });
-                    if (res.ok) {
-                        Notif.exito(`Documento PDF "${file.name}" cargado exitosamente.`);
-                        cargarCoordinacion();
-                    } else {
-                        Notif.error("Error guardando el PDF en el servidor.");
-                    }
-                } catch (err) {
-                    Notif.error("Error en la subida del archivo PDF.");
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function borrarPdfFeedback(id) {
-            const confirmar = await Notif.confirmar("¿Eliminar PDF adjunto?", "Se desvinculará el documento de este feedback.");
-            if (!confirmar) return;
-            await fetch(`/api/coordinacion/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pdf_feedback: '', nombre_pdf: '' })
-            });
-            cargarCoordinacion();
-        }
-
         async function guardarSupervisorCoordinacion() {
             const discord_raw = document.getElementById('coordDiscord').value.trim();
             const discord_id = discord_raw.replace(/[^0-9]/g, '');
@@ -1852,9 +1790,6 @@
                     if (c.estado === 'Baja') badgeEstado = 'badge-estado-baja';
 
                     const semaforoHoras = obtenerClaseSemaforoCasilla(c.horas_semana);
-                    const tienePdf = !!c.pdf_feedback;
-                    const pdfEscapado = c.pdf_feedback ? encodeURIComponent(c.pdf_feedback) : '';
-                    const nombrePdfEscapado = c.nombre_pdf ? encodeURIComponent(c.nombre_pdf) : 'Reporte.pdf';
 
                     return `
                     <tr class="fluid-row hover:bg-zinc-900/40">
@@ -1889,30 +1824,9 @@
                             </select>
                         </td>
                         <td class="fluid-td">
-                            <div class="space-y-1.5">
-                                <textarea rows="1" onblur="editarCoordinacionEnTabla(${c.id}, 'feedback_semanal', this.value)" 
-                                          placeholder="Feedback semanal, rango de fechas de ausencia..." 
-                                          class="cell-input text-zinc-300 text-xs resize-y min-h-[30px]">${c.feedback_semanal || ''}</textarea>
-                                
-                                <div class="flex items-center gap-2">
-                                    <input type="file" id="filePdfFeedback_${c.id}" accept="application/pdf" class="hidden" onchange="procesarSubidaPdf(${c.id}, this)">
-                                    
-                                    <button onclick="abrirSelectorPdfFeedback(${c.id})" class="text-[10px] bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-500/40 px-2 py-0.5 rounded-md font-bold flex items-center gap-1 transition">
-                                        📎 ${tienePdf ? 'Cambiar PDF' : 'Subir PDF'}
-                                    </button>
-
-                                    ${tienePdf ? `
-                                        <button onclick="verPdfFeedback(decodeURIComponent('${pdfEscapado}'), decodeURIComponent('${nombrePdfEscapado}'))" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-black flex items-center gap-1 transition">
-                                            📄 Ver PDF
-                                        </button>
-                                        <button onclick="borrarPdfFeedback(${c.id})" title="Eliminar PDF" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold px-1">
-                                            ✕
-                                        </button>
-                                    ` : `
-                                        <span class="text-[10px] text-zinc-500 italic">Sin reporte PDF</span>
-                                    `}
-                                </div>
-                            </div>
+                            <textarea rows="3" onblur="editarCoordinacionEnTabla(${c.id}, 'feedback_semanal', this.value)" 
+                                      placeholder="Feedback semanal, rendimiento o ausencias del supervisor..." 
+                                      class="cell-input text-zinc-300 text-sm resize-y min-h-[80px] w-full bg-black/50 border border-zinc-700/50 rounded-xl p-3 focus:border-pink-500 transition">${c.feedback_semanal || ''}</textarea>
                         </td>
                         <td class="fluid-td text-right">
                             <button onclick="eliminarCoordinacion(${c.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -2430,9 +2344,8 @@
                                        class="cell-input text-center font-mono-code text-xs text-zinc-300">
                             </td>
                             <td class="fluid-td text-zinc-400 text-xs">
-                                <input type="text" value="${r.descripcion}" 
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
-                                       class="cell-input text-zinc-300 text-xs">
+                                <textarea rows="2" onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
+                                          class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] w-full bg-black/40 border border-zinc-800 rounded-lg p-2">${r.descripcion || ''}</textarea>
                             </td>
                             <td class="fluid-td text-right">
                                 <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -2533,10 +2446,9 @@
         });
 
         // =========================================================================
-        // FUNCIONES FALTANTES DEL FRONTEND (PERFIL, RANGOS CUSTOM Y VISOR PDF)
+        // FUNCIONES EXTRAS (PERFIL, RANGOS CUSTOM)
         // =========================================================================
 
-        // 1. Mostrar información del perfil actual
         function abrirModalMiPerfil() {
             if (!usuarioActual) return;
             Swal.fire({
@@ -2557,7 +2469,6 @@
             });
         }
 
-        // 2. Crear nuevos rangos dinámicamente desde el Panel Admin
         function crearNuevoRangoPersonalizado() {
             const nombre = document.getElementById('nuevoRangoNombre').value.trim();
             const emoji = document.getElementById('nuevoRangoEmoji').value.trim();
@@ -2570,12 +2481,10 @@
             const nombreCompleto = nombre;
             const labelCompleto = `『${emoji}』${nombre}`;
 
-            // Evitar duplicados
             if (TODOS_LOS_RANGOS.some(r => r.id.toLowerCase() === nombreCompleto.toLowerCase())) {
                 return Notif.error("Este rango ya existe en el sistema.");
             }
 
-            // Añadir al estado local del cliente
             TODOS_LOS_RANGOS.push({ id: nombreCompleto, label: labelCompleto, escala: "personalizada" });
             JERARQUIA_MENOR_A_MAYOR[nombreCompleto] = peso;
             
@@ -2583,45 +2492,16 @@
                 RANGOS_EMS.push(nombreCompleto);
             }
 
-            // Limpiar inputs
             document.getElementById('nuevoRangoNombre').value = '';
             document.getElementById('nuevoRangoEmoji').value = '';
             document.getElementById('nuevoRangoPeso').value = '';
 
-            // Refrescar selects e interfaz
             cargarTablas();
             if (!document.getElementById('seccion-admin').classList.contains('hidden')) {
                 cargarGestionAdmin();
             }
 
             Notif.exito(`El rango ${labelCompleto} fue agregado a los listados.`);
-        }
-
-        // 3. Abrir visor interno para los reportes en PDF (Coordinación)
-        function verPdfFeedback(pdfBase64, titulo) {
-            if (!pdfBase64 || pdfBase64 === 'null' || pdfBase64 === '') {
-                return Notif.error("Este supervisor no tiene un documento PDF válido adjunto.");
-            }
-            
-            const modal = document.getElementById('modalVisorPdf');
-            const iframe = document.getElementById('modalPdfIframe');
-            const tituloEl = document.getElementById('modalPdfTitulo');
-
-            tituloEl.innerText = titulo || 'Reporte de Feedback - Coordinación';
-            iframe.src = pdfBase64;
-            
-            // Mostrar modal
-            modal.classList.remove('hidden');
-        }
-
-        // 4. Cerrar el visor interno de PDF
-        function cerrarModalVisorPdf() {
-            const modal = document.getElementById('modalVisorPdf');
-            const iframe = document.getElementById('modalPdfIframe');
-            
-            // Limpiar la fuente por rendimiento y ocultar
-            iframe.src = '';
-            modal.classList.add('hidden');
         }
 
     </script>
