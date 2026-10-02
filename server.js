@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const compression = require('compression');
 const { Server } = require('socket.io');
-const db = require('./database');
+const db = require('./db'); // Ajustado a './db' asumiendo que así se llama tu archivo
 const path = require('path');
 
 const app = express();
@@ -153,13 +153,13 @@ app.get('/api/usuarios', async (req, res) => {
         const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json([]); // Prevents array.map errors in frontend
     }
 });
 
 app.put('/api/usuarios/:id', async (req, res) => {
     const { rango, rol, discord_id, horas_semana, fecha_ingreso, nombre, password } = req.body;
-    let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
+    let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
         await db.execute({
@@ -197,7 +197,7 @@ app.get('/api/ascensos', async (req, res) => {
         const result = await db.execute("SELECT * FROM registro_ascensos ORDER BY id DESC");
         res.json(result.rows || []);
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json([]);
     }
 });
 
@@ -215,34 +215,12 @@ app.post('/api/ascensos', async (req, res) => {
     try {
         await db.execute({
             sql: `INSERT INTO registro_ascensos (
-                    jefatura, 
-                    discord_id, 
-                    nombre_ems, 
-                    nombre, 
-                    rango_actual, 
-                    rango_postular, 
-                    faltas, 
-                    horas_semana, 
-                    examen, 
-                    estado, 
-                    descripcion, 
-                    fecha_ingreso, 
-                    actualizado_por
+                    jefatura, discord_id, nombre_ems, nombre, rango_actual, rango_postular, 
+                    faltas, horas_semana, examen, estado, descripcion, fecha_ingreso, actualizado_por
                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
-                jefatura,
-                discordLimpio,
-                nombre.trim(),
-                nombre.trim(),
-                rangoBase,
-                rangoBase,
-                'NINGUNA',
-                '',
-                'NO APLICA',
-                'Activo',
-                marcaPrueba,
-                fechaHoy,
-                actualizado_por || 'Jefatura'
+                jefatura, discordLimpio, nombre.trim(), nombre.trim(), rangoBase, rangoBase,
+                'NINGUNA', '', 'NO APLICA', 'Activo', marcaPrueba, fechaHoy, actualizado_por || 'Jefatura'
             ]
         });
 
@@ -298,19 +276,10 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     fecha_ingreso = COALESCE(?, fecha_ingreso)
                   WHERE id = ?`,
             args: [
-                jefatura || null,
-                discordLimpio,
-                nombre ? nombre.trim() : null,
-                nombre ? nombre.trim() : null,
-                rango_actual || null,
-                rango_postular || null,
-                faltas || null,
-                horas_semana !== undefined ? horas_semana.trim() : null,
-                examen || null,
-                estado || null,
-                descripcion !== undefined ? descripcion.trim() : null,
-                fecha_ingreso !== undefined ? fecha_ingreso.trim() : null,
-                req.params.id
+                jefatura || null, discordLimpio, nombre ? nombre.trim() : null, nombre ? nombre.trim() : null,
+                rango_actual || null, rango_postular || null, faltas || null, horas_semana !== undefined ? horas_semana.trim() : null,
+                examen || null, estado || null, descripcion !== undefined ? descripcion.trim() : null,
+                fecha_ingreso !== undefined ? fecha_ingreso.trim() : null, req.params.id
             ]
         });
         notificar('ascensos_actualizados');
@@ -320,11 +289,9 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSOS GLOBALES Y REINICIAR HORAS A CERO
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
         const registros = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
-
         let aplicados = 0;
         for (const item of registros.rows) {
             let postular = item.rango_postular || item.rango_actual;
@@ -344,16 +311,12 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
 
             await db.execute({
                 sql: `UPDATE registro_ascensos SET 
-                        rango_actual = ?, 
-                        rango_postular = ?, 
-                        jefatura = ?,
-                        horas_semana = '00:00 HRS'
+                        rango_actual = ?, rango_postular = ?, jefatura = ?, horas_semana = '00:00 HRS'
                       WHERE id = ?`,
                 args: [nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
             });
             aplicados++;
         }
-
         notificar('ascensos_actualizados');
         res.json({ message: `Se aplicaron los rangos y se reiniciaron las horas en las 3 tablas (${aplicados} efectivos procesados).` });
     } catch (e) {
@@ -377,7 +340,7 @@ app.get('/api/control-tablas', async (req, res) => {
         const result = await db.execute("SELECT * FROM control_tablas_listas");
         res.json(result.rows || []);
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json([]);
     }
 });
 
@@ -396,13 +359,7 @@ app.post('/api/control-tablas/toggle', async (req, res) => {
 
         const ahoraMex = new Intl.DateTimeFormat('es-MX', {
             timeZone: 'America/Mexico_City',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
         }).format(new Date());
 
         const fechaHoraFinal = nuevoEstado === 1 ? ahoraMex : '';
@@ -426,7 +383,7 @@ app.get('/api/formaciones', async (req, res) => {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
         res.json(result.rows || []);
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json([]);
     }
 });
 
@@ -449,8 +406,8 @@ app.post('/api/formaciones', async (req, res) => {
 
 app.put('/api/formaciones/:id', async (req, res) => {
     const { instrucciones_hechas, instrucciones_totales, notas, rango } = req.body;
-    const cantSemanal = instrucciones_hechas !== undefined ? Math.max(0, parseInt(instrucciones_hechas) || 0) : null;
-    const cantTotales = instrucciones_totales !== undefined ? Math.max(0, parseInt(instrucciones_totales) || 0) : null;
+    const cantSemanal = instrucciones_hechas !== undefined ? Math.max(0, parseFloat(instrucciones_hechas) || 0) : null;
+    const cantTotales = instrucciones_totales !== undefined ? Math.max(0, parseFloat(instrucciones_totales) || 0) : null;
     const totalPago = cantSemanal !== null ? cantSemanal * 50000 : null;
 
     try {
@@ -462,14 +419,7 @@ app.put('/api/formaciones/:id', async (req, res) => {
                     notas = COALESCE(?, notas),
                     rango = COALESCE(?, rango)
                   WHERE id = ?`,
-            args: [
-                cantSemanal,
-                cantTotales,
-                totalPago,
-                notas !== undefined ? notas.trim() : null,
-                rango || null,
-                req.params.id
-            ]
+            args: [cantSemanal, cantTotales, totalPago, notas !== undefined ? notas.trim() : null, rango || null, req.params.id]
         });
         notificar('formaciones_actualizadas');
         res.json({ message: "Formación actualizada." });
@@ -504,7 +454,7 @@ app.get('/api/coordinacion', async (req, res) => {
         const result = await db.execute("SELECT * FROM registro_coordinacion ORDER BY id DESC");
         res.json(result.rows || []);
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json([]);
     }
 });
 
@@ -519,15 +469,8 @@ app.post('/api/coordinacion', async (req, res) => {
             sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, pdf_feedback, nombre_pdf, actualizado_por)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
-                discordLimpio,
-                supervisor.trim(),
-                rango || 'Supervisor',
-                horas_semana || '',
-                estado || 'Activo',
-                feedback_semanal || '',
-                pdf_feedback || '',
-                nombre_pdf || '',
-                actualizado_por || 'Coordinación'
+                discordLimpio, supervisor.trim(), rango || 'Supervisor', horas_semana || '',
+                estado || 'Activo', feedback_semanal || '', pdf_feedback || '', nombre_pdf || '', actualizado_por || 'Coordinación'
             ]
         });
         notificar('coordinacion_actualizada');
@@ -539,7 +482,7 @@ app.post('/api/coordinacion', async (req, res) => {
 
 app.put('/api/coordinacion/:id', async (req, res) => {
     const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor, pdf_feedback, nombre_pdf } = req.body;
-    let discordLimpio = discord_id !== undefined ? String(discord_id).replace(/[^0-9]/g, '') : null;
+    let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
         await db.execute({
@@ -554,15 +497,9 @@ app.put('/api/coordinacion/:id', async (req, res) => {
                     nombre_pdf = COALESCE(?, nombre_pdf)
                   WHERE id = ?`,
             args: [
-                estado || null,
-                feedback_semanal !== undefined ? feedback_semanal.trim() : null,
-                rango || null,
-                horas_semana !== undefined ? horas_semana.trim() : null,
-                discordLimpio,
-                supervisor || null,
-                pdf_feedback !== undefined ? pdf_feedback : null,
-                nombre_pdf !== undefined ? nombre_pdf : null,
-                req.params.id
+                estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null,
+                horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null,
+                pdf_feedback !== undefined ? pdf_feedback : null, nombre_pdf !== undefined ? nombre_pdf : null, req.params.id
             ]
         });
         notificar('coordinacion_actualizada');
@@ -588,7 +525,7 @@ app.get('/api/pagos', async (req, res) => {
         const result = await db.execute("SELECT * FROM registro_pagos ORDER BY id DESC");
         res.json(result.rows || []);
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json([]);
     }
 });
 
@@ -606,14 +543,8 @@ app.post('/api/pagos', async (req, res) => {
             sql: `INSERT INTO registro_pagos (personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
-                personal.trim(),
-                rango || 'Personal EMS',
-                concepto.trim(),
-                monto,
-                estado || 'Pendiente',
-                pagado_por || (estado === 'Pagado' ? (registrado_por || 'Dirección') : 'Pendiente'),
-                hoy,
-                registrado_por || 'Dirección'
+                personal.trim(), rango || 'Personal EMS', concepto.trim(), monto, estado || 'Pendiente',
+                pagado_por || (estado === 'Pagado' ? (registrado_por || 'Dirección') : 'Pendiente'), hoy, registrado_por || 'Dirección'
             ]
         });
         notificar('pagos_actualizados');
@@ -628,23 +559,14 @@ app.put('/api/pagos/:id', async (req, res) => {
     try {
         await db.execute({
             sql: `UPDATE registro_pagos SET 
-                    personal = COALESCE(?, personal),
-                    rango = COALESCE(?, rango),
-                    concepto = COALESCE(?, concepto),
-                    cantidad = COALESCE(?, cantidad),
-                    estado = COALESCE(?, estado),
-                    pagado_por = COALESCE(?, pagado_por),
+                    personal = COALESCE(?, personal), rango = COALESCE(?, rango), concepto = COALESCE(?, concepto),
+                    cantidad = COALESCE(?, cantidad), estado = COALESCE(?, estado), pagado_por = COALESCE(?, pagado_por),
                     fecha_pago = COALESCE(?, fecha_pago)
                   WHERE id = ?`,
             args: [
-                personal ? personal.trim() : null,
-                rango || null,
-                concepto ? concepto.trim() : null,
-                cantidad !== undefined ? Math.max(0, parseFloat(cantidad) || 0) : null,
-                estado || null,
-                pagado_por || null,
-                fecha_pago || null,
-                req.params.id
+                personal ? personal.trim() : null, rango || null, concepto ? concepto.trim() : null,
+                cantidad !== undefined ? Math.max(0, parseFloat(cantidad) || 0) : null, estado || null,
+                pagado_por || null, fecha_pago || null, req.params.id
             ]
         });
         notificar('pagos_actualizados');

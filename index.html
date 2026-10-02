@@ -2532,6 +2532,98 @@
             if (tieneAccesoTesoreria()) cargarPagos();
         });
 
+        // =========================================================================
+        // FUNCIONES FALTANTES DEL FRONTEND (PERFIL, RANGOS CUSTOM Y VISOR PDF)
+        // =========================================================================
+
+        // 1. Mostrar información del perfil actual
+        function abrirModalMiPerfil() {
+            if (!usuarioActual) return;
+            Swal.fire({
+                title: '👤 Mi Perfil Institucional',
+                html: `
+                    <div class="text-left space-y-3 mt-4 text-sm bg-black/40 p-5 rounded-2xl border border-zinc-800">
+                        <p><strong class="text-pink-400">Nombre (IC):</strong> <span class="text-white">${usuarioActual.nombre}</span></p>
+                        <p><strong class="text-pink-400">Usuario Sistema:</strong> <span class="text-zinc-300 font-mono-code">@${usuarioActual.usuario}</span></p>
+                        <p><strong class="text-pink-400">Discord ID:</strong> <span class="text-zinc-300 font-mono-code">${usuarioActual.discord_id || 'No registrado'}</span></p>
+                        <p><strong class="text-pink-400">Rango Asignado:</strong> <span class="text-white">${usuarioActual.rango}</span></p>
+                        <p><strong class="text-pink-400">Nivel de Permisos:</strong> <span class="text-emerald-300">${usuarioActual.rol === 'admin' ? 'Administración Global' : 'Personal Regular'}</span></p>
+                        <p><strong class="text-pink-400">Fecha Ingreso:</strong> <span class="text-zinc-300">${usuarioActual.fecha_ingreso || 'N/A'}</span></p>
+                    </div>
+                `,
+                customClass: { popup: 'swal-dark-ems' },
+                confirmButtonColor: '#ec4899',
+                confirmButtonText: 'Cerrar Panel'
+            });
+        }
+
+        // 2. Crear nuevos rangos dinámicamente desde el Panel Admin
+        function crearNuevoRangoPersonalizado() {
+            const nombre = document.getElementById('nuevoRangoNombre').value.trim();
+            const emoji = document.getElementById('nuevoRangoEmoji').value.trim();
+            const peso = parseInt(document.getElementById('nuevoRangoPeso').value);
+
+            if (!nombre || !emoji || isNaN(peso)) {
+                return Notif.error("Por favor llena todos los campos (Nombre, Emoji y Jerarquía).");
+            }
+
+            const nombreCompleto = nombre;
+            const labelCompleto = `『${emoji}』${nombre}`;
+
+            // Evitar duplicados
+            if (TODOS_LOS_RANGOS.some(r => r.id.toLowerCase() === nombreCompleto.toLowerCase())) {
+                return Notif.error("Este rango ya existe en el sistema.");
+            }
+
+            // Añadir al estado local del cliente
+            TODOS_LOS_RANGOS.push({ id: nombreCompleto, label: labelCompleto, escala: "personalizada" });
+            JERARQUIA_MENOR_A_MAYOR[nombreCompleto] = peso;
+            
+            if (!RANGOS_EMS.includes(nombreCompleto)) {
+                RANGOS_EMS.push(nombreCompleto);
+            }
+
+            // Limpiar inputs
+            document.getElementById('nuevoRangoNombre').value = '';
+            document.getElementById('nuevoRangoEmoji').value = '';
+            document.getElementById('nuevoRangoPeso').value = '';
+
+            // Refrescar selects e interfaz
+            cargarTablas();
+            if (!document.getElementById('seccion-admin').classList.contains('hidden')) {
+                cargarGestionAdmin();
+            }
+
+            Notif.exito(`El rango ${labelCompleto} fue agregado a los listados.`);
+        }
+
+        // 3. Abrir visor interno para los reportes en PDF (Coordinación)
+        function verPdfFeedback(pdfBase64, titulo) {
+            if (!pdfBase64 || pdfBase64 === 'null' || pdfBase64 === '') {
+                return Notif.error("Este supervisor no tiene un documento PDF válido adjunto.");
+            }
+            
+            const modal = document.getElementById('modalVisorPdf');
+            const iframe = document.getElementById('modalPdfIframe');
+            const tituloEl = document.getElementById('modalPdfTitulo');
+
+            tituloEl.innerText = titulo || 'Reporte de Feedback - Coordinación';
+            iframe.src = pdfBase64;
+            
+            // Mostrar modal
+            modal.classList.remove('hidden');
+        }
+
+        // 4. Cerrar el visor interno de PDF
+        function cerrarModalVisorPdf() {
+            const modal = document.getElementById('modalVisorPdf');
+            const iframe = document.getElementById('modalPdfIframe');
+            
+            // Limpiar la fuente por rendimiento y ocultar
+            iframe.src = '';
+            modal.classList.add('hidden');
+        }
+
     </script>
 </body>
 </html>
