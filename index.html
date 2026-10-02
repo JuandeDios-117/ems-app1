@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EMS Origen Roleplay - Sistema Central de Evaluación</title>
     <link id="dynamic-favicon" rel="icon" type="image/png" href="/logo.png">
+    
+    <!-- Tailwind CSS y SweetAlert2 para modales oscuros elegantes -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -157,19 +159,6 @@
             background: rgba(239, 68, 68, 0.12);
             color: #fca5a5;
             border: 1px solid rgba(239, 68, 68, 0.25);
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
         }
 
         /* Resaltado amarillo nítido en el Censo General si tiene pago pendiente en Tesorería */
@@ -563,7 +552,7 @@
                                 <th class="fluid-th text-left w-1/5">PERSONAL (IC)</th>
                                 <th class="fluid-th text-left w-40">DEPARTAMENTO</th>
                                 <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
-                                <th class="fluid-th text-left w-52">RANGO A POSTULAR</th>
+                                <th class="fluid-th text-left w-48">POSTULACIÓN</th>
                                 <th class="fluid-th text-center w-36">ESTADO</th>
                                 <th class="fluid-th text-center w-36">HORAS SEMANA</th>
                                 <th class="fluid-th text-center w-28">FALTAS</th>
@@ -579,7 +568,7 @@
             </div>
         </section>
 
-        <!-- PANEL ADMIN (CON BOTÓN GENERAL DE APLICAR ASCENSOS Y CREADOR DE RANGOS) -->
+        <!-- PANEL ADMIN (CON BOTÓN GENERAL DE APLICAR ASCENSOS PARA LAS 3 TABLAS Y GESTOR DE JERARQUÍAS) -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
@@ -638,7 +627,7 @@
 
     </div>
 
-    <!-- MODAL INTEGRADO PARA VISUALIZACIÓN DE PDF IN-APP -->
+    <!-- MODAL INTEGRADO PARA VISUALIZACIÓN DE PDF IN-APP (SIN DESCARGAR NI SALIR DE LA WEB) -->
     <div id="modalVisorPdf" class="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md hidden">
         <div class="bg-zinc-950 border border-pink-500/40 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
@@ -1774,7 +1763,7 @@
 
         async function ejecutarCorteSemanalFormaciones() {
             const confirmar = await Notif.confirmar(
-                "⚠️ ¿Realizar Corte Semanal de Nómina?",
+                "⚠️️ ¿Realizar Corte Semanal de Nómina?",
                 "Se reiniciarán a 0 las instrucciones semanales ($50,000 por instrucción), preservando el histórico total acumulado."
             );
             if (!confirmar) return;
@@ -2256,7 +2245,9 @@
             cargarCensoGeneral();
         }
 
+        // =========================================================================
         // CENSO GENERAL DE DIRECCIÓN (INFORMACIÓN 1:1 COMPLETA + RESALTADO AMARILLO)
+        // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
             if (campo === 'horas_semana') {
@@ -2453,6 +2444,7 @@
                     const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
                     const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
+                    // Resaltado amarillo prominente si tiene cobro pendiente en tesorería
                     const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
                     const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
 
