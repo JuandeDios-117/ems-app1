@@ -69,14 +69,14 @@
         .fluid-th {
             font-weight: 900;
             text-transform: uppercase;
-            padding: 12px 10px;
+            padding: 13px 10px;
             letter-spacing: 0.6px;
             font-size: 11px;
             border-bottom: 2px solid rgba(255,255,255,0.1);
         }
         .fluid-td {
             border-bottom: 1px solid #1f2333;
-            padding: 7px 8px;
+            padding: 8px 8px;
             background: #090b10;
         }
         .fluid-row:nth-child(even) .fluid-td {
@@ -88,7 +88,7 @@
             color: inherit;
             border: none;
             outline: none;
-            padding: 5px 6px;
+            padding: 6px 6px;
             border-radius: 6px;
             font-size: 13px;
         }
@@ -161,51 +161,17 @@
             backdrop-filter: blur(4px);
         }
 
-        .fila-en-prueba {
-            background: rgba(245, 158, 11, 0.05) !important;
-            box-shadow: inset 3px 0 0 #f59e0b;
-        }
-        .badge-prueba {
-            background: rgba(245, 158, 11, 0.18);
-            border: 1px solid rgba(245, 158, 11, 0.5);
-            color: #fde68a;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 2px 7px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
-            letter-spacing: 0.5px;
-        }
-        .badge-formador-censo {
-            background: rgba(245, 158, 11, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            color: #fde68a;
-            font-size: 9px;
-            font-weight: 900;
-            padding: 1px 5px;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        @media print {
-            body { background: #ffffff !important; color: #000000 !important; }
-            header, nav, #userInfo, .btn-origen, button { display: none !important; }
-            .card-ems { border: 1px solid #ccc !important; box-shadow: none !important; background: #fff !important; }
-            .fluid-th { background: #eee !important; color: #000 !important; border: 1px solid #ddd !important; }
-            .fluid-td { background: #fff !important; color: #000 !important; border: 1px solid #ddd !important; }
-            .cell-input { color: #000 !important; }
+        /* Resaltado amarillo sutil en Censo para miembros con pago pendiente */
+        .fila-pago-pendiente {
+            background: rgba(245, 158, 11, 0.14) !important;
+            border-left: 3px solid #f59e0b !important;
         }
     </style>
 </head>
 <body class="p-3 md:p-6 text-sm">
-    <div class="w-full max-w-[1780px] mx-auto space-y-4">
+    <div class="w-full max-w-[1850px] mx-auto space-y-4">
         
-        <!-- HEADER EMS ORIGEN -->
+        <!-- HEADER EMS ORIGEN CON RELOJES INTERNACIONALES (MX, AR, ES) -->
         <header class="card-ems p-4 md:p-5 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500">
             <div class="flex items-center gap-4">
                 <div class="w-16 h-16 rounded-full overflow-hidden bg-black/60 border-2 border-pink-500/50 flex items-center justify-center p-0.5 shadow-lg shadow-pink-500/20 shrink-0">
@@ -221,6 +187,26 @@
                     <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones, Supervisión y Tesorería</p>
                 </div>
             </div>
+
+            <!-- RELOJES INTERNACIONALES EN VIVO -->
+            <div class="flex flex-wrap items-center gap-2 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
+                <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
+                    <span>🇲🇽</span>
+                    <span class="text-zinc-400 font-bold">MX:</span>
+                    <span class="text-emerald-300 font-black" id="clockMX">--:--:--</span>
+                </div>
+                <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
+                    <span>🇦🇷</span>
+                    <span class="text-zinc-400 font-bold">AR:</span>
+                    <span class="text-sky-300 font-black" id="clockAR">--:--:--</span>
+                </div>
+                <div class="px-2.5 py-1 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-1.5">
+                    <span>🇪🇸</span>
+                    <span class="text-zinc-400 font-bold">ES:</span>
+                    <span class="text-amber-300 font-black" id="clockES">--:--:--</span>
+                </div>
+            </div>
+
             <div id="userInfo" class="text-xs text-zinc-400 flex items-center gap-3"></div>
         </header>
 
@@ -243,7 +229,7 @@
             <button onclick="location.reload()" class="btn-origen w-full py-2.5 rounded-xl uppercase text-xs">Comprobar Acceso</button>
         </div>
 
-        <!-- AUTH (CON DISCORD ID EN EL REGISTRO PARA DETECCIÓN AUTOMÁTICA DE RANGO) -->
+        <!-- AUTH -->
         <div id="seccion-auth" class="max-w-md mx-auto card-ems p-8 rounded-3xl space-y-4 mt-10 border border-pink-500/30">
             <div class="text-center space-y-1">
                 <div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-pink-500/50 shadow-md">
@@ -275,17 +261,15 @@
         <!-- SECCIONES DEPARTAMENTALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN + INGRESO DE ASPIRANTES CON AUTO-CONTADOR) -->
+        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN) -->
         <section id="seccion-formaciones" class="hidden space-y-5">
-            
-            <!-- PANEL: INGRESO DE ASPIRANTES (SUMA +1 AL CONTADOR DEL FORMADOR QUE LO INGRESA) -->
             <div class="card-ems p-6 rounded-3xl space-y-4 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-3 border-b border-zinc-800 pb-3">
                     <div>
                         <h2 class="text-xl font-black text-white uppercase flex items-center gap-2">
                             🎓 Ingreso de Aspirantes / Nuevos Celadores
                         </h2>
-                        <p class="text-xs text-zinc-400">Al ingresar un nuevo aspirante, se integrará automáticamente a la tabla de Enfermería como Celador en pruebas y <strong class="text-emerald-400">se te sumará +1 instrucción realizada automáticamente</strong>.</p>
+                        <p class="text-xs text-zinc-400">Al registrar un aspirante, se integrará a la tabla de Enfermería como Celador en pruebas y <strong class="text-emerald-400">se te sumará +1 instrucción realizada</strong> automáticamente.</p>
                     </div>
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
                         Suma +1 Automático al Formador
@@ -315,17 +299,17 @@
                 </div>
             </div>
 
-            <!-- PANEL: LIQUIDACIÓN DE INSTRUCTORES -->
+            <!-- TABLA DE FORMACIONES CON INSTRUCCIONES SEMANALES Y TOTALES -->
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-amber-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">📚 Jefatura de Formaciones · Nómina de Instructores</h2>
-                        <p class="text-xs text-zinc-400">Registro de capacitadores y liquidación en tiempo real ($50,000 por instrucción).</p>
+                        <p class="text-xs text-zinc-400">Instrucciones semanales ($50,000 c/u) y registro acumulado de instrucciones totales modificables.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Instrucción</span>
                         <button onclick="ejecutarCorteSemanalFormaciones()" class="bg-rose-600 hover:bg-rose-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-rose-600/30">
-                            🔄 Corte Semanal ($0)
+                            🔄 Corte Semanal ($0 Semanal)
                         </button>
                     </div>
                 </div>
@@ -351,8 +335,9 @@
                                 <th class="fluid-th text-center w-12">#</th>
                                 <th class="fluid-th text-left w-1/4">INSTRUCTOR</th>
                                 <th class="fluid-th text-left w-1/5">RANGO</th>
-                                <th class="fluid-th text-center w-1/6">INSTRUCCIONES REALIZADAS</th>
-                                <th class="fluid-th text-center w-1/6">TOTAL A LIQUIDAR</th>
+                                <th class="fluid-th text-center w-36">INST. SEMANALES</th>
+                                <th class="fluid-th text-center w-36">INST. TOTALES</th>
+                                <th class="fluid-th text-center w-40">TOTAL A LIQUIDAR</th>
                                 <th class="fluid-th text-left w-1/4">NOTAS / CAPACITACIONES</th>
                                 <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
@@ -371,12 +356,7 @@
                         <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
                         <p class="text-xs text-zinc-400">Seguimiento de actividad, horas de guardia, ausencias temporales, excedencias y reportes PDF de feedback para Dirección.</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="imprimirReporteCoordinacion()" class="bg-zinc-800 hover:bg-zinc-700 text-pink-300 border border-pink-500/40 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
-                            📄 Exportar Reporte PDF
-                        </button>
-                        <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
-                    </div>
+                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
@@ -433,7 +413,7 @@
             </div>
         </section>
 
-        <!-- SECCIÓN TESORERÍA & PAGOS -->
+        <!-- SECCIÓN TESORERÍA & PAGOS (SOLO SUBDIRECCIÓN Y DIRECCIÓN CON BUSCADOR) -->
         <section id="seccion-pagos" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -441,7 +421,7 @@
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
                             💰 TESORERÍA DEPARTAMENTAL · REGISTRO DE PAGOS
                         </h2>
-                        <p class="text-xs text-zinc-400">Control centralizado y transparente de bonos semanales, incentivos, premios y liquidaciones.</p>
+                        <p class="text-xs text-zinc-400">Control confidencial exclusivo para Subdirección y Dirección General.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="ejecutarCorteSemanalPagos()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
@@ -472,6 +452,12 @@
                         </div>
                         <span class="text-2xl">⏳</span>
                     </div>
+                </div>
+
+                <!-- BUSCADOR EN VIVO DE PAGOS -->
+                <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3">
+                    <span class="text-zinc-500 text-base">🔍</span>
+                    <input type="text" id="filtroBuscadorPagos" oninput="filtrarTablaPagos()" placeholder="Buscar por nombre de personal o concepto de pago..." class="bg-transparent w-full text-white text-xs outline-none">
                 </div>
 
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
@@ -524,7 +510,7 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL (EDITABLE CON EMOJIS DE DOCTOR Y DISTINTIVO DE FORMADOR) -->
+        <!-- CENSO GENERAL (EDITABLE CON EMOJIS DE DOCTOR Y RESALTADO DE PAGO PENDIENTE) -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -532,7 +518,7 @@
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
                             🩺 CENSO GENERAL DEL PERSONAL · PANEL DE DIRECCIÓN
                         </h2>
-                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica. Los instructores cuentan con su distintivo de formador.</p>
+                        <p class="text-xs text-zinc-400">Listado consolidado ordenado de mayor a menor jerarquía médica. Los miembros con pagos pendientes en tesorería se resaltan en amarillo.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
@@ -590,6 +576,25 @@
         const socket = io();
         let usuarioActual = null;
         let esRegistro = false;
+        let cachePagosGlobal = [];
+
+        // RELOJES INTERNACIONALES EN VIVO (MX, AR, ES)
+        function actualizarRelojes() {
+            const ahora = new Date();
+            const fmtMX = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+            const fmtAR = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+            const fmtES = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+
+            const elMX = document.getElementById('clockMX');
+            const elAR = document.getElementById('clockAR');
+            const elES = document.getElementById('clockES');
+
+            if (elMX) elMX.innerText = fmtMX;
+            if (elAR) elAR.innerText = fmtAR;
+            if (elES) elES.innerText = fmtES;
+        }
+        setInterval(actualizarRelojes, 1000);
+        actualizarRelojes();
 
         function aplicarFaviconCircular() {
             const img = new Image();
@@ -658,6 +663,7 @@
             { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
 
+        // CORRECCIÓN: "Jefe de Cirugía" en lugar de "Jefa de Cirugía" para Formaciones
         const TODOS_LOS_RANGOS = [
             ...RANGOS_EVALUACION,
             { id: "Formador", label: "📚 Formador", escala: "mando" },
@@ -666,7 +672,7 @@
             { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" },
             { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" },
             { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" },
-            { id: "Jefa de Cirugía", label: "🥼✂️ Jefa de Cirugía", escala: "jefatura" },
+            { id: "Jefe de Cirugía", label: "🥼✂️ Jefe de Cirugía", escala: "jefatura" },
             { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" },
             { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" }
         ];
@@ -690,7 +696,7 @@
                 colorBorde: 'border-purple-500',
                 colorHeader: 'bg-purple-950/40 text-purple-200',
                 colorTexto: 'text-purple-400',
-                rangosPermitidos: ["Jefa de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador"]
+                rangosPermitidos: ["Jefa de Cirugía", "Jefe de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador"]
             },
             { 
                 id: 'medicina', 
@@ -740,7 +746,7 @@
                 return `<span class="inline-flex items-center gap-1 bg-rose-500/20 text-rose-300 border border-rose-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🩺🏢 ${rango}</span>`;
             }
             if (r.includes('cirugía') || r.includes('cirugia')) {
-                return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼✂️ ${rango}</span>`;
+                return `<span class="inline-flex items-center gap-1 bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼✂️️ ${rango}</span>`;
             }
             if (r.includes('medicina')) {
                 return `<span class="inline-flex items-center gap-1 bg-blue-600/25 text-blue-200 border border-blue-500/50 px-2.5 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider">🥼💊 ${rango}</span>`;
@@ -768,7 +774,7 @@
             if (r.includes('estudiante')) return `<span class="text-blue-300 font-bold">📑 『📗』 ${rango}</span>`;
             if (r.includes('enfermero/a especialista')) return `<span class="text-emerald-300 font-bold">💉 『🧵』 ${rango}</span>`;
             if (r.includes('enfermero/a general') || r === 'enfermero') return `<span class="text-teal-300 font-bold">💉 『💉』 ${rango}</span>`;
-            if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️️ 『🧴』 ${rango}</span>`;
+            if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️ 『🧴』 ${rango}</span>`;
             if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡️ 『👀』 ${rango}</span>`;
 
             return `<span class="text-zinc-300 font-semibold">${rango}</span>`;
@@ -776,6 +782,11 @@
 
         function esDirector() {
             return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora');
+        }
+
+        // CONTROL DE ACCESO ESTRICTO A TESORERÍA (SUBDIRECCIÓN PARA ARRIBA)
+        function tieneAccesoTesoreria() {
+            return usuarioActual && (usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora' || usuarioActual.rol === 'admin');
         }
 
         function parsearHorasNumericas(str) {
@@ -855,6 +866,7 @@
             `).join('');
         }
 
+        // RENDERIZADO LIMPIO DE FILA (INSIGNIAS DISCRETAS SIN AMONTONAR)
         function renderizarFilaEvaluacion(r, index, jefaturaId, colorTexto) {
             const esEnfermeria = jefaturaId === 'enfermeria';
             const opcionesPostular = generarOpcionesPostular(r.rango_actual, r.examen, jefaturaId, r.rango_postular);
@@ -872,12 +884,10 @@
             if (estadoActual === 'Baja') claseEstadoBadge = 'badge-estado-baja';
 
             const maxFecha = new Date().toISOString().split('T')[0];
-            const hayAscensoPropuesto = r.rango_postular && r.rango_postular !== r.rango_actual;
             const prueba = calcularEstadoPrueba(r.fecha_ingreso);
-            const claseFilaPrueba = prueba.enPrueba ? 'fila-en-prueba' : '';
 
             return `
-                <tr class="fluid-row hover:bg-zinc-900/60 transition ${claseFilaPrueba}">
+                <tr class="fluid-row hover:bg-zinc-900/60 transition">
                     <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                     <td class="fluid-td font-mono-code text-zinc-400">
                         <input type="text" value="${r.discord_id || 'N/A'}" 
@@ -886,11 +896,11 @@
                                class="cell-input font-mono-code text-xs">
                     </td>
                     <td class="fluid-td font-semibold text-white">
-                        <div class="flex items-center gap-1.5 flex-wrap">
+                        <div class="flex items-center gap-1.5">
                             <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm flex-1">
                             ${prueba.enPrueba ? `
-                                <span class="badge-prueba shrink-0" title="Aspirante en periodo de prueba de 4 días">
-                                    ⏳ PRUEBA (Día ${prueba.diasPasados}/4 - ${prueba.diasRestantes}d rest.)
+                                <span class="text-amber-400 text-xs shrink-0 cursor-help" title="Aspirante en prueba: Día ${prueba.diasPasados}/4 (Quedan ${prueba.diasRestantes} días)">
+                                    ⏳ D${prueba.diasPasados}
                                 </span>
                             ` : ''}
                         </div>
@@ -901,16 +911,9 @@
                         </select>
                     </td>
                     <td class="fluid-td">
-                        <div class="flex items-center gap-1">
-                            <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${jefaturaId}')" class="cell-input font-bold text-pink-300">
-                                ${opcionesPostular}
-                            </select>
-                            ${hayAscensoPropuesto ? `
-                                <button onclick="aplicarAscensoOficial(${r.id})" title="Aplicar ascenso y mover de tabla" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] px-2 py-1 rounded-md shrink-0 shadow-md">
-                                    ⚡ Aplicar
-                                </button>
-                            ` : ''}
-                        </div>
+                        <select onchange="editarCampo(${r.id}, 'rango_postular', this.value, '${jefaturaId}')" class="cell-input font-bold text-pink-300">
+                            ${opcionesPostular}
+                        </select>
                     </td>
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'estado', this.value, '${jefaturaId}')" 
@@ -939,8 +942,8 @@
                     <td class="fluid-td text-center">
                         <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
                             <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
-                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
+                            <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''} class="bg-amber-200 text-amber-950 font-black">PENDIENTE</option>
+                            <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''} class="bg-emerald-400 text-emerald-950 font-black">REALIZADO</option>
                         </select>
                     </td>
                     ` : ''}
@@ -960,6 +963,7 @@
             `;
         }
 
+        // INICIALIZADOR CON BOTÓN "APLICAR TODOS LOS ASCENSOS" Y "TABLA LISTA (HORA MÉXICO)"
         function inicializarEstructuraHtml() {
             const container = document.getElementById('contenedor-secciones');
             const hoy = new Date().toISOString().split('T')[0];
@@ -974,25 +978,21 @@
                         <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white uppercase tracking-wider">${j.titulo}</h2>
-                                <p class="text-xs text-zinc-400 mt-0.5">Control jerárquico ordenado de menor a mayor rango, horas y fecha de ingreso.</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span id="badgeEstadoTabla_${j.id}" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
+                                        🔴 Tabla No Lista / En Revisión
+                                    </span>
+                                </div>
                             </div>
                             
-                            <div class="flex items-center gap-3 bg-black/60 p-2 px-3 rounded-2xl border border-zinc-800">
-                                <span class="status-pill text-rose-300 border border-rose-500/40">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                    <span>Alerta de Horas</span>
-                                    <span class="bg-rose-950/80 px-2 py-0.5 rounded-md text-xs font-mono-code font-black text-white" id="countRojo_${j.id}">0</span>
-                                </span>
-                                <span class="status-pill text-amber-300 border border-amber-500/40">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                                    <span>En Progreso</span>
-                                    <span class="bg-amber-950/80 px-2 py-0.5 rounded-md text-xs font-mono-code font-black text-white" id="countAmarillo_${j.id}">0</span>
-                                </span>
-                                <span class="status-pill text-emerald-300 border border-emerald-500/40">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                                    <span>Meta Cumplida</span>
-                                    <span class="bg-emerald-950/80 px-2 py-0.5 rounded-md text-xs font-mono-code font-black text-white" id="countVerde_${j.id}">0</span>
-                                </span>
+                            <!-- BOTÓN TABLA LISTA (HORA MX) Y APLICAR TODOS LOS ASCENSOS -->
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button onclick="toggleTablaLista('${j.id}')" id="btnTablaLista_${j.id}" class="bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
+                                    ✅ Marcar Tabla Lista
+                                </button>
+                                <button onclick="aplicarTodosLosAscensos('${j.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
+                                    ⚡ Aplicar Todos los Ascensos (Reinicia Horas a 0)
+                                </button>
                             </div>
                         </div>
                         
@@ -1123,6 +1123,84 @@
 
         inicializarEstructuraHtml();
 
+        // ACCIÓN: APLICAR TODOS LOS ASCENSOS Y REINICIAR HORAS A 0
+        async function aplicarTodosLosAscensos(jefaturaId) {
+            const confirmar = confirm(`⚡ ¿Confirmas aplicar oficialmente TODOS los ascensos propuestos en esta escala?\n\n- Los rangos a postular pasarán a ser sus nuevos rangos actuales.\n- Si cambian de escala, se moverán a su respectiva tabla.\n- TODAS LAS HORAS se reiniciarán a 00:00 HRS para el nuevo ciclo.`);
+            if (!confirmar) return;
+
+            try {
+                const res = await fetch('/api/ascensos/aplicar-todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jefatura: jefaturaId })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("✅ " + data.message);
+                    await cargarTablas();
+                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                        cargarCensoGeneral();
+                    }
+                } else {
+                    alert("Error: " + (data.error || "No se pudo procesar."));
+                }
+            } catch (e) {
+                alert("Error de conexión al aplicar los ascensos.");
+            }
+        }
+
+        // CONTROL DE "TABLA LISTA" CON HORA DE MÉXICO
+        async function toggleTablaLista(jefaturaId) {
+            try {
+                const res = await fetch('/api/control-tablas/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jefatura: jefaturaId,
+                        marcado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
+                    })
+                });
+                if (res.ok) {
+                    await cargarEstadosTablasListas();
+                }
+            } catch (e) {
+                alert("Error al actualizar estado de la tabla.");
+            }
+        }
+
+        async function cargarEstadosTablasListas() {
+            try {
+                const res = await fetch('/api/control-tablas');
+                const data = await res.json();
+
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const badge = document.getElementById(`badgeEstadoTabla_${item.jefatura}`);
+                        const btn = document.getElementById(`btnTablaLista_${item.jefatura}`);
+                        if (!badge) return;
+
+                        if (item.esta_lista === 1) {
+                            badge.className = "px-2.5 py-0.5 rounded-lg text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40";
+                            badge.innerText = `🟢 Lista el ${item.fecha_hora_mexico} (Hora México) por ${item.marcado_por}`;
+                            if (btn) {
+                                btn.className = "bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md";
+                                btn.innerText = "🔄 Desmarcar (Marcar En Revisión)";
+                            }
+                        } else {
+                            badge.className = "px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40";
+                            badge.innerText = "🔴 Tabla No Lista / En Revisión";
+                            if (btn) {
+                                btn.className = "bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md";
+                                btn.innerText = "✅ Marcar Tabla Lista";
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Error al cargar estados de tablas:", e);
+            }
+        }
+
         async function ingresarAspiranteCelador() {
             const discord_raw = document.getElementById('aspDiscord').value.trim();
             const discord_id = discord_raw.replace(/[^0-9]/g, '');
@@ -1147,7 +1225,7 @@
 
                 const data = await res.json();
                 if (res.ok) {
-                    alert(`✅ ¡Aspirante ingresado con éxito! Se integró a ${nombre} como Celador/a en la Escala Básica con 4 días de prueba y se te sumó +1 instrucción realizada.`);
+                    alert(`✅ ¡Aspirante ingresado con éxito! Se integró a ${nombre} como Celador/a en la Escala Básica en pruebas y se te sumó +1 instrucción.`);
                     document.getElementById('aspDiscord').value = '';
                     document.getElementById('aspNombre').value = '';
                     await cargarTablas();
@@ -1236,7 +1314,6 @@
             let pestanaAInicializar = null;
             let navBotonesHTML = '';
 
-            // SI ES FORMADOR SOLO TIENE ACCESO A FORMACIONES
             if (esSoloFormador) {
                 navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
                 pestanaAInicializar = 'formaciones';
@@ -1261,8 +1338,8 @@
                     if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
                 }
 
-                const tieneAccesoPagos = esAdmin || usuarioActual.rango.includes('Jefe') || usuarioActual.rango.includes('Jefa') || usuarioActual.rango === 'Coordinador';
-                if (tieneAccesoPagos) {
+                // TESORERÍA EXCLUSIVA: SUBDIRECCIÓN Y DIRECCIÓN
+                if (tieneAccesoTesoreria()) {
                     navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
                     if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
                 }
@@ -1278,7 +1355,8 @@
             cargarTablas();
             cargarFormaciones();
             cargarCoordinacion();
-            cargarPagos();
+            cargarEstadosTablasListas();
+            if (tieneAccesoTesoreria()) cargarPagos();
             if (pestanaAInicializar) cambiarPestana(pestanaAInicializar);
 
             socket.emit('user_connected', usuarioActual);
@@ -1299,7 +1377,7 @@
             const btnActivo = document.getElementById(`tab-${pestana}`);
             if (btnActivo) btnActivo.className = 'tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-origen text-white';
 
-            if (pestana === 'pagos') cargarPagos();
+            if (pestana === 'pagos' && tieneAccesoTesoreria()) cargarPagos();
             if (pestana === 'censo') cargarCensoGeneral();
             if (pestana === 'admin') cargarGestionAdmin();
         }
@@ -1365,26 +1443,6 @@
             }
         }
 
-        async function aplicarAscensoOficial(id) {
-            if (!confirm("⚡ ¿Confirmas aplicar oficialmente este ascenso y transferir al miembro a su tabla correspondiente?")) return;
-
-            try {
-                const res = await fetch(`/api/ascensos/${id}/aplicar`, { method: 'POST' });
-                const data = await res.json();
-                if (res.ok) {
-                    alert("✅ " + data.message);
-                    await cargarTablas();
-                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                        cargarCensoGeneral();
-                    }
-                } else {
-                    alert("Error: " + (data.error || "No se pudo aplicar el ascenso."));
-                }
-            } catch (e) {
-                alert("Error de conexión al aplicar ascenso.");
-            }
-        }
-
         async function cargarTablas() {
             try {
                 const res = await fetch('/api/ascensos');
@@ -1399,19 +1457,6 @@
                         if (pesoA !== pesoB) return pesoA - pesoB;
                         return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                     });
-
-                    let cRojo = 0, cAmarillo = 0, cVerde = 0;
-
-                    filtrados.forEach(r => {
-                        const h = parsearHorasNumericas(r.horas_semana);
-                        if (h < 6) cRojo++;
-                        else if (h < 8) cAmarillo++;
-                        else cVerde++;
-                    });
-
-                    document.getElementById(`countRojo_${j.id}`).innerText = cRojo;
-                    document.getElementById(`countAmarillo_${j.id}`).innerText = cAmarillo;
-                    document.getElementById(`countVerde_${j.id}`).innerText = cVerde;
 
                     if (j.id === 'enfermeria') {
                         const basica = filtrados.filter(x => x.rango_actual === 'Celador/a' || x.rango_actual === 'Auxiliar de Enfermería');
@@ -1459,7 +1504,7 @@
         }
 
         // =========================================================================
-        // FORMACIONES ($50,000 POR INSTRUCCIÓN)
+        // FORMACIONES ($50,000 POR INSTRUCCIÓN + TOTALES EDITABLES)
         // =========================================================================
         async function guardarNuevoInstructor() {
             const instructor = document.getElementById('formInstructor').value.trim();
@@ -1497,17 +1542,17 @@
             if (targetCell) {
                 targetCell.innerText = `$${total.toLocaleString()}`;
             }
-            actualizarFormacionBackendDebounced(id, cant);
+            actualizarFormacionBackendDebounced(id, { instrucciones_hechas: cant });
         }
 
         let debounceTimers = {};
-        function actualizarFormacionBackendDebounced(id, cant) {
+        function actualizarFormacionBackendDebounced(id, payload) {
             clearTimeout(debounceTimers[id]);
             debounceTimers[id] = setTimeout(async () => {
                 await fetch(`/api/formaciones/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ instrucciones_hechas: cant })
+                    body: JSON.stringify(payload)
                 });
             }, 300);
         }
@@ -1526,13 +1571,13 @@
         }
 
         async function ejecutarCorteSemanalFormaciones() {
-            const confirmar = confirm("⚠️ ¿Confirmas realizar el CORTE SEMANAL de nómina?\n\nEsta acción reiniciará a 0 todas las instrucciones y el total a pagar de cada instructor ($50,000 por instrucción).");
+            const confirmar = confirm("⚠️ ¿Confirmas realizar el CORTE SEMANAL de nómina?\n\nEsta acción reiniciará a 0 las instrucciones semanales ($50,000 por instrucción), pero preservará el histórico acumulado de instrucciones totales.");
             if (!confirmar) return;
 
             try {
                 const res = await fetch('/api/formaciones/corte-semanal', { method: 'POST' });
                 if (res.ok) {
-                    alert("✅ Corte semanal completado exitosamente. Cuentas reiniciadas a $0.");
+                    alert("✅ Corte semanal completado exitosamente. Cuentas semanales reiniciadas a $0.");
                     await cargarFormaciones();
                 }
             } catch (e) {
@@ -1547,7 +1592,7 @@
                 const cuerpo = document.getElementById('cuerpoTablaFormaciones');
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-zinc-500 italic text-sm">No hay instructores registrados.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-zinc-500 italic text-sm">No hay instructores registrados.</td></tr>`;
                     return;
                 }
 
@@ -1561,9 +1606,15 @@
                             </select>
                         </td>
                         <td class="fluid-td text-center">
-                            <input type="number" min="0" value="${f.instrucciones_hechas}" 
+                            <input type="number" min="0" value="${f.instrucciones_hechas || 0}" 
                                    oninput="calcularPagoInstantaneo(${f.id}, this)"
                                    class="cell-input text-center font-mono-code font-black text-yellow-400 text-sm bg-black/40 border border-zinc-800 rounded-lg py-1">
+                        </td>
+                        <td class="fluid-td text-center">
+                            <input type="number" min="0" value="${f.instrucciones_totales || 0}" 
+                                   onblur="editarFormacionEnTabla(${f.id}, 'instrucciones_totales', this.value)"
+                                   class="cell-input text-center font-mono-code font-black text-sky-400 text-sm bg-black/40 border border-zinc-800 rounded-lg py-1"
+                                   title="Histórico total de formaciones (editable)">
                         </td>
                         <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-base" id="totalPagoForm_${f.id}">
                             $${(f.total_pago || 0).toLocaleString()}
@@ -1601,13 +1652,8 @@
             const file = inputElement.files[0];
             if (!file) return;
 
-            if (file.type !== 'application/pdf') {
-                return alert("Solo puedes adjuntar archivos en formato PDF.");
-            }
-
-            if (file.size > 15 * 1024 * 1024) {
-                return alert("El archivo PDF supera el tamaño máximo permitido de 15MB.");
-            }
+            if (file.type !== 'application/pdf') return alert("Solo puedes adjuntar archivos en formato PDF.");
+            if (file.size > 15 * 1024 * 1024) return alert("El archivo PDF supera el tamaño máximo permitido de 15MB.");
 
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -1616,12 +1662,8 @@
                     const res = await fetch(`/api/coordinacion/${id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            pdf_feedback: base64Data,
-                            nombre_pdf: file.name
-                        })
+                        body: JSON.stringify({ pdf_feedback: base64Data, nombre_pdf: file.name })
                     });
-
                     if (res.ok) {
                         alert(`📄 Documento PDF "${file.name}" cargado exitosamente.`);
                         cargarCoordinacion();
@@ -1649,10 +1691,6 @@
                 body: JSON.stringify({ pdf_feedback: '', nombre_pdf: '' })
             });
             cargarCoordinacion();
-        }
-
-        function imprimirReporteCoordinacion() {
-            window.print();
         }
 
         async function guardarSupervisorCoordinacion() {
@@ -1776,7 +1814,7 @@
 
                                     ${tienePdf ? `
                                         <button onclick="verPdfFeedback('${c.pdf_feedback}', '${c.nombre_pdf || 'reporte.pdf'}')" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-black flex items-center gap-1 transition">
-                                            📄 Ver PDF (${c.nombre_pdf || 'Adjunto'})
+                                            📄 Ver PDF
                                         </button>
                                         <button onclick="borrarPdfFeedback(${c.id})" title="Eliminar PDF" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold px-1">
                                             ✕
@@ -1807,7 +1845,7 @@
         }
 
         // ==========================================
-        // TESORERÍA & PAGOS
+        // TESORERÍA & PAGOS (CON BUSCADOR EN VIVO)
         // ==========================================
         async function guardarRegistroPago() {
             const personal = document.getElementById('pagoPersonal').value.trim();
@@ -1842,6 +1880,9 @@
                     document.getElementById('pagoConcepto').value = '';
                     document.getElementById('pagoCantidad').value = '';
                     await cargarPagos();
+                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                        cargarCensoGeneral();
+                    }
                 } else {
                     const data = await res.json();
                     alert("Error: " + (data.error || "No se pudo registrar el pago."));
@@ -1867,6 +1908,9 @@
                     body: JSON.stringify(payload)
                 });
                 await cargarPagos();
+                if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                    cargarCensoGeneral();
+                }
             } catch (e) {
                 console.error("Error al actualizar pago:", e);
             }
@@ -1881,31 +1925,88 @@
                 if (res.ok) {
                     alert("✅ Corte semanal de tesorería procesado con éxito.");
                     await cargarPagos();
+                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                        cargarCensoGeneral();
+                    }
                 }
             } catch (e) {
                 alert("Error al procesar corte de tesorería.");
             }
         }
 
+        function filtrarTablaPagos() {
+            const q = (document.getElementById('filtroBuscadorPagos').value || '').toLowerCase().trim();
+            const cuerpo = document.getElementById('cuerpoTablaPagos');
+
+            const filtrados = cachePagosGlobal.filter(p => 
+                (p.personal || '').toLowerCase().includes(q) ||
+                (p.concepto || '').toLowerCase().includes(q)
+            );
+
+            renderizarPagosFiltrados(filtrados);
+        }
+
+        function renderizarPagosFiltrados(lista) {
+            const cuerpo = document.getElementById('cuerpoTablaPagos');
+            if (!lista || lista.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No se encontraron pagos con ese criterio de búsqueda.</td></tr>`;
+                return;
+            }
+
+            cuerpo.innerHTML = lista.map((p, index) => {
+                const esPagado = p.estado === 'Pagado';
+                const badgeEstado = esPagado 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+
+                return `
+                    <tr class="fluid-row hover:bg-zinc-900/40 transition">
+                        <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                        <td class="fluid-td font-bold text-white text-sm">
+                            <input type="text" value="${p.personal}" onblur="editarPagoEnTabla(${p.id}, 'personal', this.value)" class="cell-input font-bold text-white">
+                        </td>
+                        <td class="fluid-td">
+                            <select onchange="editarPagoEnTabla(${p.id}, 'rango', this.value)" class="cell-input text-pink-300 font-semibold">
+                                ${TODOS_LOS_RANGOS.map(r => `<option value="${r.id}" ${r.id === p.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="fluid-td">
+                            <input type="text" value="${p.concepto}" onblur="editarPagoEnTabla(${p.id}, 'concepto', this.value)" class="cell-input text-zinc-200">
+                        </td>
+                        <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-sm">
+                            <input type="number" value="${p.cantidad}" onblur="editarPagoEnTabla(${p.id}, 'cantidad', this.value)" class="cell-input text-center font-mono-code font-black text-emerald-400">
+                        </td>
+                        <td class="fluid-td text-center">
+                            <select onchange="editarPagoEnTabla(${p.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
+                                <option value="Pendiente" ${!esPagado ? 'selected' : ''}>⏳ Pendiente</option>
+                                <option value="Pagado" ${esPagado ? 'selected' : ''}>✅ Pagado</option>
+                            </select>
+                        </td>
+                        <td class="fluid-td text-zinc-300 text-xs font-semibold">
+                            <input type="text" value="${p.pagado_por || 'Pendiente'}" onblur="editarPagoEnTabla(${p.id}, 'pagado_por', this.value)" class="cell-input text-zinc-300 text-xs">
+                        </td>
+                        <td class="fluid-td text-center font-mono-code text-xs text-zinc-400">
+                            <input type="date" value="${p.fecha_pago || ''}" onchange="editarPagoEnTabla(${p.id}, 'fecha_pago', this.value)" class="cell-input text-center font-mono-code text-xs text-zinc-400">
+                        </td>
+                        <td class="fluid-td text-right">
+                            <button onclick="eliminarPago(${p.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         async function cargarPagos() {
             try {
                 const res = await fetch('/api/pagos');
                 const data = await res.json();
-                const cuerpo = document.getElementById('cuerpoTablaPagos');
+                cachePagosGlobal = Array.isArray(data) ? data : [];
 
                 let totalGeneral = 0;
                 let totalLiquidado = 0;
                 let totalPendiente = 0;
 
-                if (!Array.isArray(data) || data.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No hay registros de pagos ni bonos asentados.</td></tr>`;
-                    document.getElementById('totalPagosRegistrados').innerText = "$0";
-                    document.getElementById('totalPagosLiquidados').innerText = "$0";
-                    document.getElementById('totalPagosPendientes').innerText = "$0";
-                    return;
-                }
-
-                data.forEach(p => {
+                cachePagosGlobal.forEach(p => {
                     const cant = parseFloat(p.cantidad) || 0;
                     totalGeneral += cant;
                     if (p.estado === 'Pagado') totalLiquidado += cant;
@@ -1916,47 +2017,7 @@
                 document.getElementById('totalPagosLiquidados').innerText = `$${totalLiquidado.toLocaleString()}`;
                 document.getElementById('totalPagosPendientes').innerText = `$${totalPendiente.toLocaleString()}`;
 
-                cuerpo.innerHTML = data.map((p, index) => {
-                    const esPagado = p.estado === 'Pagado';
-                    const badgeEstado = esPagado 
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
-
-                    return `
-                        <tr class="fluid-row hover:bg-zinc-900/40 transition">
-                            <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                            <td class="fluid-td font-bold text-white text-sm">
-                                <input type="text" value="${p.personal}" onblur="editarPagoEnTabla(${p.id}, 'personal', this.value)" class="cell-input font-bold text-white">
-                            </td>
-                            <td class="fluid-td">
-                                <select onchange="editarPagoEnTabla(${p.id}, 'rango', this.value)" class="cell-input text-pink-300 font-semibold">
-                                    ${TODOS_LOS_RANGOS.map(r => `<option value="${r.id}" ${r.id === p.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
-                                </select>
-                            </td>
-                            <td class="fluid-td">
-                                <input type="text" value="${p.concepto}" onblur="editarPagoEnTabla(${p.id}, 'concepto', this.value)" class="cell-input text-zinc-200">
-                            </td>
-                            <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-sm">
-                                <input type="number" value="${p.cantidad}" onblur="editarPagoEnTabla(${p.id}, 'cantidad', this.value)" class="cell-input text-center font-mono-code font-black text-emerald-400">
-                            </td>
-                            <td class="fluid-td text-center">
-                                <select onchange="editarPagoEnTabla(${p.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
-                                    <option value="Pendiente" ${!esPagado ? 'selected' : ''}>⏳ Pendiente</option>
-                                    <option value="Pagado" ${esPagado ? 'selected' : ''}>✅ Pagado</option>
-                                </select>
-                            </td>
-                            <td class="fluid-td text-zinc-300 text-xs font-semibold">
-                                <input type="text" value="${p.pagado_por || 'Pendiente'}" onblur="editarPagoEnTabla(${p.id}, 'pagado_por', this.value)" class="cell-input text-zinc-300 text-xs">
-                            </td>
-                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-400">
-                                <input type="date" value="${p.fecha_pago || ''}" onchange="editarPagoEnTabla(${p.id}, 'fecha_pago', this.value)" class="cell-input text-center font-mono-code text-xs text-zinc-400">
-                            </td>
-                            <td class="fluid-td text-right">
-                                <button onclick="eliminarPago(${p.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                filtrarTablaPagos();
             } catch (e) {
                 console.error("Error al cargar pagos:", e);
             }
@@ -1966,10 +2027,13 @@
             if (!confirm("¿Deseas eliminar este registro de tesorería?")) return;
             await fetch(`/api/pagos/${id}`, { method: 'DELETE' });
             cargarPagos();
+            if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
+                cargarCensoGeneral();
+            }
         }
 
         // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (CON DISTINTIVO DE FORMADOR Y FILTRO DE RANGO)
+        // CENSO GENERAL DE DIRECCIÓN (RESALTADO AMARILLO SI TIENE PAGO PENDIENTE)
         // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
@@ -2008,21 +2072,29 @@
 
         async function cargarCensoGeneral() {
             try {
-                const [resAsc, resCoord, resUsers, resForm] = await Promise.all([
+                const [resAsc, resCoord, resUsers, resForm, resPagos] = await Promise.all([
                     fetch('/api/ascensos'),
                     fetch('/api/coordinacion'),
                     fetch('/api/usuarios'),
-                    fetch('/api/formaciones')
+                    fetch('/api/formaciones'),
+                    fetch('/api/pagos')
                 ]);
 
                 const dataAsc = await resAsc.json();
                 const dataCoord = await resCoord.json();
                 const dataUsers = await resUsers.json();
                 const dataForm = await resForm.json();
+                const dataPagos = await resPagos.json();
 
-                // LISTA DE NOMBRES DE FORMADORES PARA ASIGNARLES EL DISTINTIVO
                 const instructoresSet = new Set(
                     Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
+                );
+
+                // Set de personas que tienen un pago PENDIENTE para resaltarlos en amarillo
+                const personasConPagoPendiente = new Set(
+                    Array.isArray(dataPagos) 
+                        ? dataPagos.filter(p => p.estado === 'Pendiente').map(p => (p.personal || '').toLowerCase().trim())
+                        : []
                 );
 
                 let listaUnificada = [];
@@ -2134,7 +2206,6 @@
                     return;
                 }
 
-                // ORDEN DE MAYOR A MENOR (18 -> 1)
                 listaUnificada.sort((a, b) => {
                     const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
                     const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
@@ -2153,12 +2224,14 @@
                     if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
 
                     const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
-                    const hayAscensoPropuesto = r.tipo_origen === 'ascenso' && r.rango_postular && r.rango_postular !== r.rango_actual;
                     const prueba = calcularEstadoPrueba(r.fecha_ingreso);
-                    const claseFilaPrueba = prueba.enPrueba ? 'fila-en-prueba' : '';
+
+                    // Resaltar en amarillo suave si tiene un pago pendiente en tesorería
+                    const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
+                    const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
 
                     return `
-                        <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPrueba}">
+                        <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPago}">
                             <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                             <td class="fluid-td font-mono-code text-zinc-400 text-xs">
                                 <input type="text" value="${r.discord_id}" 
@@ -2171,16 +2244,9 @@
                                     <input type="text" value="${r.nombre}" 
                                            onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
                                            class="cell-input font-bold text-white text-sm flex-1">
-                                    ${r.esFormador ? `
-                                        <span class="badge-formador-censo shrink-0" title="Instructor oficial de Formaciones">
-                                            📚 FORMADOR
-                                        </span>
-                                    ` : ''}
-                                    ${prueba.enPrueba ? `
-                                        <span class="badge-prueba shrink-0" title="Aspirante en periodo de prueba de 4 días">
-                                            ⏳ PRUEBA (${prueba.diasPasados}/4)
-                                        </span>
-                                    ` : ''}
+                                    ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
+                                    ${tienePagoPendiente ? `<span class="text-amber-300 text-xs font-black px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/40" title="Pago pendiente por cobrar en Tesorería">💵 Pendiente</span>` : ''}
+                                    ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
                                 </div>
                             </td>
                             <td class="fluid-td">${deptoTag}</td>
@@ -2191,16 +2257,9 @@
                             </td>
                             <td class="fluid-td font-semibold">
                                 ${r.tipo_origen === 'ascenso' ? `
-                                    <div class="flex items-center gap-1">
-                                        <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
-                                            ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
-                                        </select>
-                                        ${hayAscensoPropuesto ? `
-                                            <button onclick="aplicarAscensoOficial(${r.id_original})" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] px-2 py-1 rounded-md shrink-0 shadow-md">
-                                                ⚡ Aplicar
-                                            </button>
-                                        ` : ''}
-                                    </div>
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                        ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
+                                    </select>
                                 ` : `
                                     <span class="text-xs text-zinc-400 font-semibold">${r.rango_postular}</span>
                                 `}
@@ -2252,7 +2311,7 @@
         }
 
         async function eliminarDesdeCenso(tipo, id) {
-            if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar este registro del censo y de su respectivo departamento?")) return;
+            if (!confirm("⚠️️ ¿Estás seguro de que deseas eliminar este registro del censo y de su respectivo departamento?")) return;
 
             if (tipo === 'ascenso') {
                 await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
@@ -2266,7 +2325,7 @@
             cargarTablas();
             cargarCoordinacion();
             cargarGestionAdmin();
-            cargarPagos();
+            if (tieneAccesoTesoreria()) cargarPagos();
         }
 
         // ==========================================
@@ -2301,7 +2360,7 @@
                     </td>
                     <td class="fluid-td text-right flex items-center justify-end gap-1.5 py-3">
                         <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1 rounded-xl text-xs">Guardar</button>
-                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded-xl text-xs">Eliminar</button>
+                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded-xl text-xs">Eliminar</button>
                     </td>
                 </tr>
             `).join('');
@@ -2332,7 +2391,8 @@
             cargarTablas();
             cargarFormaciones();
             cargarCoordinacion();
-            cargarPagos();
+            cargarEstadosTablasListas();
+            if (tieneAccesoTesoreria()) cargarPagos();
             if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
                 cargarCensoGeneral();
             }

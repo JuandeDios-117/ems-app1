@@ -64,12 +64,15 @@ const db = createClient({
         instructor TEXT NOT NULL,
         rango TEXT NOT NULL,
         instrucciones_hechas INTEGER DEFAULT 0,
+        instrucciones_totales INTEGER DEFAULT 0,
         total_pago REAL DEFAULT 0,
         notas TEXT DEFAULT '',
         actualizado_por TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    try { await db.execute("ALTER TABLE registro_formaciones ADD COLUMN instrucciones_totales INTEGER DEFAULT 0"); } catch (e) {}
 
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_coordinacion (
@@ -87,10 +90,6 @@ const db = createClient({
       )
     `);
 
-    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
-    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN pdf_feedback TEXT DEFAULT ''"); } catch (e) {}
-    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN nombre_pdf TEXT DEFAULT ''"); } catch (e) {}
-
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_pagos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,7 +105,26 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Todas las tablas y campos para PDF y congelamiento configurados en Turso.");
+    // TABLA PARA EL ESTADO DE TABLA LISTA (CIRUGÍA, MEDICINA, ENFERMERÍA)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS control_tablas_listas (
+        jefatura TEXT PRIMARY KEY,
+        esta_lista INTEGER DEFAULT 0,
+        fecha_hora_mexico TEXT DEFAULT '',
+        marcado_por TEXT DEFAULT ''
+      )
+    `);
+
+    // Inicializar estados de tablas si no existen
+    const jefaturas = ['cirugia', 'medicina', 'enfermeria'];
+    for (const j of jefaturas) {
+      await db.execute({
+        sql: "INSERT OR IGNORE INTO control_tablas_listas (jefatura, esta_lista, fecha_hora_mexico, marcado_por) VALUES (?, 0, '', '')",
+        args: [j]
+      });
+    }
+
+    console.log("[DB] Base de datos Turso lista con control de horas, totales de formación y estados de tabla.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

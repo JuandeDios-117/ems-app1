@@ -57,7 +57,7 @@ function notificar(evento, data = {}) {
     io.emit('db_update', { evento, ...data });
 }
 
-// 1. REGISTRO CON DETECCIÓN AUTOMÁTICA POR DISCORD ID
+// 1. REGISTRO & LOGIN
 app.post('/api/register', async (req, res) => {
     const { nombre, usuario, password, discord_id } = req.body;
     const userClean = (usuario || '').trim().toLowerCase();
@@ -74,7 +74,7 @@ app.post('/api/register', async (req, res) => {
         });
 
         if (checkUser.rows && checkUser.rows.length > 0) {
-            return res.status(400).json({ error: "El nombre de usuario ya está registrado." });
+            return res.status(400).json({ error: "El usuario ya existe." });
         }
 
         if (discordLimpio) {
@@ -83,7 +83,7 @@ app.post('/api/register', async (req, res) => {
                 args: [discordLimpio]
             });
             if (checkDiscord.rows && checkDiscord.rows.length > 0) {
-                return res.status(400).json({ error: "Este Discord ID ya tiene una cuenta asociada." });
+                return res.status(400).json({ error: "Este Discord ID ya tiene una cuenta." });
             }
         }
 
@@ -93,7 +93,6 @@ app.post('/api/register', async (req, res) => {
         let rangoAsignado = esPrimero ? 'Director (Admin)' : 'Sin Rango (Pendiente)';
         let rolAsignado = esPrimero ? 'admin' : 'empleado';
 
-        // DETECCIÓN AUTOMÁTICA DE RANGO SI YA EXISTE EN EL SISTEMA POR DISCORD ID
         if (!esPrimero && discordLimpio) {
             const matchAscensos = await db.execute({
                 sql: "SELECT rango_actual FROM registro_ascensos WHERE discord_id = ? LIMIT 1",
@@ -190,7 +189,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     }
 });
 
-// 3. REGISTROS DE EVALUACIÓN (CON CONTADOR AUTOMÁTICO DE FORMADOR)
+// 3. REGISTROS DE EVALUACIÓN
 app.get('/api/ascensos', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_ascensos ORDER BY id DESC");
@@ -246,24 +245,25 @@ app.post('/api/ascensos', async (req, res) => {
             ]
         });
 
-        // INCREMENTAR CONTADOR AL FORMADOR SI EL REGISTRO VINO DE FORMACIONES
+        // Sumar +1 instrucción semanal y +1 total al formador
         if (es_aspirante_formacion && actualizado_por) {
             const formadorClean = actualizado_por.trim();
             const formadorCheck = await db.execute({
-                sql: "SELECT id, instrucciones_hechas FROM registro_formaciones WHERE LOWER(TRIM(instructor)) = LOWER(?)",
+                sql: "SELECT id, instrucciones_hechas, instrucciones_totales FROM registro_formaciones WHERE LOWER(TRIM(instructor)) = LOWER(?)",
                 args: [formadorClean]
             });
 
             if (formadorCheck.rows && formadorCheck.rows.length > 0) {
                 const fId = formadorCheck.rows[0].id;
                 const nuevas = Number(formadorCheck.rows[0].instrucciones_hechas || 0) + 1;
+                const nuevasTotales = Number(formadorCheck.rows[0].instrucciones_totales || 0) + 1;
                 await db.execute({
-                    sql: "UPDATE registro_formaciones SET instrucciones_hechas = ?, total_pago = ? WHERE id = ?",
-                    args: [nuevas, nuevas * 50000, fId]
+                    sql: "UPDATE registro_formaciones SET instrucciones_hechas = ?, instrucciones_totales = ?, total_pago = ? WHERE id = ?",
+                    args: [nuevas, nuevasTotales, nuevas * 50000, fId]
                 });
             } else {
                 await db.execute({
-                    sql: "INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, total_pago, notas, actualizado_por) VALUES (?, 'Formador', 1, 50000, 'Ingreso de aspirante', ?)",
+                    sql: "INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, instrucciones_totales, total_pago, notas, actualizado_por) VALUES (?, 'Formador', 1, 1, 50000, 'Ingreso de aspirante', ?)",
                     args: [formadorClean, formadorClean]
                 });
             }
@@ -322,45 +322,50 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-app.post('/api/ascensos/:id/aplicar', async (req, res) => {
+// APLICAR TODOS LOS ASCENSOS DE UNA JEFATURA Y REINICIAR HORAS A 00:00
+app.post('/api/ascensos/aplicar-todos', async (req, res) => {
+    const { jefatura } = req.body;
+    if (!jefatura) return res.status(400).json({ error: "Especifica la jefatura." });
+
     try {
-        const check = await db.execute({
-            sql: "SELECT * FROM registro_ascensos WHERE id = ?",
-            args: [req.params.id]
+        const registros = await db.execute({
+            sql: "SELECT * FROM registro_ascensos WHERE jefatura = ?",
+            args: [jefatura]
         });
 
-        if (!check.rows || check.rows.length === 0) {
-            return res.status(404).json({ error: "Registro no encontrado." });
+        let aplicados = 0;
+        for (const item of registros.rows) {
+            let postular = item.rango_postular || item.rango_actual;
+            let nuevaJefatura = item.jefatura;
+            let nuevoRangoActual = postular;
+
+            if (postular.includes('(Cirugía)')) {
+                nuevaJefatura = 'cirugia';
+                nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
+            } else if (postular.includes('(Medicina)')) {
+                nuevaJefatura = 'medicina';
+                nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').trim();
+            } else if (postular.includes('(Bajar)')) {
+                nuevaJefatura = 'enfermeria';
+                nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
+            }
+
+            // Asignar nuevo rango, igualar postulación y reiniciar horas a 0
+            await db.execute({
+                sql: `UPDATE registro_ascensos SET 
+                        rango_actual = ?, 
+                        rango_propuesto = ?, 
+                        rango_postular = ?, 
+                        jefatura = ?,
+                        horas_semana = '00:00 HRS'
+                      WHERE id = ?`,
+                args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
+            });
+            aplicados++;
         }
-
-        const item = check.rows[0];
-        let postular = item.rango_postular || item.rango_actual;
-        let nuevaJefatura = item.jefatura;
-        let nuevoRangoActual = postular;
-
-        if (postular.includes('(Cirugía)')) {
-            nuevaJefatura = 'cirugia';
-            nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
-        } else if (postular.includes('(Medicina)')) {
-            nuevaJefatura = 'medicina';
-            nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').trim();
-        } else if (postular.includes('(Bajar)')) {
-            nuevaJefatura = 'enfermeria';
-            nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
-        }
-
-        await db.execute({
-            sql: `UPDATE registro_ascensos SET 
-                    rango_actual = ?, 
-                    rango_propuesto = ?, 
-                    rango_postular = ?, 
-                    jefatura = ? 
-                  WHERE id = ?`,
-            args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, req.params.id]
-        });
 
         notificar('ascensos_actualizados');
-        res.json({ message: `Ascenso aplicado exitosamente a ${item.nombre}. Trasladado a ${nuevaJefatura} con rango ${nuevoRangoActual}.` });
+        res.json({ message: `Se aplicaron los rangos y se reiniciaron las horas a 0 en ${aplicados} miembros.` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -371,6 +376,56 @@ app.delete('/api/ascensos/:id', async (req, res) => {
         await db.execute({ sql: "DELETE FROM registro_ascensos WHERE id = ?", args: [req.params.id] });
         notificar('ascensos_actualizados');
         res.json({ message: "Registro eliminado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// CONTROL DE ESTADO DE TABLA LISTA (CIRUGÍA, MEDICINA, ENFERMERÍA)
+app.get('/api/control-tablas', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT * FROM control_tablas_listas");
+        res.json(result.rows || []);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/control-tablas/toggle', async (req, res) => {
+    const { jefatura, marcado_por } = req.body;
+    if (!jefatura) return res.status(400).json({ error: "Jefatura requerida." });
+
+    try {
+        const current = await db.execute({
+            sql: "SELECT esta_lista FROM control_tablas_listas WHERE jefatura = ?",
+            args: [jefatura]
+        });
+
+        const yaEstaLista = current.rows && current.rows.length > 0 && current.rows[0].esta_lista === 1;
+        const nuevoEstado = yaEstaLista ? 0 : 1;
+
+        // Fecha y hora México CST en tiempo real
+        const ahoraMex = new Intl.DateTimeFormat('es-MX', {
+            timeZone: 'America/Mexico_City',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).format(new Date());
+
+        const fechaHoraFinal = nuevoEstado === 1 ? ahoraMex : '';
+        const userFinal = nuevoEstado === 1 ? (marcado_por || 'Jefatura') : '';
+
+        await db.execute({
+            sql: "INSERT OR REPLACE INTO control_tablas_listas (jefatura, esta_lista, fecha_hora_mexico, marcado_por) VALUES (?, ?, ?, ?)",
+            args: [jefatura, nuevoEstado, fechaHoraFinal, userFinal]
+        });
+
+        notificar('tablas_listas_actualizadas');
+        res.json({ esta_lista: nuevoEstado, fecha_hora_mexico: fechaHoraFinal, marcado_por: userFinal });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -392,8 +447,8 @@ app.post('/api/formaciones', async (req, res) => {
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, total_pago, notas, actualizado_por)
-                  VALUES (?, ?, 0, 0, '', ?)`,
+            sql: `INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, instrucciones_totales, total_pago, notas, actualizado_por)
+                  VALUES (?, ?, 0, 0, 0, '', ?)`,
             args: [instructor.trim(), rango || 'Formador', actualizado_por || 'Jefe de Formaciones']
         });
         notificar('formaciones_actualizadas');
@@ -404,20 +459,23 @@ app.post('/api/formaciones', async (req, res) => {
 });
 
 app.put('/api/formaciones/:id', async (req, res) => {
-    const { instrucciones_hechas, notas, rango } = req.body;
-    const cant = Math.max(0, parseInt(instrucciones_hechas) || 0);
-    const totalPago = cant * 50000;
+    const { instrucciones_hechas, instrucciones_totales, notas, rango } = req.body;
+    const cantSemanal = instrucciones_hechas !== undefined ? Math.max(0, parseInt(instrucciones_hechas) || 0) : null;
+    const cantTotales = instrucciones_totales !== undefined ? Math.max(0, parseInt(instrucciones_totales) || 0) : null;
+    const totalPago = cantSemanal !== null ? cantSemanal * 50000 : null;
 
     try {
         await db.execute({
             sql: `UPDATE registro_formaciones SET 
                     instrucciones_hechas = COALESCE(?, instrucciones_hechas),
-                    total_pago = ?,
+                    instrucciones_totales = COALESCE(?, instrucciones_totales),
+                    total_pago = COALESCE(?, total_pago),
                     notas = COALESCE(?, notas),
                     rango = COALESCE(?, rango)
                   WHERE id = ?`,
             args: [
-                instrucciones_hechas !== undefined ? cant : null,
+                cantSemanal,
+                cantTotales,
                 totalPago,
                 notas !== undefined ? notas.trim() : null,
                 rango || null,
@@ -425,7 +483,7 @@ app.put('/api/formaciones/:id', async (req, res) => {
             ]
         });
         notificar('formaciones_actualizadas');
-        res.json({ message: "Formación actualizada.", total_pago: totalPago });
+        res.json({ message: "Formación actualizada." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -433,9 +491,10 @@ app.put('/api/formaciones/:id', async (req, res) => {
 
 app.post('/api/formaciones/corte-semanal', async (req, res) => {
     try {
+        // Reinicia las semanales a 0 y mantiene las totales acumuladas
         await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
         notificar('formaciones_actualizadas');
-        res.json({ message: "Corte semanal de nómina procesado ($0)." });
+        res.json({ message: "Corte semanal de nómina procesado ($0 semanal, acumulado total preservado)." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
