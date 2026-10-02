@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EMS Origen Roleplay - Sistema Central de Evaluación</title>
     <link id="dynamic-favicon" rel="icon" type="image/png" href="/logo.png">
-    
-    <!-- Tailwind CSS y SweetAlert2 para modales oscuros elegantes -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -24,7 +22,6 @@
         }
         .font-mono-code { font-family: 'JetBrains Mono', monospace; }
         
-        /* Animación suave entre pestañas */
         @keyframes tabFadeIn {
             0% { opacity: 0; transform: translateY(6px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -161,13 +158,11 @@
             border: 1px solid rgba(239, 68, 68, 0.25);
         }
 
-        /* Resaltado amarillo nítido en el Censo General si tiene pago pendiente en Tesorería */
         .fila-pago-pendiente {
             background: rgba(245, 158, 11, 0.2) !important;
             box-shadow: inset 4px 0 0 #f59e0b, 0 0 15px rgba(245, 158, 11, 0.15) !important;
         }
 
-        /* Modales estéticos con SweetAlert2 */
         div:where(.swal2-container).swal2-backdrop-show {
             background: rgba(4, 5, 8, 0.85) !important;
             backdrop-filter: blur(6px) !important;
@@ -187,7 +182,7 @@
 <body class="p-3 md:p-6 text-sm">
     <div class="w-full max-w-[1920px] mx-auto space-y-4">
         
-        <!-- HEADER EMS ORIGEN CON RELOJES INTERNACIONALES (MX, AR, ES) -->
+        <!-- HEADER EMS ORIGEN -->
         <header class="card-ems p-4 md:p-5 rounded-3xl flex flex-wrap justify-between items-center gap-4 border-t-4 border-pink-500">
             <div class="flex items-center gap-4">
                 <div class="w-16 h-16 rounded-full overflow-hidden bg-black/60 border-2 border-pink-500/50 flex items-center justify-center p-0.5 shadow-lg shadow-pink-500/20 shrink-0">
@@ -277,7 +272,7 @@
         <!-- SECCIONES DEPARTAMENTALES -->
         <main id="contenedor-secciones"></main>
 
-        <!-- JEFATURA DE FORMACIONES ($50K POR INSTRUCCIÓN) -->
+        <!-- JEFATURA DE FORMACIONES -->
         <section id="seccion-formaciones" class="hidden space-y-5">
             <div class="card-ems p-6 rounded-3xl space-y-4 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-3 border-b border-zinc-800 pb-3">
@@ -428,7 +423,7 @@
             </div>
         </section>
 
-        <!-- SECCIÓN TESORERÍA & PAGOS (CENTRALIZADA, INTELIGENTE Y EXCLUSIVA PARA SUBDIRECCIÓN Y DIRECCIÓN) -->
+        <!-- SECCIÓN TESORERÍA & PAGOS -->
         <section id="seccion-pagos" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-emerald-500">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -469,7 +464,6 @@
                     </div>
                 </div>
 
-                <!-- FORMULARIO DE INGRESO INTELIGENTE QUE LEE AL CENSO GENERAL -->
                 <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Personal del Censo</label>
@@ -501,7 +495,6 @@
                     </div>
                 </div>
 
-                <!-- BUSCADOR EN VIVO DE PAGOS REGISTRADOS -->
                 <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3">
                     <span class="text-zinc-500 text-base">🔍</span>
                     <input type="text" id="filtroBuscadorPagos" oninput="filtrarTablaPagos()" placeholder="Filtrar por nombre de personal receptor o concepto de pago..." class="bg-transparent w-full text-white text-xs outline-none">
@@ -528,7 +521,7 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL (COMPLETO CON TODA LA INFORMACIÓN 1:1 DE CADA TABLA) -->
+        <!-- CENSO GENERAL COMPLETO 1:1 -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -568,7 +561,7 @@
             </div>
         </section>
 
-        <!-- PANEL ADMIN (CON BOTÓN GENERAL DE APLICAR ASCENSOS PARA LAS 3 TABLAS Y GESTOR DE JERARQUÍAS) -->
+        <!-- PANEL ADMIN -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
@@ -576,13 +569,11 @@
                     <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas y procesa ascensos masivos para el cierre semanal.</p>
                 </div>
                 
-                <!-- BOTÓN MAESTRO GENERAL: APLICA TODOS LOS ASCENSOS EN LAS 3 TABLAS Y PONE HORAS A CERO -->
                 <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
                     ⚡ Aplicar Todos los Ascensos (Enfermería, Cirugía y Medicina)
                 </button>
             </div>
 
-            <!-- GESTOR DE JERARQUÍAS Y RANGOS PERSONALIZADOS -->
             <div class="bg-black/50 p-5 rounded-2xl border border-zinc-800 space-y-3">
                 <h3 class="text-sm font-black text-pink-300 uppercase flex items-center gap-2">
                     🛠️ Creador & Gestor de Rangos Institucionales
@@ -627,7 +618,7 @@
 
     </div>
 
-    <!-- MODAL INTEGRADO PARA VISUALIZACIÓN DE PDF IN-APP (SIN DESCARGAR NI SALIR DE LA WEB) -->
+    <!-- MODAL INTEGRADO PARA VISUALIZACIÓN DE PDF IN-APP -->
     <div id="modalVisorPdf" class="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md hidden">
         <div class="bg-zinc-950 border border-pink-500/40 rounded-3xl w-full max-w-5xl h-[88vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
@@ -688,144 +679,44 @@
             }
         };
 
-        function verPdfFeedback(base64Data, nombrePdf) {
-            if (!base64Data) return Notif.error("No hay ningún PDF adjunto para este supervisor.");
-            document.getElementById('modalPdfTitulo').innerText = nombrePdf || "Reporte de Feedback";
-            document.getElementById('modalPdfIframe').src = base64Data;
-            document.getElementById('modalVisorPdf').classList.remove('hidden');
-        }
-
-        function cerrarModalVisorPdf() {
-            document.getElementById('modalVisorPdf').classList.add('hidden');
-            document.getElementById('modalPdfIframe').src = '';
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') cerrarModalVisorPdf();
-        });
-
-        // EDICIÓN DE MI PROPIO PERFIL
-        async function abrirModalMiPerfil() {
-            if (!usuarioActual) return;
-            const { value: formValues } = await Swal.fire({
-                title: '👤 Mi Perfil de Usuario',
-                html: `
-                    <div class="space-y-3 text-left text-xs font-semibold p-1">
-                        <div>
-                            <label class="block text-zinc-400 mb-1">Nombre Completo (IC)</label>
-                            <input id="swalPerfilNombre" class="w-full input-ems px-3 py-2 rounded-xl text-sm" value="${usuarioActual.nombre}">
-                        </div>
-                        <div>
-                            <label class="block text-zinc-400 mb-1">Discord ID (Sólo Números)</label>
-                            <input id="swalPerfilDiscord" class="w-full input-ems px-3 py-2 rounded-xl text-sm font-mono-code" value="${usuarioActual.discord_id || ''}">
-                        </div>
-                        <div>
-                            <label class="block text-zinc-400 mb-1">Cambiar Contraseña (opcional)</label>
-                            <input id="swalPerfilPass" type="password" placeholder="••••••••" class="w-full input-ems px-3 py-2 rounded-xl text-sm">
-                        </div>
-                    </div>
-                `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'Guardar Cambios',
-                cancelButtonText: 'Cancelar',
-                customClass: { popup: 'swal-dark-ems' },
-                confirmButtonColor: '#ec4899',
-                cancelButtonColor: '#374151',
-                preConfirm: () => {
-                    return {
-                        nombre: document.getElementById('swalPerfilNombre').value.trim(),
-                        discord_id: document.getElementById('swalPerfilDiscord').value.replace(/[^0-9]/g, ''),
-                        password: document.getElementById('swalPerfilPass').value.trim()
-                    };
-                }
-            });
-
-            if (formValues) {
-                if (!formValues.nombre) return Notif.error("El nombre no puede estar vacío.");
-
-                try {
-                    const payload = {
-                        nombre: formValues.nombre,
-                        discord_id: formValues.discord_id
-                    };
-                    if (formValues.password) payload.password = formValues.password;
-
-                    const res = await fetch(`/api/usuarios/${usuarioActual.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (res.ok) {
-                        usuarioActual.nombre = formValues.nombre;
-                        usuarioActual.discord_id = formValues.discord_id;
-                        actualizarUIUsuario();
-                        Notif.exito("Tus datos han sido actualizados con éxito.");
-                    } else {
-                        Notif.error("No se pudo actualizar tu perfil.");
-                    }
-                } catch (e) {
-                    Notif.error("Error de conexión al guardar.");
-                }
-            }
-        }
-
-        // CREADOR DE RANGOS DINÁMICO
-        function crearNuevoRangoPersonalizado() {
-            const nombre = document.getElementById('nuevoRangoNombre').value.trim();
-            const emoji = document.getElementById('nuevoRangoEmoji').value.trim() || '🩺';
-            const peso = parseInt(document.getElementById('nuevoRangoPeso').value) || 5;
-
-            if (!nombre) return Notif.error("Ingresa el nombre del rango.");
-
-            TODOS_LOS_RANGOS.push({ id: nombre, label: `${emoji} ${nombre}`, escala: "personalizado" });
-            JERARQUIA_MENOR_A_MAYOR[nombre] = peso;
-
-            document.getElementById('nuevoRangoNombre').value = '';
-            document.getElementById('nuevoRangoEmoji').value = '';
-            document.getElementById('nuevoRangoPeso').value = '';
-
-            inicializarEstructuraHtml();
-            cargarTablas();
-            cargarCensoGeneral();
-
-            Notif.exito(`Rango "${nombre}" añadido con jerarquía ${peso}.`);
-        }
-
         function actualizarRelojes() {
-            const ahora = new Date();
-            const fmtMX = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
-            const fmtAR = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
-            const fmtES = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+            try {
+                const ahora = new Date();
+                const fmtMX = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+                const fmtAR = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+                const fmtES = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
 
-            const elMX = document.getElementById('clockMX');
-            const elAR = document.getElementById('clockAR');
-            const elES = document.getElementById('clockES');
+                const elMX = document.getElementById('clockMX');
+                const elAR = document.getElementById('clockAR');
+                const elES = document.getElementById('clockES');
 
-            if (elMX) elMX.innerText = fmtMX;
-            if (elAR) elAR.innerText = fmtAR;
-            if (elES) elES.innerText = fmtES;
+                if (elMX) elMX.innerText = fmtMX;
+                if (elAR) elAR.innerText = fmtAR;
+                if (elES) elES.innerText = fmtES;
+            } catch (err) {}
         }
         setInterval(actualizarRelojes, 1000);
         actualizarRelojes();
 
         function aplicarFaviconCircular() {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.src = "/logo.png";
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                canvas.width = 64;
-                canvas.height = 64;
-                const ctx = canvas.getContext("2d");
-                ctx.beginPath();
-                ctx.arc(32, 32, 32, 0, Math.PI * 2, true);
-                ctx.closePath();
-                ctx.clip();
-                ctx.drawImage(img, 0, 0, 64, 64);
-                document.getElementById("dynamic-favicon").href = canvas.toDataURL("image/png");
-            };
+            try {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = "/logo.png";
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = 64;
+                    canvas.height = 64;
+                    const ctx = canvas.getContext("2d");
+                    ctx.beginPath();
+                    ctx.arc(32, 32, 32, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.clip();
+                    ctx.drawImage(img, 0, 0, 64, 64);
+                    const fav = document.getElementById("dynamic-favicon");
+                    if (fav) fav.href = canvas.toDataURL("image/png");
+                };
+            } catch (err) {}
         }
         aplicarFaviconCircular();
 
@@ -1318,9 +1209,7 @@
                 if (res.ok) {
                     Notif.exito(data.message);
                     await cargarTablas();
-                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                        cargarCensoGeneral();
-                    }
+                    await cargarCensoGeneral();
                 } else {
                     Notif.error(data.error || "No se pudo procesar");
                 }
@@ -1351,6 +1240,7 @@
         async function cargarEstadosTablasListas() {
             try {
                 const res = await fetch('/api/control-tablas');
+                if (!res.ok) return;
                 const data = await res.json();
 
                 if (Array.isArray(data)) {
@@ -1376,9 +1266,7 @@
                         }
                     });
                 }
-            } catch (e) {
-                console.error("Error al cargar estados de tablas:", e);
-            }
+            } catch (e) {}
         }
 
         async function ingresarAspiranteCelador() {
@@ -1410,9 +1298,7 @@
                     document.getElementById('aspNombre').value = '';
                     await cargarTablas();
                     await cargarFormaciones();
-                    if (!document.getElementById('seccion-censo').classList.contains('hidden')) {
-                        cargarCensoGeneral();
-                    }
+                    await cargarCensoGeneral();
                 } else {
                     Notif.error(data.error || "No se pudo registrar el aspirante");
                 }
@@ -1653,31 +1539,39 @@
                         const basica = filtrados.filter(x => x.rango_actual === 'Celador/a' || x.rango_actual === 'Auxiliar de Enfermería');
                         const enfermeria = filtrados.filter(x => x.rango_actual !== 'Celador/a' && x.rango_actual !== 'Auxiliar de Enfermería');
 
-                        document.getElementById('countBasica').innerText = `${basica.length} Efectivos`;
-                        document.getElementById('countEnfermeria').innerText = `${enfermeria.length} Efectivos`;
+                        const elBasica = document.getElementById('countBasica');
+                        const elEnf = document.getElementById('countEnfermeria');
+                        if (elBasica) elBasica.innerText = `${basica.length} Efectivos`;
+                        if (elEnf) elEnf.innerText = `${enfermeria.length} Efectivos`;
 
                         const cuerpoBasica = document.getElementById('cuerpoTabla_enfermeria_basica');
                         const cuerpoEnf = document.getElementById('cuerpoTabla_enfermeria_general');
 
-                        if (basica.length === 0) {
-                            cuerpoBasica.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay celadores ni auxiliares registrados.</td></tr>`;
-                        } else {
-                            cuerpoBasica.innerHTML = basica.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-emerald-400')).join('');
+                        if (cuerpoBasica) {
+                            if (basica.length === 0) {
+                                cuerpoBasica.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay celadores ni auxiliares registrados.</td></tr>`;
+                            } else {
+                                cuerpoBasica.innerHTML = basica.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-emerald-400')).join('');
+                            }
                         }
 
-                        if (enfermeria.length === 0) {
-                            cuerpoEnf.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay enfermeros ni especialistas registrados.</td></tr>`;
-                        } else {
-                            cuerpoEnf.innerHTML = enfermeria.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-teal-400')).join('');
+                        if (cuerpoEnf) {
+                            if (enfermeria.length === 0) {
+                                cuerpoEnf.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay enfermeros ni especialistas registrados.</td></tr>`;
+                            } else {
+                                cuerpoEnf.innerHTML = enfermeria.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-teal-400')).join('');
+                            }
                         }
 
                     } else {
                         const cuerpo = document.getElementById(`cuerpoTabla_${j.id}`);
-                        if (filtrados.length === 0) {
-                            cuerpo.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-500 italic bg-black/60 text-sm">No hay registros en esta escala.</td></tr>`;
-                            return;
+                        if (cuerpo) {
+                            if (filtrados.length === 0) {
+                                cuerpo.innerHTML = `<tr><td colspan="11" class="p-8 text-center text-zinc-500 italic bg-black/60 text-sm">No hay registros en esta escala.</td></tr>`;
+                            } else {
+                                cuerpo.innerHTML = filtrados.map((r, i) => renderizarFilaEvaluacion(r, i, j.id, j.colorTexto)).join('');
+                            }
                         }
-                        cuerpo.innerHTML = filtrados.map((r, i) => renderizarFilaEvaluacion(r, i, j.id, j.colorTexto)).join('');
                     }
                 });
             } catch (e) {
@@ -1763,7 +1657,7 @@
 
         async function ejecutarCorteSemanalFormaciones() {
             const confirmar = await Notif.confirmar(
-                "⚠️️ ¿Realizar Corte Semanal de Nómina?",
+                "⚠️ ¿Realizar Corte Semanal de Nómina?",
                 "Se reiniciarán a 0 las instrucciones semanales ($50,000 por instrucción), preservando el histórico total acumulado."
             );
             if (!confirmar) return;
@@ -1784,6 +1678,7 @@
                 const res = await fetch('/api/formaciones');
                 const data = await res.json();
                 const cuerpo = document.getElementById('cuerpoTablaFormaciones');
+                if (!cuerpo) return;
 
                 if (!Array.isArray(data) || data.length === 0) {
                     cuerpo.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-zinc-500 italic text-sm">No hay instructores registrados.</td></tr>`;
@@ -1943,6 +1838,7 @@
                 const res = await fetch('/api/coordinacion');
                 const data = await res.json();
                 const cuerpo = document.getElementById('cuerpoTablaCoordinacion');
+                if (!cuerpo) return;
 
                 if (!Array.isArray(data) || data.length === 0) {
                     cuerpo.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-zinc-500 italic text-sm">No hay supervisores registrados en coordinación.</td></tr>`;
@@ -1957,6 +1853,8 @@
 
                     const semaforoHoras = obtenerClaseSemaforoCasilla(c.horas_semana);
                     const tienePdf = !!c.pdf_feedback;
+                    const pdfEscapado = c.pdf_feedback ? encodeURIComponent(c.pdf_feedback) : '';
+                    const nombrePdfEscapado = c.nombre_pdf ? encodeURIComponent(c.nombre_pdf) : 'Reporte.pdf';
 
                     return `
                     <tr class="fluid-row hover:bg-zinc-900/40">
@@ -2004,7 +1902,7 @@
                                     </button>
 
                                     ${tienePdf ? `
-                                        <button onclick="verPdfFeedback('${c.pdf_feedback}', '${c.nombre_pdf || 'reporte.pdf'}')" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-black flex items-center gap-1 transition">
+                                        <button onclick="verPdfFeedback(decodeURIComponent('${pdfEscapado}'), decodeURIComponent('${nombrePdfEscapado}'))" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-black flex items-center gap-1 transition">
                                             📄 Ver PDF
                                         </button>
                                         <button onclick="borrarPdfFeedback(${c.id})" title="Eliminar PDF" class="text-[10px] text-rose-400 hover:text-rose-300 font-bold px-1">
@@ -2036,9 +1934,7 @@
             }
         }
 
-        // =========================================================================
-        // TESORERÍA INTELIGENTE: AUTO-COMPLETADO DESDE EL CENSO GENERAL
-        // =========================================================================
+        // TESORERÍA INTELIGENTE
         function poblarSelectorPersonalCenso() {
             const select = document.getElementById('pagoSelectCenso');
             if (!select) return;
@@ -2054,18 +1950,22 @@
 
         function seleccionarPersonalDesdeCenso(nombreSeleccionado) {
             if (!nombreSeleccionado) {
-                document.getElementById('pagoRango').value = '';
+                const pr = document.getElementById('pagoRango');
+                if (pr) pr.value = '';
                 return;
             }
             const persona = cacheCensoGlobal.find(p => p.nombre.toLowerCase().trim() === nombreSeleccionado.toLowerCase().trim());
             if (persona) {
-                document.getElementById('pagoRango').value = persona.rango_actual;
+                const pr = document.getElementById('pagoRango');
+                if (pr) pr.value = persona.rango_actual;
             }
         }
 
         async function guardarRegistroPago() {
-            const personal = document.getElementById('pagoSelectCenso').value.trim();
-            const rango = document.getElementById('pagoRango').value.trim();
+            const selEl = document.getElementById('pagoSelectCenso');
+            const personal = selEl ? selEl.value.trim() : '';
+            const rangoEl = document.getElementById('pagoRango');
+            const rango = rangoEl ? rangoEl.value.trim() : '';
             const concepto = document.getElementById('pagoConcepto').value.trim();
             const cantidad = document.getElementById('pagoCantidad').value.trim();
             const estado = document.getElementById('pagoEstado').value;
@@ -2092,8 +1992,8 @@
                 });
 
                 if (res.ok) {
-                    document.getElementById('pagoSelectCenso').value = '';
-                    document.getElementById('pagoRango').value = '';
+                    if (selEl) selEl.value = '';
+                    if (rangoEl) rangoEl.value = '';
                     document.getElementById('pagoConcepto').value = '';
                     document.getElementById('pagoCantidad').value = '';
                     await cargarPagos();
@@ -2150,9 +2050,8 @@
         }
 
         function filtrarTablaPagos() {
-            const q = (document.getElementById('filtroBuscadorPagos').value || '').toLowerCase().trim();
-            const cuerpo = document.getElementById('cuerpoTablaPagos');
-
+            const el = document.getElementById('filtroBuscadorPagos');
+            const q = el ? el.value.toLowerCase().trim() : '';
             const filtrados = cachePagosGlobal.filter(p => 
                 (p.personal || '').toLowerCase().includes(q) ||
                 (p.concepto || '').toLowerCase().includes(q)
@@ -2162,6 +2061,7 @@
 
         function renderizarPagosFiltrados(lista) {
             const cuerpo = document.getElementById('cuerpoTablaPagos');
+            if (!cuerpo) return;
             if (!lista || lista.length === 0) {
                 cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No se encontraron pagos con ese criterio de búsqueda.</td></tr>`;
                 return;
@@ -2213,6 +2113,7 @@
         async function cargarPagos() {
             try {
                 const res = await fetch('/api/pagos');
+                if (!res.ok) return;
                 const data = await res.json();
                 cachePagosGlobal = Array.isArray(data) ? data : [];
 
@@ -2227,9 +2128,12 @@
                     else totalPendiente += cant;
                 });
 
-                document.getElementById('totalPagosRegistrados').innerText = `$${totalGeneral.toLocaleString()}`;
-                document.getElementById('totalPagosLiquidados').innerText = `$${totalLiquidado.toLocaleString()}`;
-                document.getElementById('totalPagosPendientes').innerText = `$${totalPendiente.toLocaleString()}`;
+                const tReg = document.getElementById('totalPagosRegistrados');
+                const tLiq = document.getElementById('totalPagosLiquidados');
+                const tPen = document.getElementById('totalPagosPendientes');
+                if (tReg) tReg.innerText = `$${totalGeneral.toLocaleString()}`;
+                if (tLiq) tLiq.innerText = `$${totalLiquidado.toLocaleString()}`;
+                if (tPen) tPen.innerText = `$${totalPendiente.toLocaleString()}`;
 
                 filtrarTablaPagos();
             } catch (e) {
@@ -2245,9 +2149,7 @@
             cargarCensoGeneral();
         }
 
-        // =========================================================================
-        // CENSO GENERAL DE DIRECCIÓN (INFORMACIÓN 1:1 COMPLETA + RESALTADO AMARILLO)
-        // =========================================================================
+        // CENSO GENERAL DE DIRECCIÓN 1:1
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
             if (campo === 'horas_semana') {
@@ -2286,18 +2188,18 @@
         async function cargarCensoGeneral() {
             try {
                 const [resAsc, resCoord, resUsers, resForm, resPagos] = await Promise.all([
-                    fetch('/api/ascensos'),
-                    fetch('/api/coordinacion'),
-                    fetch('/api/usuarios'),
-                    fetch('/api/formaciones'),
-                    fetch('/api/pagos')
+                    fetch('/api/ascensos').catch(() => ({ json: () => [] })),
+                    fetch('/api/coordinacion').catch(() => ({ json: () => [] })),
+                    fetch('/api/usuarios').catch(() => ({ json: () => [] })),
+                    fetch('/api/formaciones').catch(() => ({ json: () => [] })),
+                    fetch('/api/pagos').catch(() => ({ json: () => [] }))
                 ]);
 
-                const dataAsc = await resAsc.json();
-                const dataCoord = await resCoord.json();
-                const dataUsers = await resUsers.json();
-                const dataForm = await resForm.json();
-                const dataPagos = await resPagos.json();
+                const dataAsc = await resAsc.json().catch(() => []);
+                const dataCoord = await resCoord.json().catch(() => []);
+                const dataUsers = await resUsers.json().catch(() => []);
+                const dataForm = await resForm.json().catch(() => []);
+                const dataPagos = await resPagos.json().catch(() => []);
 
                 const instructoresSet = new Set(
                     Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
@@ -2417,10 +2319,12 @@
                 poblarSelectorPersonalCenso();
 
                 const cuerpo = document.getElementById('cuerpoTablaCenso');
+                if (!cuerpo) return;
 
                 if (listaUnificada.length === 0) {
                     cuerpo.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
-                    document.getElementById('txtTotalCenso').innerText = "0 Efectivos";
+                    const tCen = document.getElementById('txtTotalCenso');
+                    if (tCen) tCen.innerText = "0 Efectivos";
                     return;
                 }
 
@@ -2431,7 +2335,8 @@
                     return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                 });
 
-                document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos Totales`;
+                const tCen = document.getElementById('txtTotalCenso');
+                if (tCen) tCen.innerText = `${listaUnificada.length} Efectivos Totales`;
                 const maxFecha = new Date().toISOString().split('T')[0];
 
                 cuerpo.innerHTML = listaUnificada.map((r, index) => {
@@ -2444,7 +2349,6 @@
                     const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
                     const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
-                    // Resaltado amarillo prominente si tiene cobro pendiente en tesorería
                     const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
                     const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
 
@@ -2505,8 +2409,8 @@
                                 ${r.tipo_origen === 'ascenso' ? `
                                     <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
                                         <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
-                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-600 text-black">WARN</option>
-                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white">DESPIDO</option>
+                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''}>WARN</option>
+                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''}>DESPIDO</option>
                                     </select>
                                 ` : `<span class="text-zinc-500">—</span>`}
                             </td>
@@ -2565,6 +2469,7 @@
             const res = await fetch('/api/usuarios');
             const data = await res.json();
             const cuerpo = document.getElementById('cuerpoTablaAdmin');
+            if (!cuerpo) return;
 
             cuerpo.innerHTML = data.map((u, index) => `
                 <tr class="fluid-row hover:bg-zinc-900/40">
@@ -2590,7 +2495,7 @@
                     </td>
                     <td class="fluid-td text-right flex items-center justify-end gap-1.5 py-3">
                         <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1 rounded-xl text-xs">Guardar</button>
-                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded-xl text-xs">Eliminar</button>
+                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded-xl text-xs">Eliminar</button>
                     </td>
                 </tr>
             `).join('');
