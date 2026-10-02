@@ -24,14 +24,8 @@
         
         /* Animación suave entre pestañas */
         @keyframes tabFadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
         .tab-animada {
             animation: tabFadeIn 0.28s ease-out forwards;
@@ -569,14 +563,14 @@
                                 <th class="fluid-th text-left w-1/5">PERSONAL (IC)</th>
                                 <th class="fluid-th text-left w-40">DEPARTAMENTO</th>
                                 <th class="fluid-th text-left w-48">RANGO ACTUAL</th>
-                                <th class="fluid-th text-left w-48">POSTULACIÓN</th>
-                                <th class="fluid-th text-center w-36">ESTADO SERVICIO</th>
+                                <th class="fluid-th text-left w-52">RANGO A POSTULAR</th>
+                                <th class="fluid-th text-center w-36">ESTADO</th>
                                 <th class="fluid-th text-center w-36">HORAS SEMANA</th>
                                 <th class="fluid-th text-center w-28">FALTAS</th>
                                 <th class="fluid-th text-center w-28">EXAMEN</th>
-                                <th class="fluid-th text-center w-32">INGRESO</th>
-                                <th class="fluid-th text-left w-1/4">OBSERVACIONES</th>
-                                <th class="fluid-th text-right w-24">ACCIÓN</th>
+                                <th class="fluid-th text-center w-32">FECHA INGRESO</th>
+                                <th class="fluid-th text-left w-1/4">DESCRIPCIÓN Y AUSENCIAS</th>
+                                <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody id="cuerpoTablaCenso"></tbody>
@@ -585,11 +579,11 @@
             </div>
         </section>
 
-        <!-- PANEL ADMIN (CON GESTOR DE JERARQUÍAS Y APLICAR ASCENSOS) -->
+        <!-- PANEL ADMIN (CON BOTÓN GENERAL DE APLICAR ASCENSOS Y CREADOR DE RANGOS) -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
-                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas, Rangos y Jerarquías</h2>
+                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas y Asignación de Rangos</h2>
                     <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas y procesa ascensos masivos para el cierre semanal.</p>
                 </div>
                 
@@ -2053,6 +2047,527 @@
             }
         }
 
+        // =========================================================================
+        // TESORERÍA INTELIGENTE: AUTO-COMPLETADO DESDE EL CENSO GENERAL
+        // =========================================================================
+        function poblarSelectorPersonalCenso() {
+            const select = document.getElementById('pagoSelectCenso');
+            if (!select) return;
+
+            const valorPrevio = select.value;
+            select.innerHTML = '<option value="">-- Seleccionar Personal del Censo --</option>' + 
+                cacheCensoGlobal.map(p => `
+                    <option value="${p.nombre}" data-rango="${p.rango_actual}">${p.nombre} (${p.rango_actual})</option>
+                `).join('');
+
+            if (valorPrevio) select.value = valorPrevio;
+        }
+
+        function seleccionarPersonalDesdeCenso(nombreSeleccionado) {
+            if (!nombreSeleccionado) {
+                document.getElementById('pagoRango').value = '';
+                return;
+            }
+            const persona = cacheCensoGlobal.find(p => p.nombre.toLowerCase().trim() === nombreSeleccionado.toLowerCase().trim());
+            if (persona) {
+                document.getElementById('pagoRango').value = persona.rango_actual;
+            }
+        }
+
+        async function guardarRegistroPago() {
+            const personal = document.getElementById('pagoSelectCenso').value.trim();
+            const rango = document.getElementById('pagoRango').value.trim();
+            const concepto = document.getElementById('pagoConcepto').value.trim();
+            const cantidad = document.getElementById('pagoCantidad').value.trim();
+            const estado = document.getElementById('pagoEstado').value;
+
+            if (!personal) return Notif.error("Por favor selecciona un miembro del Censo General.");
+            if (!concepto) return Notif.error("Ingresa el concepto del pago.");
+
+            const monto = Math.max(0, parseFloat(cantidad) || 0);
+
+            try {
+                const res = await fetch('/api/pagos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        personal,
+                        rango: rango || 'Personal EMS',
+                        concepto,
+                        cantidad: monto,
+                        estado,
+                        pagado_por: estado === 'Pagado' ? (usuarioActual ? usuarioActual.nombre : 'Dirección') : 'Pendiente',
+                        fecha_pago: new Date().toISOString().split('T')[0],
+                        registrado_por: usuarioActual ? usuarioActual.nombre : 'Dirección'
+                    })
+                });
+
+                if (res.ok) {
+                    document.getElementById('pagoSelectCenso').value = '';
+                    document.getElementById('pagoRango').value = '';
+                    document.getElementById('pagoConcepto').value = '';
+                    document.getElementById('pagoCantidad').value = '';
+                    await cargarPagos();
+                    await cargarCensoGeneral();
+                    Notif.exito("Pago asentado correctamente.");
+                } else {
+                    const data = await res.json();
+                    Notif.error(data.error || "No se pudo registrar el pago.");
+                }
+            } catch (e) {
+                Notif.error("Error de conexión al registrar pago.");
+            }
+        }
+
+        async function editarPagoEnTabla(id, campo, valor) {
+            let payload = { [campo]: valor };
+            if (campo === 'estado' && valor === 'Pagado') {
+                payload.pagado_por = usuarioActual ? usuarioActual.nombre : 'Dirección';
+                payload.fecha_pago = new Date().toISOString().split('T')[0];
+            } else if (campo === 'estado' && valor === 'Pendiente') {
+                payload.pagado_por = 'Pendiente';
+            }
+
+            try {
+                await fetch(`/api/pagos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                await cargarPagos();
+                await cargarCensoGeneral();
+            } catch (e) {
+                console.error("Error al actualizar pago:", e);
+            }
+        }
+
+        async function ejecutarCorteSemanalPagos() {
+            const confirmar = await Notif.confirmar(
+                "💼 ¿Procesar Corte Semanal de Tesorería?",
+                "Esta acción marcará todos los pagos pendientes como LIQUIDADOS y retirará los resaltados amarillos en el Censo."
+            );
+            if (!confirmar) return;
+
+            try {
+                const res = await fetch('/api/pagos/corte-semanal', { method: 'POST' });
+                if (res.ok) {
+                    Notif.exito("Corte semanal de tesorería procesado con éxito.");
+                    await cargarPagos();
+                    await cargarCensoGeneral();
+                }
+            } catch (e) {
+                Notif.error("Error al procesar corte de tesorería.");
+            }
+        }
+
+        function filtrarTablaPagos() {
+            const q = (document.getElementById('filtroBuscadorPagos').value || '').toLowerCase().trim();
+            const cuerpo = document.getElementById('cuerpoTablaPagos');
+
+            const filtrados = cachePagosGlobal.filter(p => 
+                (p.personal || '').toLowerCase().includes(q) ||
+                (p.concepto || '').toLowerCase().includes(q)
+            );
+            renderizarPagosFiltrados(filtrados);
+        }
+
+        function renderizarPagosFiltrados(lista) {
+            const cuerpo = document.getElementById('cuerpoTablaPagos');
+            if (!lista || lista.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No se encontraron pagos con ese criterio de búsqueda.</td></tr>`;
+                return;
+            }
+
+            cuerpo.innerHTML = lista.map((p, index) => {
+                const esPagado = p.estado === 'Pagado';
+                const badgeEstado = esPagado 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+
+                return `
+                    <tr class="fluid-row hover:bg-zinc-900/40 transition">
+                        <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                        <td class="fluid-td font-bold text-white text-sm">
+                            <input type="text" value="${p.personal}" onblur="editarPagoEnTabla(${p.id}, 'personal', this.value)" class="cell-input font-bold text-white">
+                        </td>
+                        <td class="fluid-td">
+                            <select onchange="editarPagoEnTabla(${p.id}, 'rango', this.value)" class="cell-input text-pink-300 font-semibold">
+                                ${TODOS_LOS_RANGOS.map(r => `<option value="${r.id}" ${r.id === p.rango ? 'selected' : ''}>${r.label}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="fluid-td">
+                            <input type="text" value="${p.concepto}" onblur="editarPagoEnTabla(${p.id}, 'concepto', this.value)" class="cell-input text-zinc-200">
+                        </td>
+                        <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-sm">
+                            <input type="number" value="${p.cantidad}" onblur="editarPagoEnTabla(${p.id}, 'cantidad', this.value)" class="cell-input text-center font-mono-code font-black text-emerald-400">
+                        </td>
+                        <td class="fluid-td text-center">
+                            <select onchange="editarPagoEnTabla(${p.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
+                                <option value="Pendiente" ${!esPagado ? 'selected' : ''}>⏳ Pendiente</option>
+                                <option value="Pagado" ${esPagado ? 'selected' : ''}>✅ Pagado</option>
+                            </select>
+                        </td>
+                        <td class="fluid-td text-zinc-300 text-xs font-semibold">
+                            <input type="text" value="${p.pagado_por || 'Pendiente'}" onblur="editarPagoEnTabla(${p.id}, 'pagado_por', this.value)" class="cell-input text-zinc-300 text-xs">
+                        </td>
+                        <td class="fluid-td text-center font-mono-code text-xs text-zinc-400">
+                            <input type="date" value="${p.fecha_pago || ''}" onchange="editarPagoEnTabla(${p.id}, 'fecha_pago', this.value)" class="cell-input text-center font-mono-code text-xs text-zinc-400">
+                        </td>
+                        <td class="fluid-td text-right">
+                            <button onclick="eliminarPago(${p.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function cargarPagos() {
+            try {
+                const res = await fetch('/api/pagos');
+                const data = await res.json();
+                cachePagosGlobal = Array.isArray(data) ? data : [];
+
+                let totalGeneral = 0;
+                let totalLiquidado = 0;
+                let totalPendiente = 0;
+
+                cachePagosGlobal.forEach(p => {
+                    const cant = parseFloat(p.cantidad) || 0;
+                    totalGeneral += cant;
+                    if (p.estado === 'Pagado') totalLiquidado += cant;
+                    else totalPendiente += cant;
+                });
+
+                document.getElementById('totalPagosRegistrados').innerText = `$${totalGeneral.toLocaleString()}`;
+                document.getElementById('totalPagosLiquidados').innerText = `$${totalLiquidado.toLocaleString()}`;
+                document.getElementById('totalPagosPendientes').innerText = `$${totalPendiente.toLocaleString()}`;
+
+                filtrarTablaPagos();
+            } catch (e) {
+                console.error("Error al cargar pagos:", e);
+            }
+        }
+
+        async function eliminarPago(id) {
+            const confirmar = await Notif.confirmar("¿Eliminar registro de pago?", "Esta acción retirará el registro de tesorería permanentemente.");
+            if (!confirmar) return;
+            await fetch(`/api/pagos/${id}`, { method: 'DELETE' });
+            cargarPagos();
+            cargarCensoGeneral();
+        }
+
+        // CENSO GENERAL DE DIRECCIÓN (INFORMACIÓN 1:1 COMPLETA + RESALTADO AMARILLO)
+        async function editarDesdeCenso(tipo, id, campo, valor) {
+            let datosAEnviar = { [campo]: valor };
+            if (campo === 'horas_semana') {
+                datosAEnviar[campo] = formatearTextoHoras(valor);
+            }
+
+            try {
+                if (tipo === 'ascenso') {
+                    await fetch(`/api/ascensos/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+                    await cargarTablas();
+                } else if (tipo === 'coordinacion') {
+                    await fetch(`/api/coordinacion/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+                    await cargarCoordinacion();
+                } else if (tipo === 'usuario') {
+                    await fetch(`/api/usuarios/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+                    await cargarGestionAdmin();
+                }
+                cargarCensoGeneral();
+            } catch (err) {
+                console.error("Error editando desde censo:", err);
+            }
+        }
+
+        async function cargarCensoGeneral() {
+            try {
+                const [resAsc, resCoord, resUsers, resForm, resPagos] = await Promise.all([
+                    fetch('/api/ascensos'),
+                    fetch('/api/coordinacion'),
+                    fetch('/api/usuarios'),
+                    fetch('/api/formaciones'),
+                    fetch('/api/pagos')
+                ]);
+
+                const dataAsc = await resAsc.json();
+                const dataCoord = await resCoord.json();
+                const dataUsers = await resUsers.json();
+                const dataForm = await resForm.json();
+                const dataPagos = await resPagos.json();
+
+                const instructoresSet = new Set(
+                    Array.isArray(dataForm) ? dataForm.map(f => (f.instructor || '').toLowerCase().trim()) : []
+                );
+
+                const personasConPagoPendiente = new Set(
+                    Array.isArray(dataPagos) 
+                        ? dataPagos.filter(p => p.estado === 'Pendiente').map(p => (p.personal || '').toLowerCase().trim())
+                        : []
+                );
+
+                let listaUnificada = [];
+
+                if (Array.isArray(dataAsc)) {
+                    dataAsc.forEach(a => {
+                        const esForm = instructoresSet.has((a.nombre || '').toLowerCase().trim());
+                        listaUnificada.push({
+                            id_original: a.id,
+                            tipo_origen: 'ascenso',
+                            discord_id: a.discord_id || 'N/A',
+                            nombre: a.nombre,
+                            departamento: a.jefatura,
+                            rango_actual: a.rango_actual,
+                            rango_postular: a.rango_postular || a.rango_actual,
+                            estado: a.estado || 'Activo',
+                            horas_semana: a.horas_semana,
+                            faltas: a.faltas || 'NINGUNA',
+                            examen: a.examen || 'NO APLICA',
+                            fecha_ingreso: a.fecha_ingreso || '—',
+                            descripcion: a.descripcion || '',
+                            esMando: false,
+                            esFormador: esForm
+                        });
+                    });
+                }
+
+                if (Array.isArray(dataCoord)) {
+                    dataCoord.forEach(c => {
+                        const nombreCoord = (c.supervisor || '').trim();
+                        const yaExiste = listaUnificada.some(x => 
+                            x.nombre && x.nombre.toLowerCase().trim() === nombreCoord.toLowerCase()
+                        );
+
+                        if (!yaExiste && nombreCoord !== '') {
+                            const esForm = instructoresSet.has(nombreCoord.toLowerCase());
+                            listaUnificada.push({
+                                id_original: c.id,
+                                tipo_origen: 'coordinacion',
+                                discord_id: c.discord_id || 'N/A',
+                                nombre: nombreCoord,
+                                departamento: 'coordinacion',
+                                rango_actual: c.rango || 'Supervisor',
+                                rango_postular: c.rango || 'Supervisor',
+                                estado: c.estado || 'Activo',
+                                horas_semana: c.horas_semana || '',
+                                faltas: 'NINGUNA',
+                                examen: 'NO APLICA',
+                                fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
+                                descripcion: c.feedback_semanal || '',
+                                esMando: true,
+                                esFormador: esForm
+                            });
+                        }
+                    });
+                }
+
+                if (Array.isArray(dataUsers)) {
+                    dataUsers.forEach(u => {
+                        const rangoLimpio = (u.rango || '').trim();
+                        const nombreUser = (u.nombre || '').trim();
+
+                        const tieneRangoValido = rangoLimpio !== '' && 
+                                                 rangoLimpio !== 'Sin Rango (Pendiente)' && 
+                                                 rangoLimpio.toLowerCase() !== 'pendiente' &&
+                                                 rangoLimpio.toLowerCase() !== 'sin rango';
+
+                        if (tieneRangoValido && nombreUser !== '') {
+                            const yaExiste = listaUnificada.some(x => {
+                                const coincideNombre = x.nombre && x.nombre.toLowerCase().trim() === nombreUser.toLowerCase();
+                                const coincideDiscord = x.discord_id && x.discord_id !== 'N/A' && u.discord_id && u.discord_id !== 'N/A' && x.discord_id === u.discord_id;
+                                return coincideNombre || coincideDiscord;
+                            });
+
+                            if (!yaExiste) {
+                                let depto = 'direccion';
+                                const rLow = rangoLimpio.toLowerCase();
+                                if (rLow.includes('cirug')) depto = 'cirugia';
+                                else if (rLow.includes('medicin')) depto = 'medicina';
+                                else if (rLow.includes('enferm')) depto = 'enfermeria';
+                                else if (rLow.includes('coord') || rLow.includes('supervis')) depto = 'coordinacion';
+
+                                const esForm = instructoresSet.has(nombreUser.toLowerCase());
+
+                                listaUnificada.push({
+                                    id_original: u.id,
+                                    tipo_origen: 'usuario',
+                                    discord_id: u.discord_id || 'N/A',
+                                    nombre: nombreUser,
+                                    departamento: depto,
+                                    rango_actual: rangoLimpio,
+                                    rango_postular: rangoLimpio,
+                                    estado: 'Activo',
+                                    horas_semana: u.horas_semana || '',
+                                    faltas: 'NINGUNA',
+                                    examen: 'NO APLICA',
+                                    fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
+                                    descripcion: `Cuenta institucional @${u.usuario}`,
+                                    esMando: true,
+                                    esFormador: esForm
+                                });
+                            }
+                        }
+                    });
+                }
+
+                cacheCensoGlobal = listaUnificada;
+                poblarSelectorPersonalCenso();
+
+                const cuerpo = document.getElementById('cuerpoTablaCenso');
+
+                if (listaUnificada.length === 0) {
+                    cuerpo.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
+                    document.getElementById('txtTotalCenso').innerText = "0 Efectivos";
+                    return;
+                }
+
+                listaUnificada.sort((a, b) => {
+                    const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
+                    const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
+                    if (pesoA !== pesoB) return pesoB - pesoA;
+                    return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
+                });
+
+                document.getElementById('txtTotalCenso').innerText = `${listaUnificada.length} Efectivos Totales`;
+                const maxFecha = new Date().toISOString().split('T')[0];
+
+                cuerpo.innerHTML = listaUnificada.map((r, index) => {
+                    let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
+                    if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
+                    if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
+                    if (r.departamento === 'coordinacion') deptoTag = '<span class="text-pink-300 font-bold">Coordinación</span>';
+                    if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
+
+                    const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
+                    const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
+
+                    const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
+                    const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
+
+                    let claseEstadoBadge = 'badge-estado-activo';
+                    if (r.estado === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
+                    if (r.estado === 'Excedencia') claseEstadoBadge = 'badge-estado-excedencia';
+                    if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
+
+                    return `
+                        <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPago}">
+                            <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">
+                                <input type="text" value="${r.discord_id}" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'discord_id', this.value)" 
+                                       class="cell-input font-mono-code text-xs">
+                            </td>
+                            <td class="fluid-td font-bold text-white">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <input type="text" value="${r.nombre}" 
+                                           onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
+                                           class="cell-input font-bold text-white text-sm flex-1">
+                                    ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
+                                    ${tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
+                                    ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
+                                </div>
+                            </td>
+                            <td class="fluid-td">${deptoTag}</td>
+                            <td class="fluid-td font-semibold">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
+                                    ${TODOS_LOS_RANGOS.map(x => `<option value="${x.id}" ${x.id === r.rango_actual ? 'selected' : ''}>${x.label}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td class="fluid-td font-semibold">
+                                ${r.tipo_origen === 'ascenso' ? `
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                        ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
+                                    </select>
+                                ` : `
+                                    <span class="text-xs text-zinc-400 font-semibold">${r.rango_postular}</span>
+                                `}
+                            </td>
+                            <td class="fluid-td text-center">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${claseEstadoBadge}">
+                                    <option value="Activo" ${r.estado === 'Activo' ? 'selected' : ''}>🟢 Activo</option>
+                                    <option value="Ausencia" ${r.estado === 'Ausencia' ? 'selected' : ''}>🟡 Ausencia</option>
+                                    <option value="Excedencia" ${r.estado === 'Excedencia' ? 'selected' : ''}>🟠 Excedencia</option>
+                                    <option value="Baja" ${r.estado === 'Baja' ? 'selected' : ''}>🔴 Baja</option>
+                                </select>
+                            </td>
+                            <td class="fluid-td text-center">
+                                <input type="text" value="${r.horas_semana || ''}" 
+                                       placeholder="00:00 HRS"
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'horas_semana', this.value)" 
+                                       class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforo}">
+                            </td>
+                            <td class="fluid-td text-center">
+                                ${r.tipo_origen === 'ascenso' ? `
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                        <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
+                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''} class="bg-amber-600 text-black">WARN</option>
+                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''} class="bg-rose-700 text-white">DESPIDO</option>
+                                    </select>
+                                ` : `<span class="text-zinc-500">—</span>`}
+                            </td>
+                            <td class="fluid-td text-center">
+                                ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
+                                        <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
+                                        <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                        <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
+                                    </select>
+                                ` : `<span class="text-zinc-500">—</span>`}
+                            </td>
+                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">
+                                <input type="date" value="${r.fecha_ingreso || ''}" 
+                                       max="${maxFecha}"
+                                       onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'fecha_ingreso', this.value)" 
+                                       class="cell-input text-center font-mono-code text-xs text-zinc-300">
+                            </td>
+                            <td class="fluid-td text-zinc-400 text-xs">
+                                <input type="text" value="${r.descripcion}" 
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
+                                       class="cell-input text-zinc-300 text-xs">
+                            </td>
+                            <td class="fluid-td text-right">
+                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error("Error al cargar censo:", e);
+            }
+        }
+
+        async function eliminarDesdeCenso(tipo, id) {
+            const confirmar = await Notif.confirmar("⚠️ ¿Eliminar registro del censo?", "Esta acción retirará al miembro del censo y de su departamento de origen.");
+            if (!confirmar) return;
+
+            if (tipo === 'ascenso') {
+                await fetch(`/api/ascensos/${id}`, { method: 'DELETE' });
+            } else if (tipo === 'coordinacion') {
+                await fetch(`/api/coordinacion/${id}`, { method: 'DELETE' });
+            } else if (tipo === 'usuario') {
+                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+            }
+
+            cargarCensoGeneral();
+            cargarTablas();
+            cargarCoordinacion();
+            cargarGestionAdmin();
+            if (tieneAccesoTesoreria()) cargarPagos();
+        }
+
         // PANEL ADMIN DE CUENTAS WEB
         async function cargarGestionAdmin() {
             const res = await fetch('/api/usuarios');
@@ -2083,7 +2598,7 @@
                     </td>
                     <td class="fluid-td text-right flex items-center justify-end gap-1.5 py-3">
                         <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1 rounded-xl text-xs">Guardar</button>
-                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded-xl text-xs">Eliminar</button>
+                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded-xl text-xs">Eliminar</button>
                     </td>
                 </tr>
             `).join('');
