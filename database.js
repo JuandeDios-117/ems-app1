@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { createClient } = require('@libsql/client');
 
-let url = (process.env.TURSO_DATABASE_URL || 'file:local.db').trim();
+let url = (process.env.TURSO_DATABASE_URL || '').trim();
 const authToken = (process.env.TURSO_AUTH_TOKEN || '').trim();
 
 if (url.startsWith('libsql://')) {
@@ -10,7 +10,7 @@ if (url.startsWith('libsql://')) {
 
 const db = createClient({
   url,
-  authToken: authToken || undefined
+  authToken
 });
 
 (async function initDB() {
@@ -30,6 +30,7 @@ const db = createClient({
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN discord_id TEXT DEFAULT 'N/A'"); } catch (e) {}
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
@@ -44,6 +45,7 @@ const db = createClient({
         nombre TEXT NOT NULL,
         rango_actual TEXT NOT NULL,
         rango_postular TEXT DEFAULT '',
+        rango_propuesto TEXT DEFAULT '',
         faltas TEXT DEFAULT 'NINGUNA',
         horas_semana TEXT DEFAULT '',
         examen TEXT DEFAULT 'NO APLICA',
@@ -54,25 +56,29 @@ const db = createClient({
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN estado TEXT DEFAULT 'Activo'"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN descripcion TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN rango_postular TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN rango_propuesto TEXT DEFAULT ''"); } catch (e) {}
 
-    // 3. FORMACIONES (Cambiado a REAL para soportar medias formaciones 0.5)
+    // 3. FORMACIONES
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_formaciones (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         instructor TEXT NOT NULL,
         rango TEXT NOT NULL,
-        instrucciones_hechas REAL DEFAULT 0,
-        instrucciones_totales REAL DEFAULT 0,
+        instrucciones_hechas INTEGER DEFAULT 0,
+        instrucciones_totales INTEGER DEFAULT 0,
         total_pago REAL DEFAULT 0,
         notas TEXT DEFAULT '',
         actualizado_por TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    try { await db.execute("ALTER TABLE registro_formaciones ADD COLUMN instrucciones_totales REAL DEFAULT 0"); } catch (e) {}
+
+    try { await db.execute("ALTER TABLE registro_formaciones ADD COLUMN instrucciones_totales INTEGER DEFAULT 0"); } catch (e) {}
 
     // 4. COORDINACIÓN
     await db.execute(`
@@ -90,6 +96,7 @@ const db = createClient({
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN pdf_feedback TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN nombre_pdf TEXT DEFAULT ''"); } catch (e) {}
@@ -128,7 +135,7 @@ const db = createClient({
       });
     }
 
-    console.log("[DB] Base de datos verificada y sincronizada.");
+    console.log("[DB] Base de datos verificada y sincronizada con solución anti-crasheo NOT NULL.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

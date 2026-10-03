@@ -200,6 +200,7 @@
                 </div>
             </div>
 
+            <!-- RELOJES CON BANDERAS (INCLUYENDO NEW YORK) -->
             <div class="flex flex-wrap items-center gap-2.5 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
                 <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
                     <span class="text-base">🇲🇽</span>
@@ -215,6 +216,11 @@
                     <span class="text-base">🇪🇸</span>
                     <span class="text-zinc-400 font-bold">ESPAÑA:</span>
                     <span class="text-amber-300 font-black" id="clockES">--:--:--</span>
+                </div>
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
+                    <span class="text-base">🇺🇸</span>
+                    <span class="text-zinc-400 font-bold">NEW YORK:</span>
+                    <span class="text-indigo-300 font-black" id="clockNY">--:--:--</span>
                 </div>
             </div>
 
@@ -679,14 +685,17 @@
                 const fmtMX = new Intl.DateTimeFormat('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
                 const fmtAR = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
                 const fmtES = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
+                const fmtNY = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(ahora);
 
                 const elMX = document.getElementById('clockMX');
                 const elAR = document.getElementById('clockAR');
                 const elES = document.getElementById('clockES');
+                const elNY = document.getElementById('clockNY');
 
                 if (elMX) elMX.innerText = fmtMX;
                 if (elAR) elAR.innerText = fmtAR;
                 if (elES) elES.innerText = fmtES;
+                if (elNY) elNY.innerText = fmtNY;
             } catch (err) {}
         }
         setInterval(actualizarRelojes, 1000);
@@ -1033,7 +1042,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
+                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] bg-black/40 border border-zinc-800 rounded-lg p-2">${r.descripcion || ''}</textarea>
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>

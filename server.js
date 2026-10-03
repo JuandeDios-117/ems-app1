@@ -213,13 +213,14 @@ app.post('/api/ascensos', async (req, res) => {
     const marcaPrueba = es_aspirante_formacion ? 'PRUEBA_ACTIVA' : '';
 
     try {
+        // BYPASS: Inyectamos rango_propuesto igual que rango_postular para evadir el SQLite Error
         await db.execute({
             sql: `INSERT INTO registro_ascensos (
-                    jefatura, discord_id, nombre_ems, nombre, rango_actual, rango_postular, 
+                    jefatura, discord_id, nombre_ems, nombre, rango_actual, rango_postular, rango_propuesto,
                     faltas, horas_semana, examen, estado, descripcion, fecha_ingreso, actualizado_por
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
-                jefatura, discordLimpio, nombre.trim(), nombre.trim(), rangoBase, rangoBase,
+                jefatura, discordLimpio, nombre.trim(), nombre.trim(), rangoBase, rangoBase, rangoBase,
                 'NINGUNA', '', 'NO APLICA', 'Activo', marcaPrueba, fechaHoy, actualizado_por || 'Jefatura'
             ]
         });
@@ -251,6 +252,7 @@ app.post('/api/ascensos', async (req, res) => {
         notificar('ascensos_actualizados', { jefatura });
         res.json({ message: "Personal ingresado con éxito." });
     } catch (e) {
+        console.error("Error Ascensos POST:", e);
         res.status(500).json({ error: e.message });
     }
 });
@@ -268,6 +270,7 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     nombre_ems = COALESCE(?, nombre_ems),
                     rango_actual = COALESCE(?, rango_actual),
                     rango_postular = COALESCE(?, rango_postular),
+                    rango_propuesto = COALESCE(?, rango_propuesto),
                     faltas = COALESCE(?, faltas),
                     horas_semana = COALESCE(?, horas_semana),
                     examen = COALESCE(?, examen),
@@ -277,7 +280,7 @@ app.put('/api/ascensos/:id', async (req, res) => {
                   WHERE id = ?`,
             args: [
                 jefatura || null, discordLimpio, nombre ? nombre.trim() : null, nombre ? nombre.trim() : null,
-                rango_actual || null, rango_postular || null, faltas || null, horas_semana !== undefined ? horas_semana.trim() : null,
+                rango_actual || null, rango_postular || null, rango_postular || null, faltas || null, horas_semana !== undefined ? horas_semana.trim() : null,
                 examen || null, estado || null, descripcion !== undefined ? descripcion.trim() : null,
                 fecha_ingreso !== undefined ? fecha_ingreso.trim() : null, req.params.id
             ]
@@ -311,9 +314,9 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
 
             await db.execute({
                 sql: `UPDATE registro_ascensos SET 
-                        rango_actual = ?, rango_postular = ?, jefatura = ?, horas_semana = '00:00 HRS'
+                        rango_actual = ?, rango_postular = ?, rango_propuesto = ?, jefatura = ?, horas_semana = '00:00 HRS'
                       WHERE id = ?`,
-                args: [nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
+                args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
             });
             aplicados++;
         }
@@ -451,7 +454,6 @@ app.delete('/api/formaciones/:id', async (req, res) => {
 // 5. COORDINACIÓN
 app.get('/api/coordinacion', async (req, res) => {
     try {
-        // EXCLUIMOS pdf_feedback para evitar bloqueos masivos de memoria
         const sql = `SELECT id, discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por, updated_at 
                      FROM registro_coordinacion ORDER BY id DESC`;
         const result = await db.execute(sql);
