@@ -256,11 +256,46 @@ app.post('/api/ascensos', async (req, res) => {
     }
 });
 
+// ACTUALIZACIÓN EN TIEMPO REAL (Con transferencia inmediata al aprobar examen)
 app.put('/api/ascensos/:id', async (req, res) => {
     const { jefatura, discord_id, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, estado, descripcion, fecha_ingreso } = req.body;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') || 'N/A' : null;
 
     try {
+        const actualRes = await db.execute({
+            sql: "SELECT * FROM registro_ascensos WHERE id = ?",
+            args: [req.params.id]
+        });
+
+        if (!actualRes.rows || actualRes.rows.length === 0) {
+            return res.status(404).json({ error: "Registro no encontrado." });
+        }
+
+        const registroActual = actualRes.rows[0];
+
+        let nuevaJefatura = jefatura !== undefined ? jefatura : registroActual.jefatura;
+        let nuevoRangoActual = rango_actual !== undefined ? rango_actual : registroActual.rango_actual;
+        let nuevoRangoPostular = rango_postular !== undefined ? rango_postular : registroActual.rango_postular;
+        let nuevoExamen = examen !== undefined ? examen : registroActual.examen;
+
+        // TRANSFERENCIA INMEDIATA ENTRE SEMANA:
+        // Si es Estudiante o Interno/a en el limbo de Enfermería y aprueba el examen con una rama seleccionada
+        if (registroActual.jefatura === 'enfermeria' && (nuevoRangoActual === 'Estudiante' || nuevoRangoActual === 'Interno/a')) {
+            if (nuevoExamen === 'REALIZADO') {
+                if (nuevoRangoPostular && nuevoRangoPostular.includes('(Cirugía)')) {
+                    nuevaJefatura = 'cirugia';
+                    nuevoRangoActual = nuevoRangoPostular.replace(' (Cirugía)', '').replace(' (Doble)', '').trim();
+                    nuevoRangoPostular = nuevoRangoActual;
+                    nuevoExamen = 'NO APLICA';
+                } else if (nuevoRangoPostular && nuevoRangoPostular.includes('(Medicina)')) {
+                    nuevaJefatura = 'medicina';
+                    nuevoRangoActual = nuevoRangoPostular.replace(' (Medicina)', '').replace(' (Doble)', '').trim();
+                    nuevoRangoPostular = nuevoRangoActual;
+                    nuevoExamen = 'NO APLICA';
+                }
+            }
+        }
+
         await db.execute({
             sql: `UPDATE registro_ascensos SET 
                     jefatura = COALESCE(?, jefatura),
@@ -278,12 +313,13 @@ app.put('/api/ascensos/:id', async (req, res) => {
                     fecha_ingreso = COALESCE(?, fecha_ingreso)
                   WHERE id = ?`,
             args: [
-                jefatura || null, discordLimpio, nombre ? nombre.trim() : null, nombre ? nombre.trim() : null,
-                rango_actual || null, rango_postular || null, rango_postular || null, faltas || null, horas_semana !== undefined ? horas_semana.trim() : null,
-                examen || null, estado || null, descripcion !== undefined ? descripcion.trim() : null,
+                nuevaJefatura, discordLimpio, nombre ? nombre.trim() : null, nombre ? nombre.trim() : null,
+                nuevoRangoActual, nuevoRangoPostular, nuevoRangoPostular, faltas || null, horas_semana !== undefined ? horas_semana.trim() : null,
+                nuevoExamen, estado || null, descripcion !== undefined ? descripcion.trim() : null,
                 fecha_ingreso !== undefined ? fecha_ingreso.trim() : null, req.params.id
             ]
         });
+
         notificar('ascensos_actualizados');
         res.json({ message: "Actualizado correctamente." });
     } catch (e) {
@@ -291,13 +327,13 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSOS GLOBAL (Con borrado automático y gestión de LIMBO)
+// APLICAR ASCENSOS GLOBAL (Exclusivo de Enfermería, Cirugía y Medicina con purga de DESPIDO)
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
-        // 1. Borrar automáticamente a los que tengan "DESPIDO" en faltas
-        await db.execute("DELETE FROM registro_ascensos WHERE faltas = 'DESPIDO'");
+        // 1. Eliminar automáticamente a cualquier efectivo con DESPIDO en las tablas médicas
+        await db.execute("DELETE FROM registro_ascensos WHERE faltas = 'DESPIDO' AND jefatura IN ('enfermeria', 'cirugia', 'medicina')");
 
-        // 2. Procesar los ascensos y reiniciar horas al resto
+        // 2. Procesar únicamente los ascensos de las 3 tablas médicas
         const registros = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
         let aplicados = 0;
         
@@ -305,31 +341,36 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             let postular = item.rango_postular || item.rango_actual;
             let nuevaJefatura = item.jefatura;
             let nuevoRangoActual = postular;
+            let nuevoExamen = item.examen;
 
             if (postular.includes('(Cirugía)')) {
                 nuevaJefatura = 'cirugia';
-                nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').replace(' (Doble)', '').trim();
+                nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble)', '').trim();
+                nuevoExamen = 'NO APLICA';
             } else if (postular.includes('(Medicina)')) {
                 nuevaJefatura = 'medicina';
-                nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').replace(' (Doble)', '').trim();
+                nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble)', '').trim();
+                nuevoExamen = 'NO APLICA';
             } else if (postular.includes('(Bajar)')) {
                 nuevaJefatura = 'enfermeria';
                 nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
             } else if (postular.includes('(En Espera)')) {
-                nuevaJefatura = 'enfermeria'; // Se queda en enfermería (Limbo)
+                nuevaJefatura = 'enfermeria'; // Permanece en el limbo de Enfermería
                 nuevoRangoActual = postular.replace(' (En Espera)', '').trim();
+                nuevoExamen = 'PENDIENTE'; // Espera su examen de rama
             }
 
             await db.execute({
                 sql: `UPDATE registro_ascensos SET 
-                        rango_actual = ?, rango_postular = ?, rango_propuesto = ?, jefatura = ?, horas_semana = '00:00 HRS'
+                        rango_actual = ?, rango_postular = ?, rango_propuesto = ?, jefatura = ?, examen = ?, horas_semana = '00:00 HRS'
                       WHERE id = ?`,
-                args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, item.id]
+                args: [nuevoRangoActual, nuevoRangoActual, nuevoRangoActual, nuevaJefatura, nuevoExamen, item.id]
             });
             aplicados++;
         }
+
         notificar('ascensos_actualizados');
-        res.json({ message: `Se eliminaron las bajas y se aplicaron los ascensos (${aplicados} efectivos procesados).` });
+        res.json({ message: `Se eliminaron las bajas y se aplicaron los ascensos en Enfermería, Cirugía y Medicina (${aplicados} efectivos procesados).` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

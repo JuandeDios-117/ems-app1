@@ -94,7 +94,6 @@
             background: #0d0f17;
         }
         
-        /* ALERTAS DE FILA ESPECIALES */
         .fila-ascenso-condicionado {
             background: rgba(249, 115, 22, 0.15) !important;
             border-left: 3px solid #f97316 !important;
@@ -204,26 +203,23 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
-                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
-                    <span class="text-base">🇲🇽</span>
-                    <span class="text-zinc-400 font-bold">MÉXICO:</span>
-                    <span class="text-emerald-300 font-black" id="clockMX">--:--:--</span>
+            <!-- RELOJES CON BANDERAS EN GRANDE (SIN TEXTO) -->
+            <div class="flex flex-wrap items-center gap-3 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2 shadow-inner">
+                    <span class="text-xl">🇲🇽</span>
+                    <span class="text-emerald-300 font-black text-sm" id="clockMX">--:--:--</span>
                 </div>
-                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
-                    <span class="text-base">🇦🇷</span>
-                    <span class="text-zinc-400 font-bold">ARGENTINA:</span>
-                    <span class="text-sky-300 font-black" id="clockAR">--:--:--</span>
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2 shadow-inner">
+                    <span class="text-xl">🇦🇷</span>
+                    <span class="text-sky-300 font-black text-sm" id="clockAR">--:--:--</span>
                 </div>
-                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
-                    <span class="text-base">🇪🇸</span>
-                    <span class="text-zinc-400 font-bold">ESPAÑA:</span>
-                    <span class="text-amber-300 font-black" id="clockES">--:--:--</span>
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2 shadow-inner">
+                    <span class="text-xl">🇪🇸</span>
+                    <span class="text-amber-300 font-black text-sm" id="clockES">--:--:--</span>
                 </div>
-                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
-                    <span class="text-base">🇺🇸</span>
-                    <span class="text-zinc-400 font-bold">NEW YORK:</span>
-                    <span class="text-indigo-300 font-black" id="clockNY">--:--:--</span>
+                <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2 shadow-inner">
+                    <span class="text-xl">🇺🇸</span>
+                    <span class="text-indigo-300 font-black text-sm" id="clockNY">--:--:--</span>
                 </div>
             </div>
 
@@ -530,7 +526,7 @@
             </div>
         </section>
 
-        <!-- CENSO GENERAL COMPLETO 1:1 -->
+        <!-- CENSO GENERAL COMPLETO 1:1 CON BUSCADOR INTELIGENTE -->
         <section id="seccion-censo" class="hidden space-y-4">
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-rose-600">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
@@ -543,6 +539,13 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-500/15 text-pink-300 border-pink-500/30" id="txtTotalCenso">0 Efectivos</span>
                     </div>
+                </div>
+
+                <!-- BUSCADOR DEL CENSO GENERAL -->
+                <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3 shadow-inner">
+                    <span class="text-pink-400 text-lg">🔍</span>
+                    <input type="text" id="filtroBuscadorCenso" oninput="filtrarTablaCenso()" placeholder="Buscar por Nombre IC o Discord ID para mostrar solo su información..." class="bg-transparent w-full text-white text-xs outline-none placeholder-zinc-500 font-bold">
+                    <button onclick="limpiarFiltroCenso()" class="text-xs text-zinc-400 hover:text-white px-2 py-1 bg-zinc-800 rounded-lg">Limpiar</button>
                 </div>
 
                 <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
@@ -634,7 +637,6 @@
         let cachePagosGlobal = [];
         let cacheCensoGlobal = [];
 
-        // ESCUDO ANTI-CRASHEOS
         async function apiFetch(url) {
             try {
                 const res = await fetch(url);
@@ -646,7 +648,6 @@
             }
         }
 
-        // FORMATEADOR DE MONEDA
         function formatearInputMoneda(inputElement) {
             let val = inputElement.value.replace(/[^0-9]/g, '');
             if (val) {
@@ -660,7 +661,6 @@
             return parseFloat(String(str).replace(/[^0-9.-]+/g, "")) || 0;
         }
 
-        // Notificaciones
         const Notif = {
             exito: (msg, titulo = "¡Operación Exitosa!") => {
                 Swal.fire({
@@ -731,7 +731,7 @@
             { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" }, { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" }, { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
             { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" }, { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" }, { id: "Residente", label: "『📚』Residente", escala: "medica" }, { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" }, { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
-        const TODOS_LOS_RANGOS = [ ...RANGOS_EVALUACION, { id: "Formador", label: "📚 Formador", escala: "mando" }, { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" }, { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" }, { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" }, { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" }, { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" }, { id: "Jefe de Cirugía", label: "🥼✂️ Jefe de Cirugía", escala: "jefatura" }, { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" }, { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" } ];
+        const TODOS_LOS_RANGOS = [ ...RANGOS_EVALUACION, { id: "Formador", label: "📚 Formador", escala: "mando" }, { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" }, { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" }, { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" }, { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" }, { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" }, { id: "Jefe de Cirugía", label: "🥼✂️️ Jefe de Cirugía", escala: "jefatura" }, { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" }, { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" } ];
         const RANGOS_ESCALA_BASICA = [ { id: "Celador/a", label: "『👀』Celador/a" }, { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" } ];
         const RANGOS_ESCALA_ENFERMERIA = [ { id: "Enfermero", label: "『💉』Enfermero" }, { id: "Enfermero/a General", label: "『💉』Enfermero/a General" }, { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" } ];
         const JEFATURAS = [
@@ -816,21 +816,22 @@
             if (jefaturaActual === 'enfermeria') {
                 lista = [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA];
                 
-                // Si ya está en Limbo (En Espera)
-                if (rangoActual === 'Estudiante') {
+                // Si ya está en Limbo (Estudiante o Interno/a en espera de rama)
+                if (rangoActual === 'Estudiante' || rangoActual === 'Interno/a') {
                     lista.push(
-                        { id: "Estudiante", label: "『📗』Mantener en Espera" },
-                        { id: "Estudiante (Cirugía)", label: "『📗』Asignar ➔ Cirugía" },
-                        { id: "Estudiante (Medicina)", label: "『📗』Asignar ➔ Medicina" }
+                        { id: `${rangoActual} (En Espera)`, label: `『📗』${rangoActual} ➔ Mantener en Espera` },
+                        { id: `${rangoActual} (Cirugía)`, label: `『📗』${rangoActual} ➔ Asignar a Cirugía` },
+                        { id: `${rangoActual} (Medicina)`, label: `『📗』${rangoActual} ➔ Asignar a Medicina` }
                     );
                 }
 
-                // Si es un Enfermero que va a subir a Estudiante
-                const puedeSubirAEstudiante = ['Enfermero/a Especialista', 'Enfermero/a General', 'Enfermero'].includes(rangoActual) && examenRealizado === 'REALIZADO';
+                // Si es un Enfermero (General o Especialista) que puede postular a Estudiante o Interno
+                const puedeSubirARama = ['Enfermero/a Especialista', 'Enfermero/a General', 'Enfermero'].includes(rangoActual);
                 
-                if (puedeSubirAEstudiante) {
+                if (puedeSubirARama) {
                     lista.push(
                         { id: "Estudiante (En Espera)", label: "『📗』Estudiante ➔ En Espera de Rama" },
+                        { id: "Interno/a (En Espera)", label: "『📝』Interno/a ➔ En Espera de Rama (Doble)" },
                         { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" },
                         { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía (Doble)" },
                         { id: "Estudiante (Medicina)", label: "『📗』Estudiante ➔ Medicina" },
@@ -855,7 +856,8 @@
                 lista = [
                     ...RANGOS_ESCALA_BASICA, 
                     ...RANGOS_ESCALA_ENFERMERIA,
-                    { id: "Estudiante", label: "『📗』Estudiante (En Espera)" }
+                    { id: "Estudiante", label: "『📗』Estudiante (En Espera)" },
+                    { id: "Interno/a", label: "『📝』Interno/a (En Espera)" }
                 ];
             } else {
                 lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
@@ -888,10 +890,10 @@
             const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
             const esExamenPendiente = r.examen === 'PENDIENTE';
-            const esEstudianteLimbo = r.rango_actual === 'Estudiante' && jefaturaId === 'enfermeria';
+            const esLimbo = (r.rango_actual === 'Estudiante' || r.rango_actual === 'Interno/a') && jefaturaId === 'enfermeria';
             
             let claseFilaGlobal = '';
-            if (esEstudianteLimbo) claseFilaGlobal = 'fila-limbo';
+            if (esLimbo) claseFilaGlobal = 'fila-limbo';
             else if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
             else claseFilaGlobal = 'fluid-row hover:bg-zinc-900/60 transition';
 
@@ -907,7 +909,7 @@
                     <td class="fluid-td font-semibold text-white">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm flex-1">
-                            ${esEstudianteLimbo ? `<span class="text-indigo-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/25 border border-indigo-400/50 shadow-sm" title="Aprobó pero no ha elegido rama">⏳ En Espera de Rama</span>` : ''}
+                            ${esLimbo ? `<span class="text-indigo-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/25 border border-indigo-400/50 shadow-sm" title="Aprobó pero no ha elegido rama">⏳ En Espera de Rama</span>` : ''}
                             ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️</span>` : ''}
                             ${prueba.enPrueba ? `<span class="text-amber-400 text-xs shrink-0 cursor-help" title="Aspirante en prueba: Día ${prueba.diasPasados}/4 (Quedan ${prueba.diasRestantes} días)">⏳ D${prueba.diasPasados}</span>` : ''}
                         </div>
@@ -961,7 +963,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
+                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -1053,7 +1055,7 @@
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between px-2">
                                     <h3 class="text-sm font-black text-teal-300 uppercase tracking-widest flex items-center gap-2">
-                                        💉 ESCALA DE ENFERMERÍA (GENERALES Y ESPECIALISTAS)
+                                        💉 ESCALA DE ENFERMERÍA Y ESTUDIANTES EN ESPERA
                                     </h3>
                                     <span class="text-[11px] text-zinc-400 font-mono-code" id="countEnfermeria">0 Efectivos</span>
                                 </div>
@@ -1120,8 +1122,8 @@
 
         async function aplicarTodosLosAscensosGlobal() {
             const confirmar = await Notif.confirmar(
-                "⚡ ¿Aplicar Todos los Ascensos Globalmente?",
-                "Se eliminarán automáticamente los perfiles marcados con DESPIDO. Luego se aplicarán los ascensos y las horas se reiniciarán a 00:00 HRS."
+                "⚡ ¿Aplicar Ascensos en Enfermería, Cirugía y Medicina?",
+                "Se eliminarán automáticamente los perfiles marcados con DESPIDO en estas tablas, se procesarán los ascensos y las horas se reiniciarán a 00:00 HRS."
             );
             if (!confirmar) return;
 
@@ -1475,7 +1477,7 @@
 
                         if (cuerpoEnf) {
                             if (enfermeria.length === 0) {
-                                cuerpoEnf.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay enfermeros ni especialistas registrados.</td></tr>`;
+                                cuerpoEnf.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-zinc-500 italic bg-black/60 text-xs">No hay enfermeros registrados.</td></tr>`;
                             } else {
                                 cuerpoEnf.innerHTML = enfermeria.map((r, i) => renderizarFilaEvaluacion(r, i, 'enfermeria', 'text-teal-400')).join('');
                             }
@@ -1543,7 +1545,7 @@
             const total = cant * 50000;
             const targetCell = document.getElementById(`totalPagoForm_${id}`);
             if (targetCell) {
-                targetCell.innerText = `$${total.toLocaleString()}`;
+                targetCell.innerText = `$${total.toLocaleString('en-US')}`;
             }
             actualizarFormacionBackendDebounced(id, { instrucciones_hechas: cant });
         }
@@ -1997,7 +1999,7 @@
             cargarCensoGeneral();
         }
 
-        // CENSO GENERAL DE DIRECCIÓN 1:1
+        // CENSO GENERAL DE DIRECCIÓN 1:1 CON BUSCADOR
         async function editarDesdeCenso(tipo, id, campo, valor) {
             let datosAEnviar = { [campo]: valor };
             if (campo === 'horas_semana') {
@@ -2033,9 +2035,154 @@
             }
         }
 
+        function filtrarTablaCenso() {
+            const el = document.getElementById('filtroBuscadorCenso');
+            const q = el ? el.value.toLowerCase().trim() : '';
+            if (!q) {
+                renderizarCenso(cacheCensoGlobal);
+                return;
+            }
+
+            const filtrados = cacheCensoGlobal.filter(p => 
+                (p.nombre || '').toLowerCase().includes(q) ||
+                (p.discord_id || '').toLowerCase().includes(q)
+            );
+            renderizarCenso(filtrados);
+        }
+
+        function limpiarFiltroCenso() {
+            const el = document.getElementById('filtroBuscadorCenso');
+            if (el) el.value = '';
+            renderizarCenso(cacheCensoGlobal);
+        }
+
+        function renderizarCenso(lista) {
+            const cuerpo = document.getElementById('cuerpoTablaCenso');
+            if (!cuerpo) return;
+
+            if (lista.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-zinc-500 italic text-sm">No se encontraron registros en el censo con ese criterio.</td></tr>`;
+                const tCen = document.getElementById('txtTotalCenso');
+                if (tCen) tCen.innerText = "0 Efectivos";
+                return;
+            }
+
+            const tCen = document.getElementById('txtTotalCenso');
+            if (tCen) tCen.innerText = `${lista.length} Efectivos Visibles`;
+            const maxFecha = new Date().toISOString().split('T')[0];
+
+            cuerpo.innerHTML = lista.map((r, index) => {
+                let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
+                if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
+                if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
+                if (r.departamento === 'coordinacion') deptoTag = '<span class="text-pink-300 font-bold">Coordinación</span>';
+                if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
+
+                const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
+                const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
+
+                const esExamenPendiente = r.examen === 'PENDIENTE';
+                const esLimbo = (r.rango_actual === 'Estudiante' || r.rango_actual === 'Interno/a') && r.departamento === 'enfermeria';
+                
+                let claseFilaGlobal = '';
+                if (esLimbo) claseFilaGlobal = 'fila-limbo';
+                else if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
+                else if (r.tienePagoPendiente) claseFilaGlobal = 'fila-pago-pendiente';
+                else claseFilaGlobal = 'fluid-row hover:bg-zinc-900/40 transition';
+
+                let claseEstadoBadge = 'badge-estado-activo';
+                if (r.estado === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
+                if (r.estado === 'Excedencia') claseEstadoBadge = 'badge-estado-excedencia';
+                if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
+
+                return `
+                    <tr class="${claseFilaGlobal}">
+                        <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                        <td class="fluid-td font-mono-code text-zinc-400 text-xs">
+                            <input type="text" value="${r.discord_id}" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                   onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'discord_id', this.value)" 
+                                   class="cell-input font-mono-code text-xs">
+                        </td>
+                        <td class="fluid-td font-bold text-white">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <input type="text" value="${r.nombre}" 
+                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
+                                       class="cell-input font-bold text-white text-sm flex-1">
+                                ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
+                                ${r.tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
+                                ${esLimbo ? `<span class="text-indigo-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/25 border border-indigo-400/50 shadow-sm" title="Aprobó pero no ha elegido rama">⏳ En Espera de Rama</span>` : ''}
+                                ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️</span>` : ''}
+                                ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="fluid-td">${deptoTag}</td>
+                        <td class="fluid-td font-semibold">
+                            <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
+                                ${TODOS_LOS_RANGOS.map(x => `<option value="${x.id}" ${x.id === r.rango_actual ? 'selected' : ''}>${x.label}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="fluid-td font-semibold">
+                            ${r.tipo_origen === 'ascenso' ? `
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                    ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
+                                </select>
+                            ` : `
+                                <span class="text-xs text-zinc-400 font-semibold">${r.rango_postular}</span>
+                            `}
+                        </td>
+                        <td class="fluid-td text-center">
+                            <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${claseEstadoBadge}">
+                                <option value="Activo" ${r.estado === 'Activo' ? 'selected' : ''}>🟢 Activo</option>
+                                <option value="Ausencia" ${r.estado === 'Ausencia' ? 'selected' : ''}>🟡 Ausencia</option>
+                                <option value="Excedencia" ${r.estado === 'Excedencia' ? 'selected' : ''}>🟠 Excedencia</option>
+                                <option value="Baja" ${r.estado === 'Baja' ? 'selected' : ''}>🔴 Baja</option>
+                            </select>
+                        </td>
+                        <td class="fluid-td text-center">
+                            <input type="text" value="${r.horas_semana || ''}" 
+                                   placeholder="00:00 HRS"
+                                   onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'horas_semana', this.value)" 
+                                   class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforo}">
+                        </td>
+                        <td class="fluid-td text-center">
+                            ${r.tipo_origen === 'ascenso' ? `
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                    <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
+                                    <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''}>WARN</option>
+                                    <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''}>DESPIDO</option>
+                                </select>
+                            ` : `<span class="text-zinc-500">—</span>`}
+                        </td>
+                        <td class="fluid-td text-center">
+                            ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
+                                    <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
+                                    <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
+                                    <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
+                                </select>
+                            ` : `<span class="text-zinc-500">—</span>`}
+                        </td>
+                        <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">
+                            <input type="date" value="${r.fecha_ingreso || ''}" 
+                                   max="${maxFecha}"
+                                   onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'fecha_ingreso', this.value)" 
+                                   class="cell-input text-center font-mono-code text-xs text-zinc-300">
+                        </td>
+                        <td class="fluid-td text-zinc-400 text-xs">
+                            <textarea rows="2" onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
+                                      class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] w-full bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
+                        </td>
+                        <td class="fluid-td text-right">
+                            <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         async function cargarCensoGeneral() {
             try {
-                // ESCUDO ANTI-CRASH: apiFetch siempre devuelve [] si algo sale mal
                 const [dataAsc, dataCoord, dataUsers, dataForm, dataPagos] = await Promise.all([
                     apiFetch('/api/ascensos'),
                     apiFetch('/api/coordinacion'),
@@ -2074,7 +2221,8 @@
                             fecha_ingreso: a.fecha_ingreso || '—',
                             descripcion: a.descripcion || '',
                             esMando: false,
-                            esFormador: esForm
+                            esFormador: esForm,
+                            tienePagoPendiente: personasConPagoPendiente.has((a.nombre || '').toLowerCase().trim())
                         });
                     });
                 }
@@ -2103,7 +2251,8 @@
                                 fecha_ingreso: c.created_at ? c.created_at.split(' ')[0] : '—',
                                 descripcion: c.feedback_semanal || '',
                                 esMando: true,
-                                esFormador: esForm
+                                esFormador: esForm,
+                                tienePagoPendiente: personasConPagoPendiente.has(nombreCoord.toLowerCase())
                             });
                         }
                     });
@@ -2151,7 +2300,8 @@
                                     fecha_ingreso: u.fecha_ingreso || (u.created_at ? u.created_at.split(' ')[0] : '—'),
                                     descripcion: `Cuenta institucional @${u.usuario}`,
                                     esMando: true,
-                                    esFormador: esForm
+                                    esFormador: esForm,
+                                    tienePagoPendiente: personasConPagoPendiente.has(nombreUser.toLowerCase())
                                 });
                             }
                         }
@@ -2161,16 +2311,6 @@
                 cacheCensoGlobal = listaUnificada;
                 poblarSelectorPersonalCenso();
 
-                const cuerpo = document.getElementById('cuerpoTablaCenso');
-                if (!cuerpo) return;
-
-                if (listaUnificada.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="13" class="p-8 text-center text-zinc-500 italic text-sm">No hay personal registrado en el censo.</td></tr>`;
-                    const tCen = document.getElementById('txtTotalCenso');
-                    if (tCen) tCen.innerText = "0 Efectivos";
-                    return;
-                }
-
                 listaUnificada.sort((a, b) => {
                     const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 0;
                     const pesoB = JERARQUIA_MENOR_A_MAYOR[b.rango_actual] || 0;
@@ -2178,119 +2318,7 @@
                     return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                 });
 
-                const tCen = document.getElementById('txtTotalCenso');
-                if (tCen) tCen.innerText = `${listaUnificada.length} Efectivos Totales`;
-                const maxFecha = new Date().toISOString().split('T')[0];
-
-                cuerpo.innerHTML = listaUnificada.map((r, index) => {
-                    let deptoTag = '<span class="text-purple-400 font-bold">Cirugía</span>';
-                    if (r.departamento === 'medicina') deptoTag = '<span class="text-blue-400 font-bold">Medicina</span>';
-                    if (r.departamento === 'enfermeria') deptoTag = '<span class="text-emerald-400 font-bold">Enfermería & Básica</span>';
-                    if (r.departamento === 'coordinacion') deptoTag = '<span class="text-pink-300 font-bold">Coordinación</span>';
-                    if (r.departamento === 'direccion') deptoTag = '<span class="text-rose-400 font-bold">Dirección / Jefatura</span>';
-
-                    const semaforo = obtenerClaseSemaforoCasilla(r.horas_semana);
-                    const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
-
-                    const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
-                    const esExamenPendiente = r.examen === 'PENDIENTE';
-                    const esEstudianteLimbo = r.rango_actual === 'Estudiante' && r.departamento === 'enfermeria';
-                    
-                    let claseFilaGlobal = '';
-                    if (esEstudianteLimbo) claseFilaGlobal = 'fila-limbo';
-                    else if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
-                    else if (tienePagoPendiente) claseFilaGlobal = 'fila-pago-pendiente';
-                    else claseFilaGlobal = 'fluid-row hover:bg-zinc-900/40 transition';
-
-                    let claseEstadoBadge = 'badge-estado-activo';
-                    if (r.estado === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
-                    if (r.estado === 'Excedencia') claseEstadoBadge = 'badge-estado-excedencia';
-                    if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
-
-                    return `
-                        <tr class="${claseFilaGlobal}">
-                            <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
-                            <td class="fluid-td font-mono-code text-zinc-400 text-xs">
-                                <input type="text" value="${r.discord_id}" 
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'discord_id', this.value)" 
-                                       class="cell-input font-mono-code text-xs">
-                            </td>
-                            <td class="fluid-td font-bold text-white">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <input type="text" value="${r.nombre}" 
-                                           onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'supervisor' : 'nombre'}', this.value)" 
-                                           class="cell-input font-bold text-white text-sm flex-1">
-                                    ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
-                                    ${tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
-                                    ${esEstudianteLimbo ? `<span class="text-indigo-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/25 border border-indigo-400/50 shadow-sm" title="Aprobó pero no ha elegido rama">⏳ En Espera de Rama</span>` : ''}
-                                    ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️️</span>` : ''}
-                                    ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
-                                </div>
-                            </td>
-                            <td class="fluid-td">${deptoTag}</td>
-                            <td class="fluid-td font-semibold">
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_actual', this.value)" class="cell-input font-bold text-sky-300">
-                                    ${TODOS_LOS_RANGOS.map(x => `<option value="${x.id}" ${x.id === r.rango_actual ? 'selected' : ''}>${x.label}</option>`).join('')}
-                                </select>
-                            </td>
-                            <td class="fluid-td font-semibold">
-                                ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
-                                        ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
-                                    </select>
-                                ` : `
-                                    <span class="text-xs text-zinc-400 font-semibold">${r.rango_postular}</span>
-                                `}
-                            </td>
-                            <td class="fluid-td text-center">
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${claseEstadoBadge}">
-                                    <option value="Activo" ${r.estado === 'Activo' ? 'selected' : ''}>🟢 Activo</option>
-                                    <option value="Ausencia" ${r.estado === 'Ausencia' ? 'selected' : ''}>🟡 Ausencia</option>
-                                    <option value="Excedencia" ${r.estado === 'Excedencia' ? 'selected' : ''}>🟠 Excedencia</option>
-                                    <option value="Baja" ${r.estado === 'Baja' ? 'selected' : ''}>🔴 Baja</option>
-                                </select>
-                            </td>
-                            <td class="fluid-td text-center">
-                                <input type="text" value="${r.horas_semana || ''}" 
-                                       placeholder="00:00 HRS"
-                                       onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'horas_semana', this.value)" 
-                                       class="cell-input text-center font-mono-code font-black rounded-lg py-1 px-2 ${semaforo}">
-                            </td>
-                            <td class="fluid-td text-center">
-                                ${r.tipo_origen === 'ascenso' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
-                                        <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
-                                        <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''}>WARN</option>
-                                        <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''}>DESPIDO</option>
-                                    </select>
-                                ` : `<span class="text-zinc-500">—</span>`}
-                            </td>
-                            <td class="fluid-td text-center">
-                                ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
-                                        <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
-                                        <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
-                                        <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
-                                    </select>
-                                ` : `<span class="text-zinc-500">—</span>`}
-                            </td>
-                            <td class="fluid-td text-center font-mono-code text-xs text-zinc-300">
-                                <input type="date" value="${r.fecha_ingreso || ''}" 
-                                       max="${maxFecha}"
-                                       onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'fecha_ingreso', this.value)" 
-                                       class="cell-input text-center font-mono-code text-xs text-zinc-300">
-                            </td>
-                            <td class="fluid-td text-zinc-400 text-xs">
-                                <textarea rows="2" onblur="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, '${r.tipo_origen === 'coordinacion' ? 'feedback_semanal' : 'descripcion'}', this.value)" 
-                                          class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] w-full bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
-                            </td>
-                            <td class="fluid-td text-right">
-                                <button onclick="eliminarDesdeCenso('${r.tipo_origen}', ${r.id_original})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+                filtrarTablaCenso();
             } catch (e) {
                 console.error("Error al cargar censo:", e);
             }
@@ -2381,10 +2409,6 @@
             cargarCensoGeneral();
             if (tieneAccesoTesoreria()) cargarPagos();
         });
-
-        // =========================================================================
-        // FUNCIONES EXTRAS (PERFIL, RANGOS CUSTOM)
-        // =========================================================================
 
         function abrirModalMiPerfil() {
             if (!usuarioActual) return;
