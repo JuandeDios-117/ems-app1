@@ -94,7 +94,7 @@
             background: #0d0f17;
         }
         
-        /* FILA NARANJA PARA ASCENSOS CONDICIONADOS (EXAMEN PENDIENTE) */
+        /* ALERTAS DE FILA ESPECIALES */
         .fila-ascenso-condicionado {
             background: rgba(249, 115, 22, 0.15) !important;
             border-left: 3px solid #f97316 !important;
@@ -102,6 +102,20 @@
         }
         .fila-ascenso-condicionado:hover {
             background: rgba(249, 115, 22, 0.25) !important;
+        }
+
+        .fila-limbo {
+            background: rgba(99, 102, 241, 0.15) !important;
+            border-left: 3px solid #6366f1 !important;
+            box-shadow: inset 0 0 10px rgba(99, 102, 241, 0.1);
+        }
+        .fila-limbo:hover {
+            background: rgba(99, 102, 241, 0.25) !important;
+        }
+
+        .fila-pago-pendiente {
+            background: rgba(245, 158, 11, 0.2) !important;
+            box-shadow: inset 4px 0 0 #f59e0b, 0 0 15px rgba(245, 158, 11, 0.15) !important;
         }
 
         .cell-input {
@@ -149,31 +163,10 @@
             border-right: 2px solid #ef4444 !important;
         }
 
-        .badge-estado-activo {
-            background: rgba(16, 185, 129, 0.12);
-            color: #6ee7b7;
-            border: 1px solid rgba(16, 185, 129, 0.25);
-        }
-        .badge-estado-ausente {
-            background: rgba(245, 158, 11, 0.12);
-            color: #fcd34d;
-            border: 1px solid rgba(245, 158, 11, 0.25);
-        }
-        .badge-estado-excedencia {
-            background: rgba(249, 115, 22, 0.12);
-            color: #fdba74;
-            border: 1px solid rgba(249, 115, 22, 0.25);
-        }
-        .badge-estado-baja {
-            background: rgba(239, 68, 68, 0.12);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.25);
-        }
-
-        .fila-pago-pendiente {
-            background: rgba(245, 158, 11, 0.2) !important;
-            box-shadow: inset 4px 0 0 #f59e0b, 0 0 15px rgba(245, 158, 11, 0.15) !important;
-        }
+        .badge-estado-activo { background: rgba(16, 185, 129, 0.12); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .badge-estado-ausente { background: rgba(245, 158, 11, 0.12); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .badge-estado-excedencia { background: rgba(249, 115, 22, 0.12); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.25); }
+        .badge-estado-baja { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.25); }
 
         div:where(.swal2-container).swal2-backdrop-show {
             background: rgba(4, 5, 8, 0.85) !important;
@@ -778,7 +771,7 @@
             if (r.includes('enfermero/a especialista')) return `<span class="text-emerald-300 font-bold">💉 『🧵』 ${rango}</span>`;
             if (r.includes('enfermero/a general') || r === 'enfermero') return `<span class="text-teal-300 font-bold">💉 『💉』 ${rango}</span>`;
             if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️ 『🧴』 ${rango}</span>`;
-            if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡️️ 『👀』 ${rango}</span>`;
+            if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡 『👀』 ${rango}</span>`;
             return `<span class="text-zinc-300 font-semibold">${rango}</span>`;
         }
 
@@ -822,21 +815,56 @@
             let lista = [];
             if (jefaturaActual === 'enfermeria') {
                 lista = [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA];
-                if (rangoActual === 'Enfermero/a Especialista' && examenRealizado === 'REALIZADO') {
+                
+                // Si ya está en Limbo (En Espera)
+                if (rangoActual === 'Estudiante') {
                     lista.push(
-                        { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" }, { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía (Doble Ascenso)" },
-                        { id: "Estudiante (Medicina)", label: "『📗』Estudiante ➔ Medicina" }, { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina (Doble Ascenso)" }
+                        { id: "Estudiante", label: "『📗』Mantener en Espera" },
+                        { id: "Estudiante (Cirugía)", label: "『📗』Asignar ➔ Cirugía" },
+                        { id: "Estudiante (Medicina)", label: "『📗』Asignar ➔ Medicina" }
+                    );
+                }
+
+                // Si es un Enfermero que va a subir a Estudiante
+                const puedeSubirAEstudiante = ['Enfermero/a Especialista', 'Enfermero/a General', 'Enfermero'].includes(rangoActual) && examenRealizado === 'REALIZADO';
+                
+                if (puedeSubirAEstudiante) {
+                    lista.push(
+                        { id: "Estudiante (En Espera)", label: "『📗』Estudiante ➔ En Espera de Rama" },
+                        { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" },
+                        { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía (Doble)" },
+                        { id: "Estudiante (Medicina)", label: "『📗』Estudiante ➔ Medicina" },
+                        { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina (Doble)" }
                     );
                 }
             } else {
                 lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
                 lista.push({ id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" }, { id: "Celador/a (Bajar)", label: "『👀』Bajar a Escala Básica" });
             }
+
+            if (!lista.some(r => r.id === postularSeleccionado) && postularSeleccionado) {
+                lista.push({ id: postularSeleccionado, label: postularSeleccionado });
+            }
+
             return lista.map(r => `<option value="${r.id}" ${r.id === postularSeleccionado ? 'selected' : ''}>${r.label}</option>`).join('');
         }
 
         function generarOpcionesActual(jefaturaActual, actualSeleccionado) {
-            let lista = jefaturaActual === 'enfermeria' ? [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA] : RANGOS_EVALUACION.filter(r => r.escala === 'medica');
+            let lista = [];
+            if (jefaturaActual === 'enfermeria') {
+                lista = [
+                    ...RANGOS_ESCALA_BASICA, 
+                    ...RANGOS_ESCALA_ENFERMERIA,
+                    { id: "Estudiante", label: "『📗』Estudiante (En Espera)" }
+                ];
+            } else {
+                lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
+            }
+
+            if (!lista.some(r => r.id === actualSeleccionado) && actualSeleccionado) {
+                lista.push({ id: actualSeleccionado, label: actualSeleccionado });
+            }
+
             return lista.map(r => `<option value="${r.id}" ${r.id === actualSeleccionado ? 'selected' : ''}>${r.label}</option>`).join('');
         }
 
@@ -860,7 +888,12 @@
             const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
             const esExamenPendiente = r.examen === 'PENDIENTE';
-            const claseFilaGlobal = esExamenPendiente ? 'fila-ascenso-condicionado' : 'fluid-row hover:bg-zinc-900/60 transition';
+            const esEstudianteLimbo = r.rango_actual === 'Estudiante' && jefaturaId === 'enfermeria';
+            
+            let claseFilaGlobal = '';
+            if (esEstudianteLimbo) claseFilaGlobal = 'fila-limbo';
+            else if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
+            else claseFilaGlobal = 'fluid-row hover:bg-zinc-900/60 transition';
 
             return `
                 <tr class="${claseFilaGlobal}">
@@ -872,8 +905,9 @@
                                class="cell-input font-mono-code text-xs">
                     </td>
                     <td class="fluid-td font-semibold text-white">
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 flex-wrap">
                             <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm flex-1">
+                            ${esEstudianteLimbo ? `<span class="text-indigo-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/25 border border-indigo-400/50 shadow-sm" title="Aprobó pero no ha elegido rama">⏳ En Espera de Rama</span>` : ''}
                             ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️</span>` : ''}
                             ${prueba.enPrueba ? `<span class="text-amber-400 text-xs shrink-0 cursor-help" title="Aspirante en prueba: Día ${prueba.diasPasados}/4 (Quedan ${prueba.diasRestantes} días)">⏳ D${prueba.diasPasados}</span>` : ''}
                         </div>
@@ -927,7 +961,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
+                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -989,7 +1023,7 @@
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between px-2">
                                     <h3 class="text-sm font-black text-emerald-300 uppercase tracking-widest flex items-center gap-2">
-                                        🛡️️ ESCALA BÁSICA (CELADORES Y AUXILIARES)
+                                        🛡 ESCALA BÁSICA (CELADORES Y AUXILIARES)
                                     </h3>
                                     <span class="text-[11px] text-zinc-400 font-mono-code" id="countBasica">0 Efectivos</span>
                                 </div>
@@ -1589,7 +1623,7 @@
                                    title="Histórico total de formaciones (editable)">
                         </td>
                         <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-base" id="totalPagoForm_${f.id}">
-                            $${(f.total_pago || 0).toLocaleString()}
+                            $${(f.total_pago || 0).toLocaleString('en-US')}
                         </td>
                         <td class="fluid-td">
                             <textarea rows="2" placeholder="Notas de capacitación..." 
@@ -2160,9 +2194,11 @@
 
                     const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
                     const esExamenPendiente = r.examen === 'PENDIENTE';
+                    const esEstudianteLimbo = r.rango_actual === 'Estudiante' && r.departamento === 'enfermeria';
                     
                     let claseFilaGlobal = '';
-                    if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
+                    if (esEstudianteLimbo) claseFilaGlobal = 'fila-limbo';
+                    else if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
                     else if (tienePagoPendiente) claseFilaGlobal = 'fila-pago-pendiente';
                     else claseFilaGlobal = 'fluid-row hover:bg-zinc-900/40 transition';
 
@@ -2187,7 +2223,8 @@
                                            class="cell-input font-bold text-white text-sm flex-1">
                                     ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
                                     ${tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
-                                    ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️</span>` : ''}
+                                    ${esEstudianteLimbo ? `<span class="text-indigo-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/25 border border-indigo-400/50 shadow-sm" title="Aprobó pero no ha elegido rama">⏳ En Espera de Rama</span>` : ''}
+                                    ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️️</span>` : ''}
                                     ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
                                 </div>
                             </td>

@@ -291,7 +291,7 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSOS GLOBAL (Con borrado automático de despidos)
+// APLICAR ASCENSOS GLOBAL (Con borrado automático y gestión de LIMBO)
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
         // 1. Borrar automáticamente a los que tengan "DESPIDO" en faltas
@@ -308,13 +308,16 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
 
             if (postular.includes('(Cirugía)')) {
                 nuevaJefatura = 'cirugia';
-                nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').trim();
+                nuevoRangoActual = postular.replace(' (Cirugía)', '').replace(' (Doble Ascenso)', '').replace(' (Doble)', '').trim();
             } else if (postular.includes('(Medicina)')) {
                 nuevaJefatura = 'medicina';
-                nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').trim();
+                nuevoRangoActual = postular.replace(' (Medicina)', '').replace(' (Doble Ascenso)', '').replace(' (Doble)', '').trim();
             } else if (postular.includes('(Bajar)')) {
                 nuevaJefatura = 'enfermeria';
                 nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
+            } else if (postular.includes('(En Espera)')) {
+                nuevaJefatura = 'enfermeria'; // Se queda en enfermería (Limbo)
+                nuevoRangoActual = postular.replace(' (En Espera)', '').trim();
             }
 
             await db.execute({
