@@ -213,7 +213,6 @@ app.post('/api/ascensos', async (req, res) => {
     const marcaPrueba = es_aspirante_formacion ? 'PRUEBA_ACTIVA' : '';
 
     try {
-        // BYPASS: Inyectamos rango_propuesto igual que rango_postular para evadir el SQLite Error
         await db.execute({
             sql: `INSERT INTO registro_ascensos (
                     jefatura, discord_id, nombre_ems, nombre, rango_actual, rango_postular, rango_propuesto,
@@ -292,10 +291,16 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
+// APLICAR ASCENSOS GLOBAL (Con borrado automático de despidos)
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
+        // 1. Borrar automáticamente a los que tengan "DESPIDO" en faltas
+        await db.execute("DELETE FROM registro_ascensos WHERE faltas = 'DESPIDO'");
+
+        // 2. Procesar los ascensos y reiniciar horas al resto
         const registros = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
         let aplicados = 0;
+        
         for (const item of registros.rows) {
             let postular = item.rango_postular || item.rango_actual;
             let nuevaJefatura = item.jefatura;
@@ -321,7 +326,7 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             aplicados++;
         }
         notificar('ascensos_actualizados');
-        res.json({ message: `Se aplicaron los rangos y se reiniciaron las horas en las 3 tablas (${aplicados} efectivos procesados).` });
+        res.json({ message: `Se eliminaron las bajas y se aplicaron los ascensos (${aplicados} efectivos procesados).` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

@@ -93,6 +93,17 @@
         .fluid-row:nth-child(even) .fluid-td {
             background: #0d0f17;
         }
+        
+        /* FILA NARANJA PARA ASCENSOS CONDICIONADOS (EXAMEN PENDIENTE) */
+        .fila-ascenso-condicionado {
+            background: rgba(249, 115, 22, 0.15) !important;
+            border-left: 3px solid #f97316 !important;
+            box-shadow: inset 0 0 10px rgba(249, 115, 22, 0.1);
+        }
+        .fila-ascenso-condicionado:hover {
+            background: rgba(249, 115, 22, 0.25) !important;
+        }
+
         .cell-input {
             background: transparent;
             width: 100%;
@@ -200,7 +211,6 @@
                 </div>
             </div>
 
-            <!-- RELOJES CON BANDERAS (INCLUYENDO NEW YORK) -->
             <div class="flex flex-wrap items-center gap-2.5 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
                 <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2">
                     <span class="text-base">🇲🇽</span>
@@ -486,8 +496,8 @@
                         <input type="text" id="pagoConcepto" placeholder="Bono semanal, Guardia, Premio..." class="w-full input-ems px-3 py-2 rounded-xl">
                     </div>
                     <div>
-                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Cantidad ($)</label>
-                        <input type="number" id="pagoCantidad" placeholder="50000" min="0" class="w-full input-ems px-3 py-2 rounded-xl font-mono-code font-bold text-emerald-400">
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Cantidad a Pagar</label>
+                        <input type="text" id="pagoCantidad" placeholder="$50,000" oninput="formatearInputMoneda(this)" class="w-full input-ems px-3 py-2 rounded-xl font-mono-code font-bold text-emerald-400">
                     </div>
                     <div>
                         <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Estado Inicial</label>
@@ -631,7 +641,7 @@
         let cachePagosGlobal = [];
         let cacheCensoGlobal = [];
 
-        // ESCUDO ANTI-CRASHEOS: Fetch seguro que nunca rompe el código si hay un error en la BD.
+        // ESCUDO ANTI-CRASHEOS
         async function apiFetch(url) {
             try {
                 const res = await fetch(url);
@@ -643,37 +653,39 @@
             }
         }
 
-        // Notificaciones visuales estéticas con SweetAlert2
+        // FORMATEADOR DE MONEDA
+        function formatearInputMoneda(inputElement) {
+            let val = inputElement.value.replace(/[^0-9]/g, '');
+            if (val) {
+                inputElement.value = '$' + parseInt(val, 10).toLocaleString('en-US');
+            } else {
+                inputElement.value = '';
+            }
+        }
+
+        function parsearMonedaLimpia(str) {
+            return parseFloat(String(str).replace(/[^0-9.-]+/g, "")) || 0;
+        }
+
+        // Notificaciones
         const Notif = {
             exito: (msg, titulo = "¡Operación Exitosa!") => {
                 Swal.fire({
-                    icon: 'success',
-                    title: titulo,
-                    text: msg,
-                    customClass: { popup: 'swal-dark-ems' },
-                    confirmButtonColor: '#ec4899'
+                    icon: 'success', title: titulo, text: msg,
+                    customClass: { popup: 'swal-dark-ems' }, confirmButtonColor: '#ec4899'
                 });
             },
             error: (msg, titulo = "Atención") => {
                 Swal.fire({
-                    icon: 'error',
-                    title: titulo,
-                    text: msg,
-                    customClass: { popup: 'swal-dark-ems' },
-                    confirmButtonColor: '#e11d48'
+                    icon: 'error', title: titulo, text: msg,
+                    customClass: { popup: 'swal-dark-ems' }, confirmButtonColor: '#e11d48'
                 });
             },
             confirmar: async (pregunta, textoDetalle = "") => {
                 const res = await Swal.fire({
-                    title: pregunta,
-                    text: textoDetalle,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#e11d48',
-                    confirmButtonText: 'Sí, confirmar',
-                    cancelButtonText: 'Cancelar',
-                    customClass: { popup: 'swal-dark-ems' }
+                    title: pregunta, text: textoDetalle, icon: 'warning',
+                    showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#e11d48',
+                    confirmButtonText: 'Sí, confirmar', cancelButtonText: 'Cancelar', customClass: { popup: 'swal-dark-ems' }
                 });
                 return res.isConfirmed;
             }
@@ -708,13 +720,9 @@
                 img.src = "/logo.png";
                 img.onload = () => {
                     const canvas = document.createElement("canvas");
-                    canvas.width = 64;
-                    canvas.height = 64;
+                    canvas.width = 64; canvas.height = 64;
                     const ctx = canvas.getContext("2d");
-                    ctx.beginPath();
-                    ctx.arc(32, 32, 32, 0, Math.PI * 2, true);
-                    ctx.closePath();
-                    ctx.clip();
+                    ctx.beginPath(); ctx.arc(32, 32, 32, 0, Math.PI * 2, true); ctx.closePath(); ctx.clip();
                     ctx.drawImage(img, 0, 0, 64, 64);
                     const fav = document.getElementById("dynamic-favicon");
                     if (fav) fav.href = canvas.toDataURL("image/png");
@@ -723,128 +731,31 @@
         }
         aplicarFaviconCircular();
 
-        const RANGOS_EMS = [
-            "Sin Rango (Pendiente)",
-            "Director (Admin)",
-            "Subdirectora",
-            "Jefa de Cirugía",
-            "Jefe de Medicina",
-            "Director de Enfermería",
-            "Jefe de Formaciones",
-            "Coordinador",
-            "Supervisor",
-            "Formador"
-        ];
-
-        const JERARQUIA_MENOR_A_MAYOR = {
-            "Celador/a": 1,
-            "Auxiliar de Enfermería": 2,
-            "Enfermero": 3,
-            "Enfermero/a General": 4,
-            "Enfermero/a Especialista": 5,
-            "Estudiante": 6,
-            "Interno/a": 7,
-            "Residente": 8,
-            "Subespecialista": 9,
-            "Especialista": 10,
-            "Formador": 10.5,
-            "Supervisor": 11,
-            "Coordinador": 12,
-            "Jefe de Formaciones": 13,
-            "Director de Enfermería": 14,
-            "Jefe de Medicina": 15,
-            "Jefe de Cirugía": 16,
-            "Jefa de Cirugía": 16,
-            "Subdirectora": 17,
-            "Director (Admin)": 18
-        };
-
+        const RANGOS_EMS = ["Sin Rango (Pendiente)", "Director (Admin)", "Subdirectora", "Jefa de Cirugía", "Jefe de Medicina", "Director de Enfermería", "Jefe de Formaciones", "Coordinador", "Supervisor", "Formador"];
+        const JERARQUIA_MENOR_A_MAYOR = { "Celador/a": 1, "Auxiliar de Enfermería": 2, "Enfermero": 3, "Enfermero/a General": 4, "Enfermero/a Especialista": 5, "Estudiante": 6, "Interno/a": 7, "Residente": 8, "Subespecialista": 9, "Especialista": 10, "Formador": 10.5, "Supervisor": 11, "Coordinador": 12, "Jefe de Formaciones": 13, "Director de Enfermería": 14, "Jefe de Medicina": 15, "Jefe de Cirugía": 16, "Jefa de Cirugía": 16, "Subdirectora": 17, "Director (Admin)": 18 };
         const RANGOS_EVALUACION = [
-            { id: "Celador/a", label: "『👀』Celador/a", escala: "basica" },
-            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería", escala: "basica" },
-            { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" },
-            { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" },
-            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
-            { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" },
-            { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" },
-            { id: "Residente", label: "『📚』Residente", escala: "medica" },
-            { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" },
-            { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
+            { id: "Celador/a", label: "『👀』Celador/a", escala: "basica" }, { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería", escala: "basica" },
+            { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" }, { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" }, { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
+            { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" }, { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" }, { id: "Residente", label: "『📚』Residente", escala: "medica" }, { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" }, { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
-
-        const TODOS_LOS_RANGOS = [
-            ...RANGOS_EVALUACION,
-            { id: "Formador", label: "📚 Formador", escala: "mando" },
-            { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" },
-            { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" },
-            { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" },
-            { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" },
-            { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" },
-            { id: "Jefe de Cirugía", label: "🥼✂️ Jefe de Cirugía", escala: "jefatura" },
-            { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" },
-            { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" }
-        ];
-
-        const RANGOS_ESCALA_BASICA = [
-            { id: "Celador/a", label: "『👀』Celador/a" },
-            { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" }
-        ];
-
-        const RANGOS_ESCALA_ENFERMERIA = [
-            { id: "Enfermero", label: "『💉』Enfermero" },
-            { id: "Enfermero/a General", label: "『💉』Enfermero/a General" },
-            { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" }
-        ];
-
+        const TODOS_LOS_RANGOS = [ ...RANGOS_EVALUACION, { id: "Formador", label: "📚 Formador", escala: "mando" }, { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" }, { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" }, { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" }, { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" }, { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" }, { id: "Jefe de Cirugía", label: "🥼✂️ Jefe de Cirugía", escala: "jefatura" }, { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" }, { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" } ];
+        const RANGOS_ESCALA_BASICA = [ { id: "Celador/a", label: "『👀』Celador/a" }, { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" } ];
+        const RANGOS_ESCALA_ENFERMERIA = [ { id: "Enfermero", label: "『💉』Enfermero" }, { id: "Enfermero/a General", label: "『💉』Enfermero/a General" }, { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" } ];
         const JEFATURAS = [
-            { 
-                id: 'cirugia', 
-                tituloNav: '🏥 CIRUGÍA',
-                titulo: '🏥 Jefatura de Cirugía · Evaluación de Ascensos',
-                colorBorde: 'border-purple-500',
-                colorHeader: 'bg-purple-950/40 text-purple-200',
-                colorTexto: 'text-purple-400',
-                rangosPermitidos: ["Jefa de Cirugía", "Jefe de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador"]
-            },
-            { 
-                id: 'medicina', 
-                tituloNav: '💊 MEDICINA',
-                titulo: '💊 Jefatura de Medicina · Evaluación de Ascensos',
-                colorBorde: 'border-blue-600',
-                colorHeader: 'bg-blue-950/40 text-blue-200',
-                colorTexto: 'text-blue-400',
-                rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador"]
-            },
-            { 
-                id: 'enfermeria', 
-                tituloNav: '💉 ENFERMERÍA & BÁSICA',
-                titulo: '💉 Escala Básica y Dirección de Enfermería',
-                colorBorde: 'border-emerald-500',
-                colorHeader: 'bg-emerald-950/40 text-emerald-200',
-                colorTexto: 'text-emerald-400',
-                rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador"]
-            }
+            { id: 'cirugia', tituloNav: '🏥 CIRUGÍA', titulo: '🏥 Jefatura de Cirugía · Evaluación de Ascensos', colorBorde: 'border-purple-500', colorHeader: 'bg-purple-950/40 text-purple-200', colorTexto: 'text-purple-400', rangosPermitidos: ["Jefa de Cirugía", "Jefe de Cirugía", "Director (Admin)", "Subdirectora", "Coordinador"] },
+            { id: 'medicina', tituloNav: '💊 MEDICINA', titulo: '💊 Jefatura de Medicina · Evaluación de Ascensos', colorBorde: 'border-blue-600', colorHeader: 'bg-blue-950/40 text-blue-200', colorTexto: 'text-blue-400', rangosPermitidos: ["Jefe de Medicina", "Director (Admin)", "Subdirectora", "Coordinador"] },
+            { id: 'enfermeria', tituloNav: '💉 ENFERMERÍA & BÁSICA', titulo: '💉 Escala Básica y Dirección de Enfermería', colorBorde: 'border-emerald-500', colorHeader: 'bg-emerald-950/40 text-emerald-200', colorTexto: 'text-emerald-400', rangosPermitidos: ["Director de Enfermería", "Director (Admin)", "Subdirectora", "Coordinador"] }
         ];
 
         function calcularEstadoPrueba(fechaIngresoStr, descripcion) {
             const esNuevoAspirante = descripcion && descripcion.includes('PRUEBA_ACTIVA');
-            if (!esNuevoAspirante || !fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') {
-                return { enPrueba: false, diasPasados: 99, diasRestantes: 0 };
-            }
-
+            if (!esNuevoAspirante || !fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') return { enPrueba: false, diasPasados: 99, diasRestantes: 0 };
             const fechaIngreso = new Date(fechaIngresoStr + 'T00:00:00');
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-
+            const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const difTiempo = hoy - fechaIngreso;
             const diasPasados = Math.floor(difTiempo / (1000 * 60 * 60 * 24)) + 1;
             const diasRestantes = 4 - diasPasados;
-
-            return {
-                enPrueba: diasPasados <= 4 && diasPasados >= 1,
-                diasPasados: Math.max(1, diasPasados),
-                diasRestantes: Math.max(0, diasRestantes)
-            };
+            return { enPrueba: diasPasados <= 4 && diasPasados >= 1, diasPasados: Math.max(1, diasPasados), diasRestantes: Math.max(0, diasRestantes) };
         }
 
         function obtenerBadgeRango(rango) {
@@ -867,18 +778,12 @@
             if (r.includes('enfermero/a especialista')) return `<span class="text-emerald-300 font-bold">💉 『🧵』 ${rango}</span>`;
             if (r.includes('enfermero/a general') || r === 'enfermero') return `<span class="text-teal-300 font-bold">💉 『💉』 ${rango}</span>`;
             if (r.includes('auxiliar')) return `<span class="text-orange-300 font-bold">🛡️ 『🧴』 ${rango}</span>`;
-            if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡️ 『👀』 ${rango}</span>`;
-
+            if (r.includes('celador')) return `<span class="text-amber-300 font-bold">🛡️️ 『👀』 ${rango}</span>`;
             return `<span class="text-zinc-300 font-semibold">${rango}</span>`;
         }
 
-        function esDirector() {
-            return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora');
-        }
-
-        function tieneAccesoTesoreria() {
-            return usuarioActual && (usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora' || usuarioActual.rol === 'admin');
-        }
+        function esDirector() { return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora'); }
+        function tieneAccesoTesoreria() { return usuarioActual && (usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora' || usuarioActual.rol === 'admin'); }
 
         function parsearHorasNumericas(str) {
             if (!str) return 0;
@@ -893,7 +798,6 @@
             if (!valorRaw) return '';
             let val = valorRaw.toUpperCase().replace(/[^0-9:]/g, '').trim();
             if (!val) return '';
-
             if (!val.includes(':')) {
                 const num = Math.max(0, parseInt(val));
                 if (!isNaN(num)) val = String(num).padStart(2, '0') + ':00';
@@ -903,7 +807,6 @@
                 const mins = Math.max(0, Math.min(59, parseInt(m) || 0));
                 val = String(horas).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
             }
-
             return `${val} HRS`;
         }
 
@@ -917,42 +820,24 @@
 
         function generarOpcionesPostular(rangoActual, examenRealizado, jefaturaActual, postularSeleccionado) {
             let lista = [];
-
             if (jefaturaActual === 'enfermeria') {
                 lista = [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA];
                 if (rangoActual === 'Enfermero/a Especialista' && examenRealizado === 'REALIZADO') {
                     lista.push(
-                        { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" },
-                        { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía (Doble Ascenso)" },
-                        { id: "Estudiante (Medicina)", label: "『📗』Estudiante ➔ Medicina" },
-                        { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina (Doble Ascenso)" }
+                        { id: "Estudiante (Cirugía)", label: "『📗』Estudiante ➔ Cirugía" }, { id: "Interno/a (Cirugía)", label: "『📝』Interno/a ➔ Cirugía (Doble Ascenso)" },
+                        { id: "Estudiante (Medicina)", label: "『📗』Estudiante ➔ Medicina" }, { id: "Interno/a (Medicina)", label: "『📝』Interno/a ➔ Medicina (Doble Ascenso)" }
                     );
                 }
             } else {
                 lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
-                lista.push(
-                    { id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" },
-                    { id: "Celador/a (Bajar)", label: "『👀』Bajar a Escala Básica" }
-                );
+                lista.push({ id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" }, { id: "Celador/a (Bajar)", label: "『👀』Bajar a Escala Básica" });
             }
-
-            return lista.map(r => `
-                <option value="${r.id}" ${r.id === postularSeleccionado ? 'selected' : ''}>
-                    ${r.label}
-                </option>
-            `).join('');
+            return lista.map(r => `<option value="${r.id}" ${r.id === postularSeleccionado ? 'selected' : ''}>${r.label}</option>`).join('');
         }
 
         function generarOpcionesActual(jefaturaActual, actualSeleccionado) {
-            let lista = jefaturaActual === 'enfermeria' 
-                ? [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA] 
-                : RANGOS_EVALUACION.filter(r => r.escala === 'medica');
-
-            return lista.map(r => `
-                <option value="${r.id}" ${r.id === actualSeleccionado ? 'selected' : ''}>
-                    ${r.label}
-                </option>
-            `).join('');
+            let lista = jefaturaActual === 'enfermeria' ? [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA] : RANGOS_EVALUACION.filter(r => r.escala === 'medica');
+            return lista.map(r => `<option value="${r.id}" ${r.id === actualSeleccionado ? 'selected' : ''}>${r.label}</option>`).join('');
         }
 
         function renderizarFilaEvaluacion(r, index, jefaturaId, colorTexto) {
@@ -974,8 +859,11 @@
             const maxFecha = new Date().toISOString().split('T')[0];
             const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
+            const esExamenPendiente = r.examen === 'PENDIENTE';
+            const claseFilaGlobal = esExamenPendiente ? 'fila-ascenso-condicionado' : 'fluid-row hover:bg-zinc-900/60 transition';
+
             return `
-                <tr class="fluid-row hover:bg-zinc-900/60 transition">
+                <tr class="${claseFilaGlobal}">
                     <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                     <td class="fluid-td font-mono-code text-zinc-400">
                         <input type="text" value="${r.discord_id || 'N/A'}" 
@@ -986,11 +874,8 @@
                     <td class="fluid-td font-semibold text-white">
                         <div class="flex items-center gap-1.5">
                             <input type="text" value="${r.nombre}" onblur="editarCampo(${r.id}, 'nombre', this.value, '${jefaturaId}')" class="cell-input font-bold text-white text-sm flex-1">
-                            ${prueba.enPrueba ? `
-                                <span class="text-amber-400 text-xs shrink-0 cursor-help" title="Aspirante en prueba: Día ${prueba.diasPasados}/4 (Quedan ${prueba.diasRestantes} días)">
-                                    ⏳ D${prueba.diasPasados}
-                                </span>
-                            ` : ''}
+                            ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️</span>` : ''}
+                            ${prueba.enPrueba ? `<span class="text-amber-400 text-xs shrink-0 cursor-help" title="Aspirante en prueba: Día ${prueba.diasPasados}/4 (Quedan ${prueba.diasRestantes} días)">⏳ D${prueba.diasPasados}</span>` : ''}
                         </div>
                     </td>
                     <td class="fluid-td">
@@ -1028,7 +913,7 @@
                     </td>
                     ${esEnfermeria ? `
                     <td class="fluid-td text-center">
-                        <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center">
+                        <select onchange="editarCampo(${r.id}, 'examen', this.value, '${jefaturaId}')" class="cell-input font-bold text-center ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
                             <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
                             <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                             <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
@@ -1042,7 +927,7 @@
                                class="cell-input text-center font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td">
-                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[40px] bg-black/40 border border-zinc-800 rounded-lg p-2">${r.descripcion || ''}</textarea>
+                        <textarea rows="2" placeholder="Notas, ausencias..." onblur="editarCampo(${r.id}, 'descripcion', this.value, '${jefaturaId}')" class="cell-input text-zinc-300 text-xs resize-y min-h-[50px] bg-black/40 border border-zinc-800 rounded-lg p-2 focus:border-pink-500 transition">${r.descripcion || ''}</textarea>
                     </td>
                     <td class="fluid-td text-right">
                         <button onclick="eliminarRegistro(${r.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
@@ -1104,7 +989,7 @@
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between px-2">
                                     <h3 class="text-sm font-black text-emerald-300 uppercase tracking-widest flex items-center gap-2">
-                                        🛡️ ESCALA BÁSICA (CELADORES Y AUXILIARES)
+                                        🛡️️ ESCALA BÁSICA (CELADORES Y AUXILIARES)
                                     </h3>
                                     <span class="text-[11px] text-zinc-400 font-mono-code" id="countBasica">0 Efectivos</span>
                                 </div>
@@ -1202,7 +1087,7 @@
         async function aplicarTodosLosAscensosGlobal() {
             const confirmar = await Notif.confirmar(
                 "⚡ ¿Aplicar Todos los Ascensos Globalmente?",
-                "Se aplicarán los ascensos en Enfermería, Medicina y Cirugía, y todas las horas se reiniciarán a 00:00 HRS."
+                "Se eliminarán automáticamente los perfiles marcados con DESPIDO. Luego se aplicarán los ascensos y las horas se reiniciarán a 00:00 HRS."
             );
             if (!confirmar) return;
 
@@ -1895,13 +1780,13 @@
             const rangoEl = document.getElementById('pagoRango');
             const rango = rangoEl ? rangoEl.value.trim() : '';
             const concepto = document.getElementById('pagoConcepto').value.trim();
-            const cantidad = document.getElementById('pagoCantidad').value.trim();
+            const cantidadRaw = document.getElementById('pagoCantidad').value;
             const estado = document.getElementById('pagoEstado').value;
 
             if (!personal) return Notif.error("Por favor selecciona un miembro del Censo General.");
             if (!concepto) return Notif.error("Ingresa el concepto del pago.");
 
-            const monto = Math.max(0, parseFloat(cantidad) || 0);
+            const monto = Math.max(0, parsearMonedaLimpia(cantidadRaw) || 0);
 
             try {
                 const res = await fetch('/api/pagos', {
@@ -2016,7 +1901,10 @@
                             <input type="text" value="${p.concepto}" onblur="editarPagoEnTabla(${p.id}, 'concepto', this.value)" class="cell-input text-zinc-200">
                         </td>
                         <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-sm">
-                            <input type="number" value="${p.cantidad}" onblur="editarPagoEnTabla(${p.id}, 'cantidad', this.value)" class="cell-input text-center font-mono-code font-black text-emerald-400">
+                            <input type="text" value="$${parseFloat(p.cantidad || 0).toLocaleString('en-US')}" 
+                                   onfocus="this.value='${p.cantidad}'"
+                                   onblur="editarPagoEnTabla(${p.id}, 'cantidad', parsearMonedaLimpia(this.value))" 
+                                   class="cell-input text-center font-mono-code font-black text-emerald-400">
                         </td>
                         <td class="fluid-td text-center">
                             <select onchange="editarPagoEnTabla(${p.id}, 'estado', this.value)" class="cell-input font-bold text-center text-xs py-1 rounded-lg ${badgeEstado}">
@@ -2057,9 +1945,9 @@
                 const tReg = document.getElementById('totalPagosRegistrados');
                 const tLiq = document.getElementById('totalPagosLiquidados');
                 const tPen = document.getElementById('totalPagosPendientes');
-                if (tReg) tReg.innerText = `$${totalGeneral.toLocaleString()}`;
-                if (tLiq) tLiq.innerText = `$${totalLiquidado.toLocaleString()}`;
-                if (tPen) tPen.innerText = `$${totalPendiente.toLocaleString()}`;
+                if (tReg) tReg.innerText = `$${totalGeneral.toLocaleString('en-US')}`;
+                if (tLiq) tLiq.innerText = `$${totalLiquidado.toLocaleString('en-US')}`;
+                if (tPen) tPen.innerText = `$${totalPendiente.toLocaleString('en-US')}`;
 
                 filtrarTablaPagos();
             } catch (e) {
@@ -2271,7 +2159,12 @@
                     const prueba = calcularEstadoPrueba(r.fecha_ingreso, r.descripcion);
 
                     const tienePagoPendiente = personasConPagoPendiente.has((r.nombre || '').toLowerCase().trim());
-                    const claseFilaPago = tienePagoPendiente ? 'fila-pago-pendiente' : '';
+                    const esExamenPendiente = r.examen === 'PENDIENTE';
+                    
+                    let claseFilaGlobal = '';
+                    if (esExamenPendiente) claseFilaGlobal = 'fila-ascenso-condicionado';
+                    else if (tienePagoPendiente) claseFilaGlobal = 'fila-pago-pendiente';
+                    else claseFilaGlobal = 'fluid-row hover:bg-zinc-900/40 transition';
 
                     let claseEstadoBadge = 'badge-estado-activo';
                     if (r.estado === 'Ausencia') claseEstadoBadge = 'badge-estado-ausente';
@@ -2279,7 +2172,7 @@
                     if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
 
                     return `
-                        <tr class="fluid-row hover:bg-zinc-900/40 transition ${claseFilaPago}">
+                        <tr class="${claseFilaGlobal}">
                             <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                             <td class="fluid-td font-mono-code text-zinc-400 text-xs">
                                 <input type="text" value="${r.discord_id}" 
@@ -2294,6 +2187,7 @@
                                            class="cell-input font-bold text-white text-sm flex-1">
                                     ${r.esFormador ? `<span class="text-amber-400 text-xs cursor-help" title="Instructor oficial de Formaciones">📖</span>` : ''}
                                     ${tienePagoPendiente ? `<span class="text-amber-300 text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-400/50 shadow-sm" title="Pago pendiente por cobrar en Tesorería">💵 Cobro Pendiente</span>` : ''}
+                                    ${esExamenPendiente ? `<span class="text-orange-400 text-xs shrink-0" title="Rango condicionado a Examen">⚠️</span>` : ''}
                                     ${prueba.enPrueba ? `<span class="text-amber-400 text-xs cursor-help" title="Aspirante en prueba (Día ${prueba.diasPasados}/4)">⏳ D${prueba.diasPasados}</span>` : ''}
                                 </div>
                             </td>
@@ -2337,7 +2231,7 @@
                             </td>
                             <td class="fluid-td text-center">
                                 ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs">
+                                    <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
                                         <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
                                         <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                                         <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
