@@ -135,7 +135,17 @@ const db = createClient({
       });
     }
 
-    console.log("[DB] Base de datos verificada y sincronizada con solución anti-crasheo NOT NULL.");
+    // 7. HISTORIAL DEL ÚLTIMO REPORTE SEMANAL
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS historial_reportes (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        reporte_json TEXT NOT NULL,
+        fecha TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    console.log("[DB] Base de datos verificada y sincronizada con historial de reportes.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

@@ -57,6 +57,28 @@ function notificar(evento, data = {}) {
     io.emit('db_update', { evento, ...data });
 }
 
+function parsearHorasServer(str) {
+    if (!str) return 0;
+    const limpio = String(str).toUpperCase().replace('HRS', '').replace('HR', '').trim();
+    const partes = limpio.split(':');
+    const h = parseFloat(partes[0]) || 0;
+    const m = partes[1] ? (parseFloat(partes[1]) || 0) / 60 : 0;
+    return Math.max(0, h + m);
+}
+
+const JERARQUIA_SERVER = {
+    "Celador/a": 1,
+    "Auxiliar de Enfermería": 2,
+    "Enfermero": 3,
+    "Enfermero/a General": 4,
+    "Enfermero/a Especialista": 5,
+    "Estudiante": 6,
+    "Interno/a": 7,
+    "Residente": 8,
+    "Subespecialista": 9,
+    "Especialista": 10
+};
+
 // 1. REGISTRO & LOGIN
 app.post('/api/register', async (req, res) => {
     const { nombre, usuario, password, discord_id } = req.body;
@@ -279,7 +301,6 @@ app.put('/api/ascensos/:id', async (req, res) => {
         let nuevoExamen = examen !== undefined ? examen : registroActual.examen;
 
         // TRANSFERENCIA INMEDIATA ENTRE SEMANA:
-        // Si es Estudiante o Interno/a en el limbo de Enfermería y aprueba el examen con una rama seleccionada
         if (registroActual.jefatura === 'enfermeria' && (nuevoRangoActual === 'Estudiante' || nuevoRangoActual === 'Interno/a')) {
             if (nuevoExamen === 'REALIZADO') {
                 if (nuevoRangoPostular && nuevoRangoPostular.includes('(Cirugía)')) {
@@ -327,17 +348,99 @@ app.put('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSOS GLOBAL (Exclusivo de Enfermería, Cirugía y Medicina con purga de DESPIDO)
+// OBTENER EL ÚLTIMO REPORTE SEMANAL GUARDADO
+app.get('/api/ascensos/ultimo-reporte', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT reporte_json, fecha, updated_at FROM historial_reportes WHERE id = 1");
+        if (!result.rows || result.rows.length === 0) {
+            return res.status(404).json({ error: "Aún no se ha generado ningún reporte semanal en el sistema." });
+        }
+        const row = result.rows[0];
+        res.json({
+            reporte: JSON.parse(row.reporte_json),
+            fecha: row.fecha,
+            updated_at: row.updated_at
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// APLICAR ASCENSOS GLOBAL + GUARDAR REPORTE SEMANAL + BONOS TESORERÍA
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
-        // 1. Eliminar automáticamente a cualquier efectivo con DESPIDO en las tablas médicas
+        const todosRes = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
+        const todos = todosRes.rows || [];
+
+        const hoy = new Date().toISOString().split('T')[0];
+
+        const reporte = {
+            fecha: hoy,
+            expulsados: [],
+            descensos: [],
+            ascensosOperativa: {
+                "Auxiliar de Enfermería": [],
+                "Enfermero": [],
+                "Enfermero/a General": [],
+                "Enfermero/a Especialista": []
+            },
+            ascensosMedica: {
+                "Estudiante": [],
+                "Interno/a": [],
+                "Residente": [],
+                "Subespecialista": [],
+                "Especialista": []
+            },
+            emsSemana: {
+                enfermeria: null,
+                medicina: null,
+                cirugia: null
+            },
+            bonos50k: [],
+            bonos100k: []
+        };
+
+        let maxHoras = { enfermeria: -1, medicina: -1, cirugia: -1 };
+        const activosParaProcesar = [];
+
+        for (const item of todos) {
+            const h = parsearHorasServer(item.horas_semana);
+
+            if (item.faltas === 'DESPIDO') {
+                reporte.expulsados.push({
+                    nombre: item.nombre,
+                    discord_id: item.discord_id,
+                    rango_anterior: item.rango_actual,
+                    jefatura: item.jefatura
+                });
+                continue;
+            }
+
+            activosParaProcesar.push(item);
+
+            if (h > 0 && h > maxHoras[item.jefatura]) {
+                maxHoras[item.jefatura] = h;
+                reporte.emsSemana[item.jefatura] = {
+                    nombre: item.nombre,
+                    discord_id: item.discord_id,
+                    horas: item.horas_semana,
+                    rango: item.rango_actual
+                };
+            }
+
+            if (h >= 50) {
+                reporte.bonos100k.push({ nombre: item.nombre, discord_id: item.discord_id, horas: item.horas_semana, rango: item.rango_actual, monto: 100000 });
+            } else if (h >= 25) {
+                reporte.bonos50k.push({ nombre: item.nombre, discord_id: item.discord_id, horas: item.horas_semana, rango: item.rango_actual, monto: 50000 });
+            }
+        }
+
+        // Eliminar expulsados de las tablas médicas
         await db.execute("DELETE FROM registro_ascensos WHERE faltas = 'DESPIDO' AND jefatura IN ('enfermeria', 'cirugia', 'medicina')");
 
-        // 2. Procesar únicamente los ascensos de las 3 tablas médicas
-        const registros = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
         let aplicados = 0;
-        
-        for (const item of registros.rows) {
+
+        for (const item of activosParaProcesar) {
             let postular = item.rango_postular || item.rango_actual;
             let nuevaJefatura = item.jefatura;
             let nuevoRangoActual = postular;
@@ -355,9 +458,34 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
                 nuevaJefatura = 'enfermeria';
                 nuevoRangoActual = postular.replace(' (Bajar)', '').trim();
             } else if (postular.includes('(En Espera)')) {
-                nuevaJefatura = 'enfermeria'; // Permanece en el limbo de Enfermería
+                nuevaJefatura = 'enfermeria';
                 nuevoRangoActual = postular.replace(' (En Espera)', '').trim();
-                nuevoExamen = 'PENDIENTE'; // Espera su examen de rama
+                nuevoExamen = 'PENDIENTE';
+            }
+
+            const pesoAnt = JERARQUIA_SERVER[item.rango_actual] || 0;
+            const pesoNuevo = JERARQUIA_SERVER[nuevoRangoActual] || 0;
+
+            if (pesoNuevo < pesoAnt || postular.includes('(Bajar)')) {
+                reporte.descensos.push({
+                    nombre: item.nombre,
+                    discord_id: item.discord_id,
+                    rango_anterior: item.rango_actual,
+                    rango_nuevo: nuevoRangoActual
+                });
+            } else if (pesoNuevo > pesoAnt) {
+                const infoPersona = {
+                    nombre: item.nombre,
+                    discord_id: item.discord_id,
+                    rango_anterior: item.rango_actual,
+                    rango_nuevo: nuevoRangoActual,
+                    jefatura_nueva: nuevaJefatura
+                };
+                if (reporte.ascensosOperativa[nuevoRangoActual] !== undefined) {
+                    reporte.ascensosOperativa[nuevoRangoActual].push(infoPersona);
+                } else if (reporte.ascensosMedica[nuevoRangoActual] !== undefined) {
+                    reporte.ascensosMedica[nuevoRangoActual].push(infoPersona);
+                }
             }
 
             await db.execute({
@@ -369,9 +497,37 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             aplicados++;
         }
 
+        // Registrar bonos en Tesorería
+        const todosLosBonos = [...reporte.bonos100k, ...reporte.bonos50k];
+        for (const b of todosLosBonos) {
+            await db.execute({
+                sql: `INSERT INTO registro_pagos (personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por)
+                      VALUES (?, ?, ?, ?, 'Pendiente', 'Pendiente', ?, 'Sistema Automático')`,
+                args: [
+                    b.nombre,
+                    b.rango,
+                    `Bono por Horas (${b.horas})`,
+                    b.monto,
+                    hoy
+                ]
+            });
+        }
+
+        // Guardar el reporte en la base de datos para consultas futuras
+        await db.execute({
+            sql: `INSERT OR REPLACE INTO historial_reportes (id, reporte_json, fecha, updated_at) VALUES (1, ?, ?, CURRENT_TIMESTAMP)`,
+            args: [JSON.stringify(reporte), hoy]
+        });
+
         notificar('ascensos_actualizados');
-        res.json({ message: `Se eliminaron las bajas y se aplicaron los ascensos en Enfermería, Cirugía y Medicina (${aplicados} efectivos procesados).` });
+        if (todosLosBonos.length > 0) notificar('pagos_actualizados');
+
+        res.json({ 
+            message: `Se aplicaron los cambios en Enfermería, Cirugía y Medicina (${aplicados} efectivos procesados, ${reporte.expulsados.length} bajas y ${todosLosBonos.length} bonos generados).`,
+            reporte
+        });
     } catch (e) {
+        console.error("Error en aplicar-todos-global:", e);
         res.status(500).json({ error: e.message });
     }
 });

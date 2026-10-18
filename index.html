@@ -7,6 +7,8 @@
     <link id="dynamic-favicon" rel="icon" type="image/png" href="/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
@@ -581,9 +583,14 @@
                     <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas y procesa ascensos masivos para el cierre semanal.</p>
                 </div>
                 
-                <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
-                    ⚡ Aplicar Todos los Ascensos (Enfermería, Cirugía y Medicina)
-                </button>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="verUltimoReporteGuardado()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-indigo-600/30">
+                        📄 Ver Último Reporte (Discord / PDF)
+                    </button>
+                    <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
+                        ⚡ Aplicar Todos los Ascensos (Enfermería, Cirugía y Medicina)
+                    </button>
+                </div>
             </div>
 
             <div class="bg-black/50 p-5 rounded-2xl border border-zinc-800 space-y-3">
@@ -630,12 +637,64 @@
 
     </div>
 
+    <!-- MODAL DE RESULTADOS DE CIERRE SEMANAL (PLANTILLA DISCORD + DESCARGA PDF) -->
+    <div id="modalReporteAscensos" class="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md hidden">
+        <div class="card-ems border border-pink-500/40 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔔</span>
+                    <div>
+                        <h3 class="font-black text-white text-sm uppercase tracking-wider">Reporte Oficial de Cierre Semanal</h3>
+                        <p class="text-[11px] text-zinc-400">Plantilla lista para publicar en Discord y Acta Oficial en PDF.</p>
+                    </div>
+                </div>
+                <button onclick="cerrarModalReporte()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-rose-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto space-y-4 flex-1">
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-black/50 p-3 rounded-2xl border border-zinc-800">
+                    <span class="text-xs font-bold text-pink-300">📄 Acciones del Reporte Generado:</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="copiarPlantillaDiscord()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg">
+                            📋 Copiar Texto para Discord
+                        </button>
+                        <button onclick="descargarPdfReporteSemanal()" class="btn-origen px-4 py-2 rounded-xl text-xs uppercase tracking-wider font-black">
+                            📥 Descargar PDF Profesional
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-zinc-400 uppercase mb-1">Vista Previa del Anuncio para Discord (Editable antes de copiar):</label>
+                    <textarea id="txtPlantillaDiscord" rows="18" class="w-full input-ems p-4 rounded-2xl font-mono-code text-xs text-zinc-200 leading-relaxed resize-y"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const socket = io();
         let usuarioActual = null;
         let esRegistro = false;
         let cachePagosGlobal = [];
         let cacheCensoGlobal = [];
+        let ultimoReporteSemanal = null;
+
+        // MAPEO DE ROLES DE DISCORD SEGÚN TU PLANTILLA OFICIAL
+        const DISCORD_ROLES_MAP = {
+            "Celador/a": "<@&1485396855419441333>",
+            "Auxiliar de Enfermería": "<@&1485396855419441333>",
+            "Enfermero": "<@&1485396487021134107>",
+            "Enfermero/a General": "<@&1485396822363996381>",
+            "Enfermero/a Especialista": "<@&1485396789086392494>",
+            "Estudiante": "<@&1485396051861962812>",
+            "Interno/a": "<@&1485396134674301039>",
+            "Residente": "<@&1485395892700971068>",
+            "Subespecialista": "<@&1485395842599882904>",
+            "Especialista": "<@&1485395842599882904>"
+        };
 
         async function apiFetch(url) {
             try {
@@ -731,7 +790,7 @@
             { id: "Enfermero", label: "『💉』Enfermero", escala: "enfermeria" }, { id: "Enfermero/a General", label: "『💉』Enfermero/a General", escala: "enfermeria" }, { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista", escala: "enfermeria" },
             { id: "Estudiante", label: "『📗』Estudiante", escala: "medica" }, { id: "Interno/a", label: "『📝』Interno/a", escala: "medica" }, { id: "Residente", label: "『📚』Residente", escala: "medica" }, { id: "Subespecialista", label: "『🔬』Subespecialista", escala: "medica" }, { id: "Especialista", label: "『🥼』Especialista", escala: "medica" }
         ];
-        const TODOS_LOS_RANGOS = [ ...RANGOS_EVALUACION, { id: "Formador", label: "📚 Formador", escala: "mando" }, { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" }, { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" }, { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" }, { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" }, { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" }, { id: "Jefe de Cirugía", label: "🥼✂️️ Jefe de Cirugía", escala: "jefatura" }, { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" }, { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" } ];
+        const TODOS_LOS_RANGOS = [ ...RANGOS_EVALUACION, { id: "Formador", label: "📚 Formador", escala: "mando" }, { id: "Supervisor", label: "📋🥼 Supervisor", escala: "mando" }, { id: "Coordinador", label: "📋🩺 Coordinador", escala: "mando" }, { id: "Jefe de Formaciones", label: "🥼📚 Jefe de Formaciones", escala: "jefatura" }, { id: "Director de Enfermería", label: "🥼💉 Director de Enfermería", escala: "jefatura" }, { id: "Jefe de Medicina", label: "🥼💊 Jefe de Medicina", escala: "jefatura" }, { id: "Jefe de Cirugía", label: "🥼✂ Jefe de Cirugía", escala: "jefatura" }, { id: "Subdirectora", label: "🩺🏢 Subdirectora", escala: "direccion" }, { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" } ];
         const RANGOS_ESCALA_BASICA = [ { id: "Celador/a", label: "『👀』Celador/a" }, { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" } ];
         const RANGOS_ESCALA_ENFERMERIA = [ { id: "Enfermero", label: "『💉』Enfermero" }, { id: "Enfermero/a General", label: "『💉』Enfermero/a General" }, { id: "Enfermero/a Especialista", label: "『🧵』Enfermero/a Especialista" } ];
         const JEFATURAS = [
@@ -816,7 +875,6 @@
             if (jefaturaActual === 'enfermeria') {
                 lista = [...RANGOS_ESCALA_BASICA, ...RANGOS_ESCALA_ENFERMERIA];
                 
-                // Si ya está en Limbo (Estudiante o Interno/a en espera de rama)
                 if (rangoActual === 'Estudiante' || rangoActual === 'Interno/a') {
                     lista.push(
                         { id: `${rangoActual} (En Espera)`, label: `『📗』${rangoActual} ➔ Mantener en Espera` },
@@ -825,7 +883,6 @@
                     );
                 }
 
-                // Si es un Enfermero (General o Especialista) que puede postular a Estudiante o Interno
                 const puedeSubirARama = ['Enfermero/a Especialista', 'Enfermero/a General', 'Enfermero'].includes(rangoActual);
                 
                 if (puedeSubirARama) {
@@ -1120,10 +1177,253 @@
 
         inicializarEstructuraHtml();
 
+        // =========================================================================
+        // GENERADOR DE PLANTILLA DISCORD Y REPORTE PDF DE CIERRE SEMANAL
+        // =========================================================================
+        function formatoTagUsuario(persona) {
+            if (persona.discord_id && persona.discord_id !== 'N/A' && persona.discord_id.trim() !== '') {
+                return `<@${persona.discord_id.trim()}>`;
+            }
+            return `**${persona.nombre}**`;
+        }
+
+        function construirTextoPlantillaDiscord(rep) {
+            const expTxt = rep.expulsados.length > 0 
+                ? rep.expulsados.map(x => formatoTagUsuario(x)).join('\n') 
+                : 'Ninguno';
+
+            const descTxt = rep.descensos.length > 0 
+                ? rep.descensos.map(x => `${formatoTagUsuario(x)} - ${DISCORD_ROLES_MAP[x.rango_nuevo] || x.rango_nuevo}`).join('\n') 
+                : 'Ninguno';
+
+            const opAux = rep.ascensosOperativa["Auxiliar de Enfermería"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const opEnf = rep.ascensosOperativa["Enfermero"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const opGen = rep.ascensosOperativa["Enfermero/a General"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const opEsp = rep.ascensosOperativa["Enfermero/a Especialista"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+
+            const medEst = rep.ascensosMedica["Estudiante"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const medInt = rep.ascensosMedica["Interno/a"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const medRes = rep.ascensosMedica["Residente"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const medSubEsp = [...rep.ascensosMedica["Subespecialista"], ...rep.ascensosMedica["Especialista"]].map(x => formatoTagUsuario(x)).join('\n') || '—';
+
+            const emsEnf = rep.emsSemana.enfermeria ? formatoTagUsuario(rep.emsSemana.enfermeria) : 'Sin definir';
+            const emsMed = rep.emsSemana.medicina ? formatoTagUsuario(rep.emsSemana.medicina) : 'Sin definir';
+            const emsCir = rep.emsSemana.cirugia ? formatoTagUsuario(rep.emsSemana.cirugia) : 'Sin definir';
+
+            const bonos100Txt = rep.bonos100k.map(x => `${formatoTagUsuario(x)} (50+ hrs ➔ $100,000)`).join('\n');
+            const bonos50Txt = rep.bonos50k.map(x => `${formatoTagUsuario(x)} (25+ hrs ➔ $50,000)`).join('\n');
+            const bloqueBonos = [bonos100Txt, bonos50Txt].filter(Boolean).join('\n\n') || 'Ninguno esta semana';
+
+            return `# 🔔 ASCENSOS / DESCENSOS 🔔
+
+## 🚪 DESPIDOS
+**❌ Expulsados**
+${expTxt}
+
+ ** ⬇️ Descensos **
+${descTxt}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+## 🏥 ÁREA OPERATIVA
+
+** ASCENSO A <@&1485396855419441333>  **
+${opAux}
+ 
+** ASCENSO A <@&1485396487021134107> **
+${opEnf}
+
+** ASCENSO A <@&1485396822363996381>  **
+${opGen}
+
+** ASCENSO A <@&1485396789086392494>   **
+${opEsp}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+## 🎓 ÁREA MÉDICA
+
+** ASCENSO A <@&1485396051861962812>   **
+*Recuerden hacer sus selecciones de <@&1489804255672926272> / <@&1485395813965238362>  abriendo un ticket en #🎫・contactar-jefatura *
+${medEst}
+
+** ASCENSO A <@&1485396134674301039>   **
+${medInt}
+
+** ASCENSO A <@&1485395892700971068>   **
+${medRes}
+
+** ASCENSO A <@&1485395842599882904>   **
+${medSubEsp}
+
+━━━━━━━━━━━━━━━━━━━━━━━
+
+# 🌟 EMS DE LA SEMANA ENFERMERIA: ${emsEnf}
+# 🌟 EMS DE LA SEMANA MEDICINA: ${emsMed}
+# 🌟 EMS DE LA SEMANA CIRUGIA: ${emsCir}
+
+# 🔔 ASCENSOS ESPECIALES 🔔
+—
+
+## 🔔 BONOS POR HORAS 🔔
+
+${bloqueBonos}
+
+
+***🏆 Reconocimiento especial al miembro que destacó durante la semana por su esfuerzo, actividad y compromiso dentro del EMS.***
+
+<@&1485606548364464309> 
+
+# CUALQUIER DUDA SOBRE SU ASCENSO POR FAVOR ABRAN TICKET EN DIRECCION <#1495794084009349394>`;
+        }
+
+        function mostrarModalReporteAscensos(rep) {
+            ultimoReporteSemanal = rep;
+            const texto = construirTextoPlantillaDiscord(rep);
+            document.getElementById('txtPlantillaDiscord').value = texto;
+            document.getElementById('modalReporteAscensos').classList.remove('hidden');
+        }
+
+        async function verUltimoReporteGuardado() {
+            try {
+                const res = await fetch('/api/ascensos/ultimo-reporte');
+                if (!res.ok) {
+                    const err = await res.json();
+                    return Notif.error(err.error || "Aún no hay ningún reporte semanal guardado.");
+                }
+                const data = await res.json();
+                if (data && data.reporte) {
+                    mostrarModalReporteAscensos(data.reporte);
+                }
+            } catch (e) {
+                Notif.error("Error al consultar el último reporte.");
+            }
+        }
+
+        function cerrarModalReporte() {
+            document.getElementById('modalReporteAscensos').classList.add('hidden');
+        }
+
+        function copiarPlantillaDiscord() {
+            const textarea = document.getElementById('txtPlantillaDiscord');
+            textarea.select();
+            document.execCommand('copy');
+            Notif.exito("Anuncio copiado al portapapeles. Ya puedes pegarlo en Discord.");
+        }
+
+        function descargarPdfReporteSemanal() {
+            if (!ultimoReporteSemanal) return;
+            const rep = ultimoReporteSemanal;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Encabezado Institucional Oscuro
+            doc.setFillColor(16, 17, 24);
+            doc.rect(0, 0, 210, 35, 'F');
+            doc.setTextColor(244, 114, 182);
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("EMS ORIGEN ROLEPLAY", 14, 16);
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.text(`ACTA OFICIAL DE ASCENSOS, BAJAS Y BONOS (${rep.fecha})`, 14, 25);
+
+            let currentY = 43;
+
+            // 1. Destacados de la Semana
+            doc.setTextColor(16, 17, 24);
+            doc.setFontSize(12);
+            doc.text("1. RECONOCIMIENTOS: EMS DE LA SEMANA", 14, currentY);
+            currentY += 3;
+
+            const emsRows = [
+                ["Enfermería & Básica", rep.emsSemana.enfermeria ? `${rep.emsSemana.enfermeria.nombre} (${rep.emsSemana.enfermeria.discord_id})` : "Sin definir", rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.horas : "—"],
+                ["Medicina", rep.emsSemana.medicina ? `${rep.emsSemana.medicina.nombre} (${rep.emsSemana.medicina.discord_id})` : "Sin definir", rep.emsSemana.medicina ? rep.emsSemana.medicina.horas : "—"],
+                ["Cirugía", rep.emsSemana.cirugia ? `${rep.emsSemana.cirugia.nombre} (${rep.emsSemana.cirugia.discord_id})` : "Sin definir", rep.emsSemana.cirugia ? rep.emsSemana.cirugia.horas : "—"]
+            ];
+
+            doc.autoTable({
+                startY: currentY,
+                head: [["Departamento", "Personal Destacado", "Horas Registradas"]],
+                body: emsRows,
+                theme: 'grid',
+                headStyles: { fillColor: [236, 72, 153], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9 }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // 2. Ascensos Área Operativa y Médica
+            doc.setFontSize(12);
+            doc.text("2. ASCENSOS OFICIALES DE LA SEMANA", 14, currentY);
+            currentY += 3;
+
+            const ascRows = [];
+            Object.entries(rep.ascensosOperativa).forEach(([rangoDest, lista]) => {
+                lista.forEach(p => ascRows.push(["Área Operativa", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
+            });
+            Object.entries(rep.ascensosMedica).forEach(([rangoDest, lista]) => {
+                lista.forEach(p => ascRows.push(["Área Médica", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
+            });
+
+            if (ascRows.length === 0) ascRows.push(["—", "Sin ascensos registrados", "—", "—", "—"]);
+
+            doc.autoTable({
+                startY: currentY,
+                head: [["Área", "Nombre (IC)", "Discord ID", "Rango Anterior", "Nuevo Rango"]],
+                body: ascRows,
+                theme: 'grid',
+                headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9 }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // 3. Bonos por Horas (25h = 50k, 50h = 100k)
+            doc.setFontSize(12);
+            doc.text("3. BONIFICACIONES POR HORAS DE GUARDIA", 14, currentY);
+            currentY += 3;
+
+            const bonosRows = [];
+            rep.bonos100k.forEach(b => bonosRows.push([b.nombre, b.discord_id, b.rango, b.horas, "$100,000 (50+ hrs)"]));
+            rep.bonos50k.forEach(b => bonosRows.push([b.nombre, b.discord_id, b.rango, b.horas, "$50,000 (25+ hrs)"]));
+            if (bonosRows.length === 0) bonosRows.push(["Sin bonos registrados", "—", "—", "—", "$0"]);
+
+            doc.autoTable({
+                startY: currentY,
+                head: [["Personal", "Discord ID", "Rango", "Horas", "Bono Asignado"]],
+                body: bonosRows,
+                theme: 'grid',
+                headStyles: { fillColor: [245, 158, 11], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9 }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+
+            // 4. Bajas / Expulsados y Descensos
+            doc.setFontSize(12);
+            doc.text("4. EXPULSIONES Y DESCENSOS", 14, currentY);
+            currentY += 3;
+
+            const bajasRows = [];
+            rep.expulsados.forEach(x => bajasRows.push(["EXPULSIÓN", x.nombre, x.discord_id, x.rango_anterior, "BAJA DEFINITIVA"]));
+            rep.descensos.forEach(x => bajasRows.push(["DESCENSO", x.nombre, x.discord_id, x.rango_anterior, x.rango_nuevo]));
+            if (bajasRows.length === 0) bajasRows.push(["—", "Sin bajas ni descensos", "—", "—", "—"]);
+
+            doc.autoTable({
+                startY: currentY,
+                head: [["Tipo", "Nombre (IC)", "Discord ID", "Rango Anterior", "Resolución"]],
+                body: bajasRows,
+                theme: 'grid',
+                headStyles: { fillColor: [225, 29, 72], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 9 }
+            });
+
+            doc.save(`Reporte_Ascensos_EMS_${rep.fecha}.pdf`);
+        }
+
         async function aplicarTodosLosAscensosGlobal() {
             const confirmar = await Notif.confirmar(
-                "⚡ ¿Aplicar Ascensos en Enfermería, Cirugía y Medicina?",
-                "Se eliminarán automáticamente los perfiles marcados con DESPIDO en estas tablas, se procesarán los ascensos y las horas se reiniciarán a 00:00 HRS."
+                "⚡ ¿Aplicar Ascensos y Generar Reporte Semanal?",
+                "Se procesarán los ascensos en Enfermería, Cirugía y Medicina, se eliminarán los despedidos, se asentarán los bonos ($50k/$100k) en Tesorería y se abrirá tu plantilla para Discord + PDF."
             );
             if (!confirmar) return;
 
@@ -1131,9 +1431,14 @@
                 const res = await fetch('/api/ascensos/aplicar-todos-global', { method: 'POST' });
                 const data = await res.json();
                 if (res.ok) {
-                    Notif.exito(data.message);
                     await cargarTablas();
                     await cargarCensoGeneral();
+                    if (tieneAccesoTesoreria()) await cargarPagos();
+                    if (data.reporte) {
+                        mostrarModalReporteAscensos(data.reporte);
+                    } else {
+                        Notif.exito(data.message);
+                    }
                 } else {
                     Notif.error(data.error || "No se pudo procesar");
                 }
@@ -2124,7 +2429,7 @@
                         </td>
                         <td class="fluid-td font-semibold">
                             ${r.tipo_origen === 'ascenso' ? `
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
                                     ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
                                 </select>
                             ` : `
@@ -2147,7 +2452,7 @@
                         </td>
                         <td class="fluid-td text-center">
                             ${r.tipo_origen === 'ascenso' ? `
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
                                     <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
                                     <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''}>WARN</option>
                                     <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''}>DESPIDO</option>
@@ -2156,7 +2461,7 @@
                         </td>
                         <td class="fluid-td text-center">
                             ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
                                     <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
                                     <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                                     <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>
