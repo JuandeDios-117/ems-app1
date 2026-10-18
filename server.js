@@ -66,7 +66,6 @@ function parsearHorasServer(str) {
     return Math.max(0, h + m);
 }
 
-// Dividir texto largo para no exceder el límite de 2000 caracteres de Discord
 function dividirMensajeDiscord(texto, maxLen = 1950) {
     if (texto.length <= maxLen) return [texto];
     const lineas = texto.split('\n');
@@ -96,6 +95,30 @@ const JERARQUIA_SERVER = {
     "Subespecialista": 9,
     "Especialista": 10
 };
+
+async function sumarInstruccionFormador(nombreFormador) {
+    if (!nombreFormador) return;
+    const formadorClean = nombreFormador.trim();
+    const formadorCheck = await db.execute({
+        sql: "SELECT id, instrucciones_hechas, instrucciones_totales FROM registro_formaciones WHERE LOWER(TRIM(instructor)) = LOWER(?)",
+        args: [formadorClean]
+    });
+
+    if (formadorCheck.rows && formadorCheck.rows.length > 0) {
+        const fId = formadorCheck.rows[0].id;
+        const nuevas = Number(formadorCheck.rows[0].instrucciones_hechas || 0) + 1;
+        const nuevasTotales = Number(formadorCheck.rows[0].instrucciones_totales || 0) + 1;
+        await db.execute({
+            sql: "UPDATE registro_formaciones SET instrucciones_hechas = ?, instrucciones_totales = ?, total_pago = ? WHERE id = ?",
+            args: [nuevas, nuevasTotales, nuevas * 50000, fId]
+        });
+    } else {
+        await db.execute({
+            sql: "INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, instrucciones_totales, total_pago, notas, actualizado_por) VALUES (?, 'Formador', 1, 1, 50000, 'Ingreso de aspirante', ?)",
+            args: [formadorClean, formadorClean]
+        });
+    }
+}
 
 // 1. REGISTRO & LOGIN
 app.post('/api/register', async (req, res) => {
@@ -198,7 +221,8 @@ app.get('/api/usuarios', async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', async (req, res) => {
-    const { rango, rol, discord_id, horas_semana, fecha_ingreso, nombre, password } = req.body;
+    const { rango, rango_actual, rol, discord_id, horas_semana, fecha_ingreso, nombre, password } = req.body;
+    const rangoFinal = rango || rango_actual || null;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
@@ -212,9 +236,9 @@ app.put('/api/usuarios/:id', async (req, res) => {
                     nombre = COALESCE(?, nombre),
                     password = COALESCE(?, password)
                   WHERE id = ?`,
-            args: [rango || null, rol || null, discordLimpio, horas_semana || null, fecha_ingreso || null, nombre ? nombre.trim() : null, password ? String(password) : null, req.params.id]
+            args: [rangoFinal, rol || null, discordLimpio, horas_semana !== undefined ? horas_semana : null, fecha_ingreso || null, nombre ? nombre.trim() : null, password ? String(password) : null, req.params.id]
         });
-        notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango, rol });
+        notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango: rangoFinal, rol });
         res.json({ message: "Actualizado con éxito." });
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -328,26 +352,7 @@ app.post('/api/ascensos', async (req, res) => {
         });
 
         if (es_aspirante_formacion && actualizado_por) {
-            const formadorClean = actualizado_por.trim();
-            const formadorCheck = await db.execute({
-                sql: "SELECT id, instrucciones_hechas, instrucciones_totales FROM registro_formaciones WHERE LOWER(TRIM(instructor)) = LOWER(?)",
-                args: [formadorClean]
-            });
-
-            if (formadorCheck.rows && formadorCheck.rows.length > 0) {
-                const fId = formadorCheck.rows[0].id;
-                const nuevas = Number(formadorCheck.rows[0].instrucciones_hechas || 0) + 1;
-                const nuevasTotales = Number(formadorCheck.rows[0].instrucciones_totales || 0) + 1;
-                await db.execute({
-                    sql: "UPDATE registro_formaciones SET instrucciones_hechas = ?, instrucciones_totales = ?, total_pago = ? WHERE id = ?",
-                    args: [nuevas, nuevasTotales, nuevas * 50000, fId]
-                });
-            } else {
-                await db.execute({
-                    sql: "INSERT INTO registro_formaciones (instructor, rango, instrucciones_hechas, instrucciones_totales, total_pago, notas, actualizado_por) VALUES (?, 'Formador', 1, 1, 50000, 'Ingreso de aspirante', ?)",
-                    args: [formadorClean, formadorClean]
-                });
-            }
+            await sumarInstruccionFormador(actualizado_por);
             notificar('formaciones_actualizadas');
         }
 
@@ -359,7 +364,7 @@ app.post('/api/ascensos', async (req, res) => {
     }
 });
 
-// ACTUALIZACIÓN EN TIEMPO REAL (Con transferencia inmediata al aprobar examen)
+// ACTUALIZACIÓN EN TIEMPO REAL
 app.put('/api/ascensos/:id', async (req, res) => {
     const { jefatura, discord_id, nombre, rango_actual, rango_postular, faltas, horas_semana, examen, estado, descripcion, fecha_ingreso } = req.body;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') || 'N/A' : null;
@@ -446,7 +451,7 @@ app.get('/api/ascensos/ultimo-reporte', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSOS GLOBAL + GUARDAR REPORTE SEMANAL + BONOS TESORERÍA
+// APLICAR ASCENSOS GLOBAL + REINICIO DE HORAS Y BORRADO DE PDFS EN COORDINACIÓN
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
         const todosRes = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
@@ -515,11 +520,12 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             }
         }
 
-        // Eliminar expulsados de las tablas médicas
+        // 1. Eliminar expulsados de las tablas médicas
         await db.execute("DELETE FROM registro_ascensos WHERE faltas = 'DESPIDO' AND jefatura IN ('enfermeria', 'cirugia', 'medicina')");
 
         let aplicados = 0;
 
+        // 2. Aplicar ascensos y reiniciar horas en Enfermería, Cirugía y Medicina
         for (const item of activosParaProcesar) {
             let postular = item.rango_postular || item.rango_actual;
             let nuevaJefatura = item.jefatura;
@@ -577,7 +583,13 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             aplicados++;
         }
 
-        // Registrar bonos en Tesorería
+        // 3. Reiniciar horas en Coordinación y BORRAR los PDFs de feedback semanales para el nuevo ciclo
+        await db.execute("UPDATE registro_coordinacion SET horas_semana = '00:00 HRS', pdf_feedback = '', nombre_pdf = '', feedback_semanal = ''");
+
+        // 4. Reiniciar horas semanales de las cuentas institucionales (Dirección/Jefaturas) para el Censo
+        await db.execute("UPDATE usuarios SET horas_semana = '00:00 HRS'");
+
+        // 5. Registrar bonos en Tesorería
         const todosLosBonos = [...reporte.bonos100k, ...reporte.bonos50k];
         for (const b of todosLosBonos) {
             await db.execute({
@@ -593,17 +605,18 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             });
         }
 
-        // Guardar el reporte en la base de datos para consultas futuras
+        // 6. Guardar el reporte en la base de datos
         await db.execute({
             sql: `INSERT OR REPLACE INTO historial_reportes (id, reporte_json, fecha, updated_at) VALUES (1, ?, ?, CURRENT_TIMESTAMP)`,
             args: [JSON.stringify(reporte), hoy]
         });
 
         notificar('ascensos_actualizados');
+        notificar('coordinacion_actualizada');
         if (todosLosBonos.length > 0) notificar('pagos_actualizados');
 
         res.json({ 
-            message: `Se aplicaron los cambios en Enfermería, Cirugía y Medicina (${aplicados} efectivos procesados, ${reporte.expulsados.length} bajas y ${todosLosBonos.length} bonos generados).`,
+            message: `Cierre completado: ${aplicados} efectivos evaluados, horas reiniciadas en todas las tablas y feedbacks PDF de Coordinación limpiados.`,
             reporte
         });
     } catch (e) {
@@ -665,7 +678,7 @@ app.post('/api/control-tablas/toggle', async (req, res) => {
     }
 });
 
-// 4. FORMACIONES
+// 4. FORMACIONES & LIMBO DE ASPIRANTES PENDIENTES DE INSTRUCCIÓN IC
 app.get('/api/formaciones', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM registro_formaciones ORDER BY id DESC");
@@ -736,11 +749,109 @@ app.delete('/api/formaciones/:id', async (req, res) => {
     }
 });
 
-// 5. COORDINACIÓN
+// RUTAS DEL LIMBO DE ASPIRANTES EN FORMACIONES (PENDIENTES IC)
+app.get('/api/formaciones/limbo', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT * FROM aspirantes_limbo ORDER BY id DESC");
+        res.json(result.rows || []);
+    } catch (e) {
+        res.json([]);
+    }
+});
+
+app.post('/api/formaciones/limbo', async (req, res) => {
+    const { discord_id, nombre, fecha_ingreso, notas, registrado_por } = req.body;
+    if (!nombre) return res.status(400).json({ error: "Ingresa el nombre del aspirante." });
+
+    const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
+    const fechaHoy = fecha_ingreso || new Date().toISOString().split('T')[0];
+
+    try {
+        await db.execute({
+            sql: "INSERT INTO aspirantes_limbo (discord_id, nombre, fecha_ingreso, notas, registrado_por) VALUES (?, ?, ?, ?, ?)",
+            args: [discordLimpio, nombre.trim(), fechaHoy, notas || 'Pendiente de Instrucción IC', registrado_por || 'Formaciones']
+        });
+        notificar('limbo_actualizado');
+        res.json({ message: "Aspirante registrado en el Limbo de Formaciones (Pendiente IC)." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/formaciones/limbo/:id', async (req, res) => {
+    const { discord_id, nombre, fecha_ingreso, notas } = req.body;
+    let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') || 'N/A' : null;
+    try {
+        await db.execute({
+            sql: `UPDATE aspirantes_limbo SET 
+                    discord_id = COALESCE(?, discord_id),
+                    nombre = COALESCE(?, nombre),
+                    fecha_ingreso = COALESCE(?, fecha_ingreso),
+                    notas = COALESCE(?, notas)
+                  WHERE id = ?`,
+            args: [discordLimpio, nombre ? nombre.trim() : null, fecha_ingreso || null, notas !== undefined ? notas.trim() : null, req.params.id]
+        });
+        notificar('limbo_actualizado');
+        res.json({ message: "Aspirante en limbo actualizado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/formaciones/limbo/:id/aprobar', async (req, res) => {
+    const { aprobado_por } = req.body;
+    try {
+        const check = await db.execute({ sql: "SELECT * FROM aspirantes_limbo WHERE id = ?", args: [req.params.id] });
+        if (!check.rows || check.rows.length === 0) {
+            return res.status(404).json({ error: "Aspirante no encontrado en el limbo." });
+        }
+        const asp = check.rows[0];
+        const hoy = new Date().toISOString().split('T')[0];
+
+        // 1. Pasar a Enfermería Básica como Celador en pruebas
+        await db.execute({
+            sql: `INSERT INTO registro_ascensos (
+                    jefatura, discord_id, nombre_ems, nombre, rango_actual, rango_postular, rango_propuesto,
+                    faltas, horas_semana, examen, estado, descripcion, fecha_ingreso, actualizado_por
+                  ) VALUES ('enfermeria', ?, ?, ?, 'Celador/a', 'Celador/a', 'Celador/a', 'NINGUNA', '', 'NO APLICA', 'Activo', 'PRUEBA_ACTIVA', ?, ?)`,
+            args: [asp.discord_id || 'N/A', asp.nombre, asp.nombre, asp.fecha_ingreso || hoy, aprobado_por || asp.registrado_por || 'Formaciones']
+        });
+
+        // 2. Sumar +1 instrucción al formador que finalizó la instrucción
+        await sumarInstruccionFormador(aprobado_por || asp.registrado_por);
+
+        // 3. Eliminar del limbo
+        await db.execute({ sql: "DELETE FROM aspirantes_limbo WHERE id = ?", args: [req.params.id] });
+
+        notificar('limbo_actualizado');
+        notificar('formaciones_actualizadas');
+        notificar('ascensos_actualizados');
+
+        res.json({ message: `${asp.nombre} completó su instrucción IC y fue enviado a Enfermería Básica.` });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/formaciones/limbo/:id', async (req, res) => {
+    try {
+        await db.execute({ sql: "DELETE FROM aspirantes_limbo WHERE id = ?", args: [req.params.id] });
+        notificar('limbo_actualizado');
+        res.json({ message: "Aspirante retirado del limbo." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 5. COORDINACIÓN (Ordenado con Coordinador arriba + Desempeño + PDF ligero bajo demanda)
 app.get('/api/coordinacion', async (req, res) => {
     try {
-        const sql = `SELECT id, discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por, updated_at 
-                     FROM registro_coordinacion ORDER BY id DESC`;
+        const sql = `SELECT id, discord_id, supervisor, rango, horas_semana, estado, COALESCE(desempeno, 'Excelente') as desempeno, 
+                            feedback_semanal, nombre_pdf, 
+                            CASE WHEN pdf_feedback IS NOT NULL AND pdf_feedback != '' THEN 1 ELSE 0 END as tiene_pdf,
+                            actualizado_por, updated_at 
+                     FROM registro_coordinacion 
+                     ORDER BY CASE WHEN rango = 'Coordinador' THEN 0 ELSE 1 END ASC, id ASC`;
         const result = await db.execute(sql);
         res.json(result.rows || []);
     } catch (e) {
@@ -748,19 +859,35 @@ app.get('/api/coordinacion', async (req, res) => {
     }
 });
 
+// Ruta ligera para visualizar el PDF de un supervisor específico sin saturar la tabla
+app.get('/api/coordinacion/:id/pdf', async (req, res) => {
+    try {
+        const result = await db.execute({
+            sql: "SELECT pdf_feedback, nombre_pdf, supervisor FROM registro_coordinacion WHERE id = ?",
+            args: [req.params.id]
+        });
+        if (!result.rows || result.rows.length === 0 || !result.rows[0].pdf_feedback) {
+            return res.status(404).json({ error: "Este supervisor no tiene un reporte PDF adjunto." });
+        }
+        res.json(result.rows[0]);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 app.post('/api/coordinacion', async (req, res) => {
-    const { discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por } = req.body;
+    const { discord_id, supervisor, rango, horas_semana, estado, desempeno, actualizado_por } = req.body;
     if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
 
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, feedback_semanal, actualizado_por)
+            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, desempeno, actualizado_por)
                   VALUES (?, ?, ?, ?, ?, ?, ?)`,
             args: [
                 discordLimpio, supervisor.trim(), rango || 'Supervisor', horas_semana || '',
-                estado || 'Activo', feedback_semanal || '', actualizado_por || 'Coordinación'
+                estado || 'Activo', desempeno || 'Excelente', actualizado_por || 'Coordinación'
             ]
         });
         notificar('coordinacion_actualizada');
@@ -771,22 +898,27 @@ app.post('/api/coordinacion', async (req, res) => {
 });
 
 app.put('/api/coordinacion/:id', async (req, res) => {
-    const { estado, feedback_semanal, rango, horas_semana, discord_id, supervisor } = req.body;
+    const { estado, desempeno, feedback_semanal, rango, rango_actual, horas_semana, discord_id, supervisor, pdf_feedback, nombre_pdf } = req.body;
+    const rangoFinal = rango || rango_actual || null;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
     try {
         await db.execute({
             sql: `UPDATE registro_coordinacion SET 
                     estado = COALESCE(?, estado),
+                    desempeno = COALESCE(?, desempeno),
                     feedback_semanal = COALESCE(?, feedback_semanal),
                     rango = COALESCE(?, rango),
                     horas_semana = COALESCE(?, horas_semana),
                     discord_id = COALESCE(?, discord_id),
-                    supervisor = COALESCE(?, supervisor)
+                    supervisor = COALESCE(?, supervisor),
+                    pdf_feedback = COALESCE(?, pdf_feedback),
+                    nombre_pdf = COALESCE(?, nombre_pdf)
                   WHERE id = ?`,
             args: [
-                estado || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rango || null,
-                horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null, req.params.id
+                estado || null, desempeno || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rangoFinal,
+                horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null,
+                pdf_feedback !== undefined ? pdf_feedback : null, nombre_pdf !== undefined ? nombre_pdf : null, req.params.id
             ]
         });
         notificar('coordinacion_actualizada');

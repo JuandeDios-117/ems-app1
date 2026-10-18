@@ -63,7 +63,7 @@ const db = createClient({
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN rango_postular TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_ascensos ADD COLUMN rango_propuesto TEXT DEFAULT ''"); } catch (e) {}
 
-    // 3. FORMACIONES
+    // 3. FORMACIONES Y LIMBO DE ASPIRANTES
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_formaciones (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,6 +80,18 @@ const db = createClient({
 
     try { await db.execute("ALTER TABLE registro_formaciones ADD COLUMN instrucciones_totales INTEGER DEFAULT 0"); } catch (e) {}
 
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS aspirantes_limbo (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        discord_id TEXT DEFAULT 'N/A',
+        nombre TEXT NOT NULL,
+        fecha_ingreso TEXT DEFAULT '',
+        notas TEXT DEFAULT 'Pendiente de Instrucción IC',
+        registrado_por TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // 4. COORDINACIÓN
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_coordinacion (
@@ -89,6 +101,7 @@ const db = createClient({
         rango TEXT DEFAULT 'Supervisor',
         horas_semana TEXT DEFAULT '',
         estado TEXT DEFAULT 'Activo',
+        desempeno TEXT DEFAULT 'Excelente',
         feedback_semanal TEXT DEFAULT '',
         pdf_feedback TEXT DEFAULT '',
         nombre_pdf TEXT DEFAULT '',
@@ -98,6 +111,7 @@ const db = createClient({
     `);
 
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN desempeno TEXT DEFAULT 'Excelente'"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN pdf_feedback TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN nombre_pdf TEXT DEFAULT ''"); } catch (e) {}
 
@@ -158,7 +172,7 @@ const db = createClient({
       args: [process.env.DISCORD_WEBHOOK_URL || '']
     });
 
-    console.log("[DB] Base de datos verificada y sincronizada con soporte para Webhook.");
+    console.log("[DB] Base de datos verificada y sincronizada al 100%.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }
