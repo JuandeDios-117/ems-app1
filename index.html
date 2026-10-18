@@ -580,7 +580,7 @@
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
                     <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas y Asignación de Rangos</h2>
-                    <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas y procesa ascensos masivos para el cierre semanal.</p>
+                    <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas, configura el Webhook de Discord y procesa ascensos masivos.</p>
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
@@ -589,6 +589,21 @@
                     </button>
                     <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
                         ⚡ Aplicar Todos los Ascensos (Enfermería, Cirugía y Medicina)
+                    </button>
+                </div>
+            </div>
+
+            <!-- GESTOR DE WEBHOOK DISCORD -->
+            <div class="bg-black/50 p-5 rounded-2xl border border-indigo-500/30 space-y-3">
+                <h3 class="text-sm font-black text-indigo-300 uppercase flex items-center gap-2">
+                    🔗 Integración de Webhook de Discord (Canal de Anuncios)
+                </h3>
+                <p class="text-xs text-zinc-400">Pega aquí la URL del Webhook de tu canal de Discord para poder enviar el reporte de ascensos directamente con un clic.</p>
+                <div class="flex flex-wrap gap-3 text-xs">
+                    <input type="password" id="inputWebhookDiscord" placeholder="https://discord.com/api/webhooks/..." class="flex-1 min-w-[260px] input-ems px-3 py-2.5 rounded-xl font-mono-code text-xs">
+                    <button onclick="toggleVerWebhook()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-2 rounded-xl font-bold">👁️ Mostrar/Ocultar</button>
+                    <button onclick="guardarWebhookDiscord()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-6 py-2.5 rounded-xl uppercase text-xs transition shadow-lg shadow-indigo-600/30">
+                        💾 Guardar Webhook
                     </button>
                 </div>
             </div>
@@ -637,7 +652,7 @@
 
     </div>
 
-    <!-- MODAL DE RESULTADOS DE CIERRE SEMANAL (PLANTILLA DISCORD + DESCARGA PDF) -->
+    <!-- MODAL DE RESULTADOS DE CIERRE SEMANAL (PLANTILLA DISCORD + WEBHOOK + PDF) -->
     <div id="modalReporteAscensos" class="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md hidden">
         <div class="card-ems border border-pink-500/40 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800 shrink-0">
@@ -645,7 +660,7 @@
                     <span class="text-xl">🔔</span>
                     <div>
                         <h3 class="font-black text-white text-sm uppercase tracking-wider">Reporte Oficial de Cierre Semanal</h3>
-                        <p class="text-[11px] text-zinc-400">Plantilla lista para publicar en Discord y Acta Oficial en PDF.</p>
+                        <p class="text-[11px] text-zinc-400">Edita el texto si deseas agregar un ascenso especial antes de publicarlo en Discord.</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalReporte()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-rose-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition">
@@ -657,8 +672,11 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 bg-black/50 p-3 rounded-2xl border border-zinc-800">
                     <span class="text-xs font-bold text-pink-300">📄 Acciones del Reporte Generado:</span>
                     <div class="flex flex-wrap gap-2">
+                        <button onclick="enviarReportePorWebhook()" id="btnEnviarWebhookModal" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
+                            🚀 Enviar a Discord (Webhook)
+                        </button>
                         <button onclick="copiarPlantillaDiscord()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg">
-                            📋 Copiar Texto para Discord
+                            📋 Copiar Texto
                         </button>
                         <button onclick="descargarPdfReporteSemanal()" class="btn-origen px-4 py-2 rounded-xl text-xs uppercase tracking-wider font-black">
                             📥 Descargar PDF Profesional
@@ -667,7 +685,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-black text-zinc-400 uppercase mb-1">Vista Previa del Anuncio para Discord (Editable antes de copiar):</label>
+                    <label class="block text-xs font-black text-zinc-400 uppercase mb-1">Vista Previa del Anuncio para Discord (Editable antes de enviar o copiar):</label>
                     <textarea id="txtPlantillaDiscord" rows="18" class="w-full input-ems p-4 rounded-2xl font-mono-code text-xs text-zinc-200 leading-relaxed resize-y"></textarea>
                 </div>
             </div>
@@ -1178,6 +1196,84 @@
         inicializarEstructuraHtml();
 
         // =========================================================================
+        // GESTIÓN DE WEBHOOK Y ENVÍO A DISCORD
+        // =========================================================================
+        async function cargarWebhookConfig() {
+            try {
+                const res = await fetch('/api/config/webhook');
+                if (!res.ok) return;
+                const data = await res.json();
+                const el = document.getElementById('inputWebhookDiscord');
+                if (el && data.webhook_url !== undefined) {
+                    el.value = data.webhook_url;
+                }
+            } catch (e) {}
+        }
+
+        function toggleVerWebhook() {
+            const el = document.getElementById('inputWebhookDiscord');
+            if (!el) return;
+            el.type = el.type === 'password' ? 'text' : 'password';
+        }
+
+        async function guardarWebhookDiscord() {
+            const el = document.getElementById('inputWebhookDiscord');
+            const webhook_url = el ? el.value.trim() : '';
+            try {
+                const res = await fetch('/api/config/webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ webhook_url })
+                });
+                const data = await res.json();
+                if (res.ok) Notif.exito(data.message);
+                else Notif.error(data.error || "No se pudo guardar el Webhook.");
+            } catch (e) {
+                Notif.error("Error de conexión al guardar Webhook.");
+            }
+        }
+
+        async function enviarReportePorWebhook() {
+            const textarea = document.getElementById('txtPlantillaDiscord');
+            const contenido = textarea ? textarea.value.trim() : '';
+            if (!contenido) return Notif.error("El texto del reporte está vacío.");
+
+            const confirmar = await Notif.confirmar(
+                "🚀 ¿Publicar anuncio en Discord?",
+                "Se enviará el texto tal como aparece en la vista previa directamente al canal de Discord configurado."
+            );
+            if (!confirmar) return;
+
+            const btn = document.getElementById('btnEnviarWebhookModal');
+            const txtOriginal = btn ? btn.innerText : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ Enviando a Discord...";
+            }
+
+            try {
+                const res = await fetch('/api/discord/enviar-reporte', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contenido })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    Notif.exito(data.message, "¡Publicado en Discord!");
+                } else {
+                    Notif.error(data.error || "No se pudo enviar al Webhook.");
+                }
+            } catch (e) {
+                Notif.error("Error de red al intentar enviar el reporte a Discord.");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = txtOriginal;
+                }
+            }
+        }
+
+        // =========================================================================
         // GENERADOR DE PLANTILLA DISCORD Y REPORTE PDF DE CIERRE SEMANAL
         // =========================================================================
         function formatoTagUsuario(persona) {
@@ -1680,7 +1776,10 @@ ${bloqueBonos}
 
             if (pestana === 'pagos' && tieneAccesoTesoreria()) cargarPagos();
             if (pestana === 'censo') cargarCensoGeneral();
-            if (pestana === 'admin') cargarGestionAdmin();
+            if (pestana === 'admin') {
+                cargarGestionAdmin();
+                cargarWebhookConfig();
+            }
         }
 
         async function agregarPersonalRapido(jefaturaId) {
@@ -2429,7 +2528,7 @@ ${bloqueBonos}
                         </td>
                         <td class="fluid-td font-semibold">
                             ${r.tipo_origen === 'ascenso' ? `
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-pink-300">
                                     ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
                                 </select>
                             ` : `
@@ -2452,7 +2551,7 @@ ${bloqueBonos}
                         </td>
                         <td class="fluid-td text-center">
                             ${r.tipo_origen === 'ascenso' ? `
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'faltas', this.value)" class="cell-input font-black text-center text-xs">
                                     <option value="NINGUNA" ${r.faltas === 'NINGUNA' ? 'selected' : ''}>—</option>
                                     <option value="WARN" ${r.faltas === 'WARN' ? 'selected' : ''}>WARN</option>
                                     <option value="DESPIDO" ${r.faltas === 'DESPIDO' ? 'selected' : ''}>DESPIDO</option>
@@ -2461,7 +2560,7 @@ ${bloqueBonos}
                         </td>
                         <td class="fluid-td text-center">
                             ${r.tipo_origen === 'ascenso' && r.departamento === 'enfermeria' ? `
-                                <select onchange="editarDesdeCenso('${r.tipo_origen}',${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
+                                <select onchange="editarDesdeCenso('${r.tipo_origen}', ${r.id_original}, 'examen', this.value)" class="cell-input font-bold text-center text-xs ${esExamenPendiente ? 'text-orange-400 bg-orange-900/30' : ''}">
                                     <option value="NO APLICA" ${r.examen === 'NO APLICA' ? 'selected' : ''}>NO APLICA</option>
                                     <option value="PENDIENTE" ${r.examen === 'PENDIENTE' ? 'selected' : ''}>PENDIENTE</option>
                                     <option value="REALIZADO" ${r.examen === 'REALIZADO' ? 'selected' : ''}>REALIZADO</option>

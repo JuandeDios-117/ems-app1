@@ -66,6 +66,24 @@ function parsearHorasServer(str) {
     return Math.max(0, h + m);
 }
 
+// Dividir texto largo para no exceder el límite de 2000 caracteres de Discord
+function dividirMensajeDiscord(texto, maxLen = 1950) {
+    if (texto.length <= maxLen) return [texto];
+    const lineas = texto.split('\n');
+    const partes = [];
+    let actual = '';
+    for (const linea of lineas) {
+        if ((actual + '\n' + linea).length > maxLen) {
+            partes.push(actual);
+            actual = linea;
+        } else {
+            actual = actual ? actual + '\n' + linea : linea;
+        }
+    }
+    if (actual) partes.push(actual);
+    return partes;
+}
+
 const JERARQUIA_SERVER = {
     "Celador/a": 1,
     "Auxiliar de Enfermería": 2,
@@ -169,7 +187,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 2. PANEL ADMIN
+// 2. PANEL ADMIN & WEBHOOK CONFIG
 app.get('/api/usuarios', async (req, res) => {
     try {
         const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
@@ -210,6 +228,69 @@ app.delete('/api/usuarios/:id', async (req, res) => {
         res.json({ message: "Usuario eliminado." });
     } catch (e) {
         res.status(500).json({ error: e.message });
+    }
+});
+
+// CONFIGURACIÓN Y ENVÍO DE WEBHOOK DISCORD
+app.get('/api/config/webhook', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT valor FROM configuracion_sistema WHERE clave = 'discord_webhook'");
+        const url = (result.rows && result.rows.length > 0) ? result.rows[0].valor : (process.env.DISCORD_WEBHOOK_URL || '');
+        res.json({ webhook_url: url });
+    } catch (e) {
+        res.json({ webhook_url: '' });
+    }
+});
+
+app.post('/api/config/webhook', async (req, res) => {
+    const { webhook_url } = req.body;
+    try {
+        await db.execute({
+            sql: "INSERT OR REPLACE INTO configuracion_sistema (clave, valor) VALUES ('discord_webhook', ?)",
+            args: [(webhook_url || '').trim()]
+        });
+        res.json({ message: "Webhook de Discord guardado exitosamente." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/discord/enviar-reporte', async (req, res) => {
+    const { contenido } = req.body;
+    if (!contenido || !contenido.trim()) {
+        return res.status(400).json({ error: "El contenido del reporte está vacío." });
+    }
+
+    try {
+        const result = await db.execute("SELECT valor FROM configuracion_sistema WHERE clave = 'discord_webhook'");
+        let webhookUrl = (result.rows && result.rows.length > 0) ? result.rows[0].valor : '';
+        if (!webhookUrl) webhookUrl = process.env.DISCORD_WEBHOOK_URL || '';
+
+        if (!webhookUrl || !webhookUrl.startsWith('https://discord')) {
+            return res.status(400).json({ error: "No hay una URL de Webhook válida configurada. Agrégala primero en el Panel de Cuentas." });
+        }
+
+        const fragmentos = dividirMensajeDiscord(contenido.trim(), 1950);
+
+        for (const fragmento of fragmentos) {
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: "EMS Origen Roleplay · Dirección",
+                    content: fragmento
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                return res.status(500).json({ error: `Discord rechazó el envío (${response.status}): ${errText}` });
+            }
+        }
+
+        res.json({ message: "¡Reporte publicado exitosamente en el canal de Discord!" });
+    } catch (e) {
+        res.status(500).json({ error: "Error al conectar con Discord: " + e.message });
     }
 });
 
@@ -300,7 +381,6 @@ app.put('/api/ascensos/:id', async (req, res) => {
         let nuevoRangoPostular = rango_postular !== undefined ? rango_postular : registroActual.rango_postular;
         let nuevoExamen = examen !== undefined ? examen : registroActual.examen;
 
-        // TRANSFERENCIA INMEDIATA ENTRE SEMANA:
         if (registroActual.jefatura === 'enfermeria' && (nuevoRangoActual === 'Estudiante' || nuevoRangoActual === 'Interno/a')) {
             if (nuevoExamen === 'REALIZADO') {
                 if (nuevoRangoPostular && nuevoRangoPostular.includes('(Cirugía)')) {

@@ -145,7 +145,20 @@ const db = createClient({
       )
     `);
 
-    console.log("[DB] Base de datos verificada y sincronizada con historial de reportes.");
+    // 8. CONFIGURACIÓN DEL SISTEMA (WEBHOOK DISCORD)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS configuracion_sistema (
+        clave TEXT PRIMARY KEY,
+        valor TEXT DEFAULT ''
+      )
+    `);
+
+    await db.execute({
+      sql: "INSERT OR IGNORE INTO configuracion_sistema (clave, valor) VALUES ('discord_webhook', ?)",
+      args: [process.env.DISCORD_WEBHOOK_URL || '']
+    });
+
+    console.log("[DB] Base de datos verificada y sincronizada con soporte para Webhook.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }
