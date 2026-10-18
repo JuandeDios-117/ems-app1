@@ -93,8 +93,41 @@ const JERARQUIA_SERVER = {
     "Interno/a": 7,
     "Residente": 8,
     "Subespecialista": 9,
-    "Especialista": 10
+    "Especialista": 10,
+    "Formador": 10.5,
+    "Supervisor": 11,
+    "Coordinador": 12,
+    "Jefe de Formaciones": 13,
+    "Director de Enfermería": 14,
+    "Jefe de Medicina": 15,
+    "Jefe de Cirugía": 16,
+    "Jefa de Cirugía": 16,
+    "Subdirectora": 17,
+    "Director (Admin)": 18
 };
+
+// Evita duplicar el mismo pago pendiente el mismo día si desmarcan y vuelven a marcar la tabla
+async function registrarPagoSinDuplicar(personal, rango, concepto, cantidad, hoy, registradoPor) {
+    const check = await db.execute({
+        sql: "SELECT id FROM registro_pagos WHERE LOWER(TRIM(personal)) = LOWER(TRIM(?)) AND concepto = ? AND estado = 'Pendiente' AND fecha_pago = ?",
+        args: [personal.trim(), concepto.trim(), hoy]
+    });
+
+    if (check.rows && check.rows.length > 0) {
+        await db.execute({
+            sql: "UPDATE registro_pagos SET cantidad = ?, rango = ? WHERE id = ?",
+            args: [cantidad, rango || 'Personal EMS', check.rows[0].id]
+        });
+        return false;
+    } else {
+        await db.execute({
+            sql: `INSERT INTO registro_pagos (personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por)
+                  VALUES (?, ?, ?, ?, 'Pendiente', 'Pendiente', ?, ?)`,
+            args: [personal.trim(), rango || 'Personal EMS', concepto.trim(), cantidad, hoy, registradoPor || 'Sistema Automático']
+        });
+        return true;
+    }
+}
 
 async function sumarInstruccionFormador(nombreFormador) {
     if (!nombreFormador) return;
@@ -177,12 +210,12 @@ app.post('/api/register', async (req, res) => {
         const hoy = new Date().toISOString().split('T')[0];
 
         const result = await db.execute({
-            sql: "INSERT INTO usuarios (nombre, usuario, password, discord_id, rango, rol, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            sql: "INSERT INTO usuarios (nombre, usuario, password, discord_id, rango, rol, permisos_custom, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?, '', ?)",
             args: [nombre.trim(), userClean, String(password), discordLimpio || 'N/A', rangoAsignado, rolAsignado, hoy]
         });
 
         notificar('nuevo_usuario');
-        res.json({ id: Number(result.lastInsertRowid), nombre: nombre.trim(), usuario: userClean, rango: rangoAsignado, rol: rolAsignado });
+        res.json({ id: Number(result.lastInsertRowid), nombre: nombre.trim(), usuario: userClean, rango: rangoAsignado, rol: rolAsignado, permisos_custom: '' });
     } catch (e) {
         res.status(500).json({ error: "Error registrando usuario." });
     }
@@ -197,7 +230,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const sql = `SELECT id, nombre, usuario, discord_id, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
+        const sql = `SELECT id, nombre, usuario, discord_id, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(permisos_custom, '') as permisos_custom, fecha_ingreso FROM usuarios WHERE LOWER(TRIM(usuario)) = ? AND password = ?`;
         const result = await db.execute({ sql, args: [userClean, String(password)] });
         
         if (!result.rows || result.rows.length === 0) {
@@ -210,10 +243,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// 2. PANEL ADMIN & WEBHOOK CONFIG
+// 2. PANEL ADMIN, PERMISOS PERSONALIZADOS & WEBHOOK CONFIG
 app.get('/api/usuarios', async (req, res) => {
     try {
-        const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
+        const result = await db.execute("SELECT id, discord_id, nombre, usuario, COALESCE(rango, 'Sin Rango (Pendiente)') as rango, COALESCE(rol, 'empleado') as rol, COALESCE(permisos_custom, '') as permisos_custom, fecha_ingreso, horas_semana FROM usuarios ORDER BY id ASC");
         res.json(result.rows || []);
     } catch (e) {
         res.json([]);
@@ -221,25 +254,31 @@ app.get('/api/usuarios', async (req, res) => {
 });
 
 app.put('/api/usuarios/:id', async (req, res) => {
-    const { rango, rango_actual, rol, discord_id, horas_semana, fecha_ingreso, nombre, password } = req.body;
+    const { rango, rango_actual, rol, permisos_custom, discord_id, horas_semana, fecha_ingreso, nombre, password } = req.body;
     const rangoFinal = rango || rango_actual || null;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
+
+    let permisosStr = null;
+    if (permisos_custom !== undefined) {
+        permisosStr = Array.isArray(permisos_custom) ? permisos_custom.join(',') : String(permisos_custom);
+    }
 
     try {
         await db.execute({
             sql: `UPDATE usuarios SET 
                     rango = COALESCE(?, rango), 
                     rol = COALESCE(?, rol),
+                    permisos_custom = COALESCE(?, permisos_custom),
                     discord_id = COALESCE(?, discord_id),
                     horas_semana = COALESCE(?, horas_semana),
                     fecha_ingreso = COALESCE(?, fecha_ingreso),
                     nombre = COALESCE(?, nombre),
                     password = COALESCE(?, password)
                   WHERE id = ?`,
-            args: [rangoFinal, rol || null, discordLimpio, horas_semana !== undefined ? horas_semana : null, fecha_ingreso || null, nombre ? nombre.trim() : null, password ? String(password) : null, req.params.id]
+            args: [rangoFinal, rol || null, permisosStr, discordLimpio, horas_semana !== undefined ? horas_semana : null, fecha_ingreso || null, nombre ? nombre.trim() : null, password ? String(password) : null, req.params.id]
         });
-        notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango: rangoFinal, rol });
-        res.json({ message: "Actualizado con éxito." });
+        notificar('usuario_modificado', { usuario_id: Number(req.params.id), rango: rangoFinal, rol, permisos_custom: permisosStr });
+        res.json({ message: "Cuenta y permisos actualizados con éxito." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -451,13 +490,35 @@ app.get('/api/ascensos/ultimo-reporte', async (req, res) => {
     }
 });
 
-// APLICAR ASCENSOS GLOBAL + REINICIO DE HORAS Y BORRADO DE PDFS EN COORDINACIÓN
+// APLICAR ASCENSOS GLOBAL + GUARDAR DESPIDOS + MOVER A COORDINACIÓN + REINICIAR FORMADORES
 app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
     try {
-        const todosRes = await db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')");
+        const [todosRes, coordRes, controlRes, formRes] = await Promise.all([
+            db.execute("SELECT * FROM registro_ascensos WHERE jefatura IN ('enfermeria', 'cirugia', 'medicina')"),
+            db.execute("SELECT * FROM registro_coordinacion"),
+            db.execute("SELECT * FROM control_tablas_listas"),
+            db.execute("SELECT * FROM registro_formaciones")
+        ]);
+
         const todos = todosRes.rows || [];
+        const listaCoord = coordRes.rows || [];
+        const controles = controlRes.rows || [];
+        const listaFormadores = formRes.rows || [];
 
         const hoy = new Date().toISOString().split('T')[0];
+
+        // Leer los EMS de la semana elegidos manualmente por cada Jefatura
+        const emsManual = { enfermeria: null, medicina: null, cirugia: null };
+        for (const c of controles) {
+            if (['enfermeria', 'medicina', 'cirugia'].includes(c.jefatura) && c.ems_semana_nombre && c.ems_semana_nombre.trim() !== '') {
+                emsManual[c.jefatura] = {
+                    nombre: c.ems_semana_nombre,
+                    discord_id: c.ems_semana_discord || 'N/A',
+                    horas: c.ems_semana_horas || 'Destacado',
+                    rango: 'EMS de la Semana'
+                };
+            }
+        }
 
         const reporte = {
             fecha: hoy,
@@ -476,21 +537,18 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
                 "Subespecialista": [],
                 "Especialista": []
             },
-            emsSemana: {
-                enfermeria: null,
-                medicina: null,
-                cirugia: null
-            },
+            ascensosEspeciales: [],
+            emsSemana: emsManual,
             bonos50k: [],
             bonos100k: []
         };
 
-        let maxHoras = { enfermeria: -1, medicina: -1, cirugia: -1 };
         const activosParaProcesar = [];
 
         for (const item of todos) {
             const h = parsearHorasServer(item.horas_semana);
 
+            // Si tiene DESPIDO, guardarlo en el Historial de Despidos antes de eliminarlo
             if (item.faltas === 'DESPIDO') {
                 reporte.expulsados.push({
                     nombre: item.nombre,
@@ -498,20 +556,23 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
                     rango_anterior: item.rango_actual,
                     jefatura: item.jefatura
                 });
+
+                await db.execute({
+                    sql: `INSERT INTO historial_despidos (discord_id, nombre, rango_anterior, jefatura, fecha_despido, motivo, registrado_por)
+                          VALUES (?, ?, ?, ?, ?, ?, 'Cierre Semanal')`,
+                    args: [
+                        item.discord_id || 'N/A',
+                        item.nombre,
+                        item.rango_actual,
+                        item.jefatura,
+                        hoy,
+                        item.descripcion && item.descripcion.trim() !== '' ? item.descripcion.trim() : 'Expulsión en Cierre Semanal'
+                    ]
+                });
                 continue;
             }
 
             activosParaProcesar.push(item);
-
-            if (h > 0 && h > maxHoras[item.jefatura]) {
-                maxHoras[item.jefatura] = h;
-                reporte.emsSemana[item.jefatura] = {
-                    nombre: item.nombre,
-                    discord_id: item.discord_id,
-                    horas: item.horas_semana,
-                    rango: item.rango_actual
-                };
-            }
 
             if (h >= 50) {
                 reporte.bonos100k.push({ nombre: item.nombre, discord_id: item.discord_id, horas: item.horas_semana, rango: item.rango_actual, monto: 100000 });
@@ -525,12 +586,53 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
 
         let aplicados = 0;
 
-        // 2. Aplicar ascensos y reiniciar horas en Enfermería, Cirugía y Medicina
+        // 2. Procesar ascensos en Enfermería, Cirugía y Medicina (incluyendo pases a Supervisor/Coordinador)
         for (const item of activosParaProcesar) {
             let postular = item.rango_postular || item.rango_actual;
             let nuevaJefatura = item.jefatura;
             let nuevoRangoActual = postular;
             let nuevoExamen = item.examen;
+
+            // Si desde Medicina o Cirugía ascienden a Supervisor o Coordinador -> Mover a la tabla de Coordinación
+            if (postular.includes('Supervisor') || postular.includes('Coordinador')) {
+                const rangoCoordFinal = postular.includes('Coordinador') ? 'Coordinador' : 'Supervisor';
+
+                const existeEnCoord = await db.execute({
+                    sql: "SELECT id FROM registro_coordinacion WHERE LOWER(TRIM(supervisor)) = LOWER(TRIM(?))",
+                    args: [item.nombre]
+                });
+
+                if (existeEnCoord.rows && existeEnCoord.rows.length > 0) {
+                    await db.execute({
+                        sql: "UPDATE registro_coordinacion SET rango = ?, rango_postular = ?, discord_id = ?, horas_semana = '00:00 HRS' WHERE id = ?",
+                        args: [rangoCoordFinal, rangoCoordFinal, item.discord_id || 'N/A', existeEnCoord.rows[0].id]
+                    });
+                } else {
+                    await db.execute({
+                        sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, rango_postular, horas_semana, estado, desempeno, actualizado_por)
+                              VALUES (?, ?, ?, ?, '00:00 HRS', 'Activo', 'Excelente', 'Ascenso Cierre Semanal')`,
+                        args: [item.discord_id || 'N/A', item.nombre, rangoCoordFinal, rangoCoordFinal]
+                    });
+                }
+
+                // Sincronizar también su cuenta de usuario si existe
+                await db.execute({
+                    sql: "UPDATE usuarios SET rango = ? WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?)) OR (discord_id != 'N/A' AND discord_id = ?)",
+                    args: [rangoCoordFinal, item.nombre, item.discord_id || '']
+                });
+
+                // Retirar de la tabla médica porque ya pasó a Coordinación
+                await db.execute({ sql: "DELETE FROM registro_ascensos WHERE id = ?", args: [item.id] });
+
+                reporte.ascensosEspeciales.push({
+                    nombre: item.nombre,
+                    discord_id: item.discord_id,
+                    rango_anterior: item.rango_actual,
+                    rango_nuevo: rangoCoordFinal
+                });
+                aplicados++;
+                continue;
+            }
 
             if (postular.includes('(Cirugía)')) {
                 nuevaJefatura = 'cirugia';
@@ -571,6 +673,8 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
                     reporte.ascensosOperativa[nuevoRangoActual].push(infoPersona);
                 } else if (reporte.ascensosMedica[nuevoRangoActual] !== undefined) {
                     reporte.ascensosMedica[nuevoRangoActual].push(infoPersona);
+                } else {
+                    reporte.ascensosEspeciales.push(infoPersona);
                 }
             }
 
@@ -583,29 +687,70 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
             aplicados++;
         }
 
-        // 3. Reiniciar horas en Coordinación y BORRAR los PDFs de feedback semanales para el nuevo ciclo
-        await db.execute("UPDATE registro_coordinacion SET horas_semana = '00:00 HRS', pdf_feedback = '', nombre_pdf = '', feedback_semanal = ''");
+        // 3. Procesar ascensos dentro de Coordinación (Supervisores -> Coordinador o Jefaturas) y limpiar PDFs/Horas
+        for (const c of listaCoord) {
+            const rActual = c.rango || 'Supervisor';
+            const rPostular = c.rango_postular || rActual;
 
-        // 4. Reiniciar horas semanales de las cuentas institucionales (Dirección/Jefaturas) para el Censo
-        await db.execute("UPDATE usuarios SET horas_semana = '00:00 HRS'");
+            if (rPostular !== rActual) {
+                reporte.ascensosEspeciales.push({
+                    nombre: c.supervisor,
+                    discord_id: c.discord_id,
+                    rango_anterior: rActual,
+                    rango_nuevo: rPostular
+                });
 
-        // 5. Registrar bonos en Tesorería
-        const todosLosBonos = [...reporte.bonos100k, ...reporte.bonos50k];
-        for (const b of todosLosBonos) {
+                // Actualizar también en la tabla de cuentas (`usuarios`) para que se refleje en todo el sistema y Censo
+                await db.execute({
+                    sql: "UPDATE usuarios SET rango = ? WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?)) OR (discord_id != 'N/A' AND discord_id = ?)",
+                    args: [rPostular, c.supervisor, c.discord_id || '']
+                });
+            }
+
             await db.execute({
-                sql: `INSERT INTO registro_pagos (personal, rango, concepto, cantidad, estado, pagado_por, fecha_pago, registrado_por)
-                      VALUES (?, ?, ?, ?, 'Pendiente', 'Pendiente', ?, 'Sistema Automático')`,
-                args: [
-                    b.nombre,
-                    b.rango,
-                    `Bono por Horas (${b.horas})`,
-                    b.monto,
-                    hoy
-                ]
+                sql: `UPDATE registro_coordinacion SET 
+                        rango = ?, rango_postular = ?, horas_semana = '00:00 HRS', 
+                        pdf_feedback = '', nombre_pdf = '', feedback_semanal = ''
+                      WHERE id = ?`,
+                args: [rPostular, rPostular, c.id]
             });
         }
 
-        // 6. Guardar el reporte en la base de datos
+        // 4. Liquidar Formadores (Enviar pagos pendientes a Tesorería si tenían instrucciones > 0 y reiniciar contador semanal a 0)
+        for (const f of listaFormadores) {
+            const instSemanal = Number(f.instrucciones_hechas || 0);
+            const pagoForm = Number(f.total_pago || (instSemanal * 50000));
+            if (instSemanal > 0 && pagoForm > 0) {
+                await registrarPagoSinDuplicar(
+                    f.instructor,
+                    f.rango || 'Formador',
+                    `Pago de Instrucciones Semanales (${instSemanal} inst.)`,
+                    pagoForm,
+                    hoy,
+                    'Cierre Formaciones'
+                );
+            }
+        }
+        await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
+
+        // 5. Reiniciar horas semanales de las cuentas institucionales y desmarcar tablas listas
+        await db.execute("UPDATE usuarios SET horas_semana = '00:00 HRS'");
+        await db.execute("UPDATE control_tablas_listas SET esta_lista = 0, fecha_hora_mexico = '', marcado_por = '', ems_semana_nombre = '', ems_semana_discord = '', ems_semana_horas = ''");
+
+        // 6. Asegurar que todos los bonos de 50k y 100k estén registrados en Tesorería (sin duplicar si ya se enviaron al marcar Tabla Lista)
+        const todosLosBonos = [...reporte.bonos100k, ...reporte.bonos50k];
+        for (const b of todosLosBonos) {
+            await registrarPagoSinDuplicar(
+                b.nombre,
+                b.rango,
+                `Bono por Horas (${b.horas})`,
+                b.monto,
+                hoy,
+                'Sistema Automático'
+            );
+        }
+
+        // 7. Guardar el reporte en la base de datos
         await db.execute({
             sql: `INSERT OR REPLACE INTO historial_reportes (id, reporte_json, fecha, updated_at) VALUES (1, ?, ?, CURRENT_TIMESTAMP)`,
             args: [JSON.stringify(reporte), hoy]
@@ -613,10 +758,13 @@ app.post('/api/ascensos/aplicar-todos-global', async (req, res) => {
 
         notificar('ascensos_actualizados');
         notificar('coordinacion_actualizada');
-        if (todosLosBonos.length > 0) notificar('pagos_actualizados');
+        notificar('formaciones_actualizadas');
+        notificar('tablas_listas_actualizadas');
+        notificar('despidos_actualizados');
+        notificar('pagos_actualizados');
 
         res.json({ 
-            message: `Cierre completado: ${aplicados} efectivos evaluados, horas reiniciadas en todas las tablas y feedbacks PDF de Coordinación limpiados.`,
+            message: `Cierre completado: ${aplicados} efectivos evaluados, formadores enviados a Tesorería y reiniciados a 0, despidos archivados y PDFs de Coordinación limpiados.`,
             reporte
         });
     } catch (e) {
@@ -635,7 +783,7 @@ app.delete('/api/ascensos/:id', async (req, res) => {
     }
 });
 
-// CONTROL DE TABLAS LISTAS
+// CONTROL DE TABLAS LISTAS (Envía automáticamente bonos de 25h/50h o nómina de Formadores a Tesorería)
 app.get('/api/control-tablas', async (req, res) => {
     try {
         const result = await db.execute("SELECT * FROM control_tablas_listas");
@@ -651,11 +799,12 @@ app.post('/api/control-tablas/toggle', async (req, res) => {
 
     try {
         const current = await db.execute({
-            sql: "SELECT esta_lista FROM control_tablas_listas WHERE jefatura = ?",
+            sql: "SELECT * FROM control_tablas_listas WHERE jefatura = ?",
             args: [jefatura]
         });
 
-        const yaEstaLista = current.rows && current.rows.length > 0 && current.rows[0].esta_lista === 1;
+        const filaActual = current.rows && current.rows.length > 0 ? current.rows[0] : null;
+        const yaEstaLista = filaActual && filaActual.esta_lista === 1;
         const nuevoEstado = yaEstaLista ? 0 : 1;
 
         const ahoraMex = new Intl.DateTimeFormat('es-MX', {
@@ -665,14 +814,114 @@ app.post('/api/control-tablas/toggle', async (req, res) => {
 
         const fechaHoraFinal = nuevoEstado === 1 ? ahoraMex : '';
         const userFinal = nuevoEstado === 1 ? (marcado_por || 'Jefatura') : '';
+        const hoy = new Date().toISOString().split('T')[0];
 
         await db.execute({
-            sql: "INSERT OR REPLACE INTO control_tablas_listas (jefatura, esta_lista, fecha_hora_mexico, marcado_por) VALUES (?, ?, ?, ?)",
-            args: [jefatura, nuevoEstado, fechaHoraFinal, userFinal]
+            sql: `INSERT OR REPLACE INTO control_tablas_listas 
+                  (jefatura, esta_lista, fecha_hora_mexico, marcado_por, ems_semana_nombre, ems_semana_discord, ems_semana_horas) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+                jefatura,
+                nuevoEstado,
+                fechaHoraFinal,
+                userFinal,
+                filaActual ? (filaActual.ems_semana_nombre || '') : '',
+                filaActual ? (filaActual.ems_semana_discord || '') : '',
+                filaActual ? (filaActual.ems_semana_horas || '') : ''
+            ]
         });
 
+        let bonosEnviados = 0;
+
+        // Si se acaba de marcar como LISTA (1), enviar automáticamente los pagos correspondientes a Tesorería
+        if (nuevoEstado === 1) {
+            if (['cirugia', 'medicina', 'enfermeria'].includes(jefatura)) {
+                const personalRes = await db.execute({
+                    sql: "SELECT * FROM registro_ascensos WHERE jefatura = ? AND faltas != 'DESPIDO'",
+                    args: [jefatura]
+                });
+                for (const p of (personalRes.rows || [])) {
+                    const h = parsearHorasServer(p.horas_semana);
+                    if (h >= 50) {
+                        await registrarPagoSinDuplicar(p.nombre, p.rango_actual, `Bono por Horas (${p.horas_semana})`, 100000, hoy, userFinal);
+                        bonosEnviados++;
+                    } else if (h >= 25) {
+                        await registrarPagoSinDuplicar(p.nombre, p.rango_actual, `Bono por Horas (${p.horas_semana})`, 50000, hoy, userFinal);
+                        bonosEnviados++;
+                    }
+                }
+            } else if (jefatura === 'formaciones') {
+                const formRes = await db.execute("SELECT * FROM registro_formaciones");
+                for (const f of (formRes.rows || [])) {
+                    const instSemanal = Number(f.instrucciones_hechas || 0);
+                    const monto = Number(f.total_pago || (instSemanal * 50000));
+                    if (instSemanal > 0 && monto > 0) {
+                        await registrarPagoSinDuplicar(
+                            f.instructor,
+                            f.rango || 'Formador',
+                            `Pago de Instrucciones Semanales (${instSemanal} inst.)`,
+                            monto,
+                            hoy,
+                            userFinal
+                        );
+                        bonosEnviados++;
+                    }
+                }
+                // Reiniciar instrucciones semanales y total a liquidar a 0 (las instrucciones totales ya tienen la suma acumulada)
+                await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
+                notificar('formaciones_actualizadas');
+            }
+            if (bonosEnviados > 0) notificar('pagos_actualizados');
+        }
+
         notificar('tablas_listas_actualizadas');
-        res.json({ esta_lista: nuevoEstado, fecha_hora_mexico: fechaHoraFinal, marcado_por: userFinal });
+        res.json({ 
+            esta_lista: nuevoEstado, 
+            fecha_hora_mexico: fechaHoraFinal, 
+            marcado_por: userFinal,
+            bonos_enviados: bonosEnviados,
+            message: nuevoEstado === 1 
+                ? `Tabla marcada como LISTA. Se enviaron ${bonosEnviados} pagos/bonos automáticamente a Tesorería.` 
+                : "Tabla marcada En Revisión."
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// SELECCIÓN MANUAL DEL EMS DE LA SEMANA POR JEFATURA (Envía Bono de $200,000 a Tesorería)
+app.post('/api/control-tablas/ems-semana', async (req, res) => {
+    const { jefatura, nombre, discord_id, rango, horas_semana, registrado_por } = req.body;
+    if (!jefatura || !nombre) {
+        return res.status(400).json({ error: "Selecciona un miembro válido para EMS de la Semana." });
+    }
+
+    const hoy = new Date().toISOString().split('T')[0];
+    const etiquetaDepto = jefatura === 'cirugia' ? 'Cirugía' : (jefatura === 'medicina' ? 'Medicina' : 'Enfermería');
+
+    try {
+        await db.execute({
+            sql: `UPDATE control_tablas_listas SET 
+                    ems_semana_nombre = ?, 
+                    ems_semana_discord = ?, 
+                    ems_semana_horas = ?
+                  WHERE jefatura = ?`,
+            args: [nombre.trim(), discord_id || 'N/A', horas_semana || 'Destacado', jefatura]
+        });
+
+        await registrarPagoSinDuplicar(
+            nombre.trim(),
+            rango || 'Personal EMS',
+            `🌟 Bono EMS de la Semana (${etiquetaDepto})`,
+            200000,
+            hoy,
+            registrado_por || 'Jefatura'
+        );
+
+        notificar('tablas_listas_actualizadas');
+        notificar('pagos_actualizados');
+
+        res.json({ message: `🌟 ${nombre} fue designado como EMS de la Semana en ${etiquetaDepto} y se envió su bono de $200,000 a Tesorería.` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -707,11 +956,30 @@ app.post('/api/formaciones', async (req, res) => {
 
 app.put('/api/formaciones/:id', async (req, res) => {
     const { instrucciones_hechas, instrucciones_totales, notas, rango } = req.body;
-    const cantSemanal = instrucciones_hechas !== undefined ? Math.max(0, parseFloat(instrucciones_hechas) || 0) : null;
-    const cantTotales = instrucciones_totales !== undefined ? Math.max(0, parseFloat(instrucciones_totales) || 0) : null;
-    const totalPago = cantSemanal !== null ? cantSemanal * 50000 : null;
 
     try {
+        const actualRes = await db.execute({
+            sql: "SELECT instrucciones_hechas, instrucciones_totales FROM registro_formaciones WHERE id = ?",
+            args: [req.params.id]
+        });
+
+        const filaActual = actualRes.rows && actualRes.rows.length > 0 ? actualRes.rows[0] : { instrucciones_hechas: 0, instrucciones_totales: 0 };
+
+        let cantSemanal = null;
+        let cantTotales = null;
+        let totalPago = null;
+
+        if (instrucciones_hechas !== undefined) {
+            cantSemanal = Math.max(0, parseFloat(instrucciones_hechas) || 0);
+            const dif = cantSemanal - Number(filaActual.instrucciones_hechas || 0);
+            cantTotales = Math.max(0, Number(filaActual.instrucciones_totales || 0) + dif);
+            totalPago = cantSemanal * 50000;
+        }
+
+        if (instrucciones_totales !== undefined) {
+            cantTotales = Math.max(0, parseFloat(instrucciones_totales) || 0);
+        }
+
         await db.execute({
             sql: `UPDATE registro_formaciones SET 
                     instrucciones_hechas = COALESCE(?, instrucciones_hechas),
@@ -730,10 +998,30 @@ app.put('/api/formaciones/:id', async (req, res) => {
 });
 
 app.post('/api/formaciones/corte-semanal', async (req, res) => {
+    const { registrado_por } = req.body || {};
+    const hoy = new Date().toISOString().split('T')[0];
     try {
+        const formRes = await db.execute("SELECT * FROM registro_formaciones");
+        let enviados = 0;
+        for (const f of (formRes.rows || [])) {
+            const instSemanal = Number(f.instrucciones_hechas || 0);
+            const monto = Number(f.total_pago || (instSemanal * 50000));
+            if (instSemanal > 0 && monto > 0) {
+                await registrarPagoSinDuplicar(
+                    f.instructor,
+                    f.rango || 'Formador',
+                    `Pago de Instrucciones Semanales (${instSemanal} inst.)`,
+                    monto,
+                    hoy,
+                    registrado_por || 'Jefe de Formaciones'
+                );
+                enviados++;
+            }
+        }
         await db.execute("UPDATE registro_formaciones SET instrucciones_hechas = 0, total_pago = 0");
         notificar('formaciones_actualizadas');
-        res.json({ message: "Corte semanal procesado." });
+        if (enviados > 0) notificar('pagos_actualizados');
+        res.json({ message: `Corte semanal procesado: ${enviados} pagos enviados a Tesorería y contadores semanales en 0.` });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -808,7 +1096,6 @@ app.post('/api/formaciones/limbo/:id/aprobar', async (req, res) => {
         const asp = check.rows[0];
         const hoy = new Date().toISOString().split('T')[0];
 
-        // 1. Pasar a Enfermería Básica como Celador en pruebas
         await db.execute({
             sql: `INSERT INTO registro_ascensos (
                     jefatura, discord_id, nombre_ems, nombre, rango_actual, rango_postular, rango_propuesto,
@@ -817,10 +1104,8 @@ app.post('/api/formaciones/limbo/:id/aprobar', async (req, res) => {
             args: [asp.discord_id || 'N/A', asp.nombre, asp.nombre, asp.fecha_ingreso || hoy, aprobado_por || asp.registrado_por || 'Formaciones']
         });
 
-        // 2. Sumar +1 instrucción al formador que finalizó la instrucción
         await sumarInstruccionFormador(aprobado_por || asp.registrado_por);
 
-        // 3. Eliminar del limbo
         await db.execute({ sql: "DELETE FROM aspirantes_limbo WHERE id = ?", args: [req.params.id] });
 
         notificar('limbo_actualizado');
@@ -843,10 +1128,11 @@ app.delete('/api/formaciones/limbo/:id', async (req, res) => {
     }
 });
 
-// 5. COORDINACIÓN (Ordenado con Coordinador arriba + Desempeño + PDF ligero bajo demanda)
+// 5. COORDINACIÓN (Ordenado con Coordinador arriba + Rango a Postular + Desempeño + PDF ligero)
 app.get('/api/coordinacion', async (req, res) => {
     try {
-        const sql = `SELECT id, discord_id, supervisor, rango, horas_semana, estado, COALESCE(desempeno, 'Excelente') as desempeno, 
+        const sql = `SELECT id, discord_id, supervisor, rango, COALESCE(rango_postular, rango) as rango_postular, 
+                            horas_semana, estado, COALESCE(desempeno, 'Excelente') as desempeno, 
                             feedback_semanal, nombre_pdf, 
                             CASE WHEN pdf_feedback IS NOT NULL AND pdf_feedback != '' THEN 1 ELSE 0 END as tiene_pdf,
                             actualizado_por, updated_at 
@@ -859,7 +1145,6 @@ app.get('/api/coordinacion', async (req, res) => {
     }
 });
 
-// Ruta ligera para visualizar el PDF de un supervisor específico sin saturar la tabla
 app.get('/api/coordinacion/:id/pdf', async (req, res) => {
     try {
         const result = await db.execute({
@@ -876,29 +1161,30 @@ app.get('/api/coordinacion/:id/pdf', async (req, res) => {
 });
 
 app.post('/api/coordinacion', async (req, res) => {
-    const { discord_id, supervisor, rango, horas_semana, estado, desempeno, actualizado_por } = req.body;
+    const { discord_id, supervisor, rango, rango_postular, horas_semana, estado, desempeno, actualizado_por } = req.body;
     if (!supervisor) return res.status(400).json({ error: "Ingresa el nombre del supervisor." });
 
     const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
+    const rangoBase = rango || 'Supervisor';
 
     try {
         await db.execute({
-            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, horas_semana, estado, desempeno, actualizado_por)
-                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            sql: `INSERT INTO registro_coordinacion (discord_id, supervisor, rango, rango_postular, horas_semana, estado, desempeno, actualizado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
-                discordLimpio, supervisor.trim(), rango || 'Supervisor', horas_semana || '',
+                discordLimpio, supervisor.trim(), rangoBase, rango_postular || rangoBase, horas_semana || '',
                 estado || 'Activo', desempeno || 'Excelente', actualizado_por || 'Coordinación'
             ]
         });
         notificar('coordinacion_actualizada');
-        res.json({ message: "Supervisor registrado en Coordinación." });
+        res.json({ message: "Personal registrado en Coordinación." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
 app.put('/api/coordinacion/:id', async (req, res) => {
-    const { estado, desempeno, feedback_semanal, rango, rango_actual, horas_semana, discord_id, supervisor, pdf_feedback, nombre_pdf } = req.body;
+    const { estado, desempeno, feedback_semanal, rango, rango_actual, rango_postular, horas_semana, discord_id, supervisor, pdf_feedback, nombre_pdf } = req.body;
     const rangoFinal = rango || rango_actual || null;
     let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') : null;
 
@@ -909,6 +1195,7 @@ app.put('/api/coordinacion/:id', async (req, res) => {
                     desempeno = COALESCE(?, desempeno),
                     feedback_semanal = COALESCE(?, feedback_semanal),
                     rango = COALESCE(?, rango),
+                    rango_postular = COALESCE(?, rango_postular),
                     horas_semana = COALESCE(?, horas_semana),
                     discord_id = COALESCE(?, discord_id),
                     supervisor = COALESCE(?, supervisor),
@@ -917,10 +1204,23 @@ app.put('/api/coordinacion/:id', async (req, res) => {
                   WHERE id = ?`,
             args: [
                 estado || null, desempeno || null, feedback_semanal !== undefined ? feedback_semanal.trim() : null, rangoFinal,
-                horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null,
+                rango_postular || null, horas_semana !== undefined ? horas_semana.trim() : null, discordLimpio, supervisor || null,
                 pdf_feedback !== undefined ? pdf_feedback : null, nombre_pdf !== undefined ? nombre_pdf : null, req.params.id
             ]
         });
+
+        // Si se le cambió el rango directo en Coordinación (ej. a Coordinador o Jefatura), reflejarlo en su cuenta de sistema y Censo
+        if (rangoFinal) {
+            const rowCheck = await db.execute({ sql: "SELECT supervisor, discord_id FROM registro_coordinacion WHERE id = ?", args: [req.params.id] });
+            if (rowCheck.rows && rowCheck.rows.length > 0) {
+                const sup = rowCheck.rows[0];
+                await db.execute({
+                    sql: "UPDATE usuarios SET rango = ? WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(?)) OR (discord_id != 'N/A' AND discord_id = ?)",
+                    args: [rangoFinal, sup.supervisor, sup.discord_id || '']
+                });
+            }
+        }
+
         notificar('coordinacion_actualizada');
         res.json({ message: "Coordinación actualizada." });
     } catch (e) {
@@ -1010,6 +1310,68 @@ app.delete('/api/pagos/:id', async (req, res) => {
         await db.execute({ sql: "DELETE FROM registro_pagos WHERE id = ?", args: [req.params.id] });
         notificar('pagos_actualizados');
         res.json({ message: "Registro eliminado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// 7. HISTORIAL DE DESPIDOS (REGISTRO Y CONSULTA DE BAJAS)
+app.get('/api/despidos', async (req, res) => {
+    try {
+        const result = await db.execute("SELECT * FROM historial_despidos ORDER BY id DESC");
+        res.json(result.rows || []);
+    } catch (e) {
+        res.json([]);
+    }
+});
+
+app.post('/api/despidos', async (req, res) => {
+    const { discord_id, nombre, rango_anterior, jefatura, fecha_despido, motivo, registrado_por } = req.body;
+    if (!nombre) return res.status(400).json({ error: "Ingresa el nombre de la persona despedida." });
+
+    const discordLimpio = (discord_id || '').replace(/[^0-9]/g, '') || 'N/A';
+    const hoy = fecha_despido || new Date().toISOString().split('T')[0];
+
+    try {
+        await db.execute({
+            sql: `INSERT INTO historial_despidos (discord_id, nombre, rango_anterior, jefatura, fecha_despido, motivo, registrado_por)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            args: [discordLimpio, nombre.trim(), rango_anterior || 'Personal EMS', jefatura || 'General', hoy, motivo || 'Baja administrativa', registrado_por || 'Dirección']
+        });
+        notificar('despidos_actualizados');
+        res.json({ message: "Despido archivado en el historial." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.put('/api/despidos/:id', async (req, res) => {
+    const { discord_id, nombre, rango_anterior, jefatura, fecha_despido, motivo } = req.body;
+    let discordLimpio = discord_id !== undefined && discord_id !== null ? String(discord_id).replace(/[^0-9]/g, '') || 'N/A' : null;
+    try {
+        await db.execute({
+            sql: `UPDATE historial_despidos SET 
+                    discord_id = COALESCE(?, discord_id),
+                    nombre = COALESCE(?, nombre),
+                    rango_anterior = COALESCE(?, rango_anterior),
+                    jefatura = COALESCE(?, jefatura),
+                    fecha_despido = COALESCE(?, fecha_despido),
+                    motivo = COALESCE(?, motivo)
+                  WHERE id = ?`,
+            args: [discordLimpio, nombre ? nombre.trim() : null, rango_anterior || null, jefatura || null, fecha_despido || null, motivo !== undefined ? motivo.trim() : null, req.params.id]
+        });
+        notificar('despidos_actualizados');
+        res.json({ message: "Registro de despido actualizado." });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.delete('/api/despidos/:id', async (req, res) => {
+    try {
+        await db.execute({ sql: "DELETE FROM historial_despidos WHERE id = ?", args: [req.params.id] });
+        notificar('despidos_actualizados');
+        res.json({ message: "Registro eliminado del historial de despidos." });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

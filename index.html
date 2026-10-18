@@ -207,7 +207,7 @@
                     <h1 class="text-xl md:text-2xl font-black uppercase text-white tracking-wider flex items-center gap-2">
                         EMS <span class="text-pink-400">ORIGEN</span> <span class="text-xs font-bold text-zinc-400">ROLEPLAY</span>
                     </h1>
-                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones, Supervisión y Tesorería</p>
+                    <p class="text-xs text-zinc-400">Control Departamental de Evaluaciones, Horas, Formaciones, Supervisión, Despidos y Tesorería</p>
                 </div>
             </div>
 
@@ -243,7 +243,7 @@
             <h2 class="text-xl font-black text-amber-300 uppercase tracking-wide">Acceso en Espera de Autorización</h2>
             <p class="text-xs text-zinc-300 leading-relaxed">
                 Tu cuenta ha sido creada exitosamente. Por motivos de seguridad y privacidad departamental, 
-                <strong class="text-white">aún no tienes un rango asignado</strong> para visualizar las tablas internas.
+                <strong class="text-white">aún no tienes un rango o permisos asignados</strong> para visualizar las tablas internas.
             </p>
             <div class="bg-black/60 p-4 rounded-xl border border-zinc-800 text-xs text-zinc-400 text-left space-y-1">
                 <p>• Contacta a un miembro de <span class="text-pink-400 font-bold">Dirección</span> en Discord.</p>
@@ -345,7 +345,7 @@
                                     <th class="fluid-th text-left w-40">DISCORD ID</th>
                                     <th class="fluid-th text-left w-1/4">ASPIRANTE (PENDIENTE IC)</th>
                                     <th class="fluid-th text-center w-36">FECHA REGISTRO</th>
-                                    <th class="fluid-th text-left w-1/3">ESTADO / NOTAS DE INSTRUCCIÓNFALTANTE</th>
+                                    <th class="fluid-th text-left w-1/3">ESTADO / NOTAS DE INSTRUCCIÓN FALTANTE</th>
                                     <th class="fluid-th text-left w-36">REGISTRADO POR</th>
                                     <th class="fluid-th text-right w-56">ACCIÓN</th>
                                 </tr>
@@ -360,12 +360,20 @@
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase">📚 Jefatura de Formaciones · Nómina de Instructores</h2>
-                        <p class="text-xs text-zinc-400">Instrucciones semanales ($50,000 c/u) y registro acumulado de instrucciones totales modificables.</p>
+                        <div class="flex flex-wrap items-center gap-2 mt-1">
+                            <span id="badgeEstadoTabla_formaciones" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
+                                🔴 Tabla No Lista / En Revisión
+                            </span>
+                            <span class="text-xs text-zinc-400">· Al marcar lista o hacer corte, envía pagos a Tesorería y reinicia semanales a 0.</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Instrucción</span>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-xs font-black uppercase px-3 py-2 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Inst.</span>
+                        <button onclick="toggleTablaLista('formaciones')" id="btnTablaLista_formaciones" class="bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
+                            ✅ Marcar Tabla Lista (Enviar Pagos a Tesorería y Reiniciar a 0)
+                        </button>
                         <button onclick="ejecutarCorteSemanalFormaciones()" class="bg-rose-600 hover:bg-rose-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-rose-600/30">
-                            🔄 Corte Semanal ($0 Semanal)
+                            🔄 Liquidar y Reiniciar ($0)
                         </button>
                     </div>
                 </div>
@@ -409,8 +417,8 @@
             <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-pink-400">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
-                        <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Rendimiento</h2>
-                        <p class="text-xs text-zinc-400">El Coordinador aparece encabezado al inicio. Incluye semáforo de desempeño y visor de reportes PDF in-app (los PDFs se reinician en el cierre semanal).</p>
+                        <h2 class="text-2xl font-black text-white uppercase">🛡️ Coordinación General · Supervisión y Ascensos de Mando</h2>
+                        <p class="text-xs text-zinc-400">El Coordinador encabeza la tabla. Permite postular supervisores a Coordinador o Jefaturas, calificar con semáforo y visualizar reportes PDF in-app.</p>
                     </div>
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-pink-400/15 text-pink-200 border-pink-400/30">Cuerpo de Supervisión</span>
                 </div>
@@ -425,7 +433,7 @@
                         <input type="text" id="coordSupervisor" placeholder="Dr. Gregory House" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-sm">
                     </div>
                     <div class="w-44">
-                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Cargo</label>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Cargo Inicial</label>
                         <select id="coordRangoSel" class="w-full input-ems px-3 py-2.5 rounded-xl font-bold text-xs">
                             <option value="Coordinador">👑 Coordinador (Encabeza Tabla)</option>
                             <option value="Supervisor" selected>🛡️ Supervisor</option>
@@ -462,13 +470,14 @@
                         <thead>
                             <tr class="bg-pink-950/40 text-pink-200">
                                 <th class="fluid-th text-center w-12">#</th>
-                                <th class="fluid-th text-left w-36">DISCORD ID</th>
+                                <th class="fluid-th text-left w-32">DISCORD ID</th>
                                 <th class="fluid-th text-left w-1/5">COORDINADOR / SUPERVISOR</th>
-                                <th class="fluid-th text-left w-40">RANGO</th>
-                                <th class="fluid-th text-center w-36">HORAS GUARDIA</th>
-                                <th class="fluid-th text-center w-36">ESTADO</th>
-                                <th class="fluid-th text-center w-48">CALIFICACIÓN / DESEMPEÑO</th>
-                                <th class="fluid-th text-center w-64">REPORTE PDF SEMANAL (VISOR)</th>
+                                <th class="fluid-th text-left w-40">RANGO ACTUAL</th>
+                                <th class="fluid-th text-left w-48">RANGO A POSTULAR (JEFATURAS)</th>
+                                <th class="fluid-th text-center w-32">HORAS GUARDIA</th>
+                                <th class="fluid-th text-center w-32">ESTADO</th>
+                                <th class="fluid-th text-center w-44">CALIFICACIÓN / DESEMPEÑO</th>
+                                <th class="fluid-th text-center w-56">REPORTE PDF SEMANAL</th>
                                 <th class="fluid-th text-right w-20">ACCIÓN</th>
                             </tr>
                         </thead>
@@ -484,9 +493,9 @@
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                     <div>
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
-                            💰 TESORERÍA DEPARTAMENTAL · REGISTRO DE PAGOS
+                            💰 TESORERÍA DEPARTAMENTAL · REGISTRO DE PAGOS Y BONOS
                         </h2>
-                        <p class="text-xs text-zinc-400">Selecciona o busca a cualquier miembro del Censo General para autocompletar su rango y asentar pagos o bonificaciones.</p>
+                        <p class="text-xs text-zinc-400">Recibe automáticamente los bonos de 25h ($50k), 50h ($100k), EMS de la Semana ($200k) y nómina de Formadores cuando las tablas se marcan listas.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="ejecutarCorteSemanalPagos()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
@@ -623,12 +632,87 @@
             </div>
         </section>
 
+        <!-- SECCIÓN HISTORIAL DE DESPIDOS Y BAJAS -->
+        <section id="seccion-despidos" class="hidden space-y-4">
+            <div class="card-ems p-6 rounded-3xl space-y-5 border-l-4 border-red-600">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
+                            🚪 HISTORIAL DE DESPIDOS Y BAJAS · CONTROL DE REINGRESOS
+                        </h2>
+                        <p class="text-xs text-zinc-400">Archiva automáticamente a todos los miembros dados de baja en los cierres semanales (o agregados manualmente) con su fecha, rango anterior y Discord ID.</p>
+                    </div>
+                    <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-red-500/15 text-red-300 border-red-500/30" id="txtTotalDespidos">0 Bajas Archivadas</span>
+                </div>
+
+                <!-- REGISTRO MANUAL DE DESPIDO -->
+                <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Discord ID</label>
+                        <input type="text" id="despDiscord" placeholder="4239841..." oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full input-ems px-3 py-2 rounded-xl font-mono-code">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Nombre Completo (IC)</label>
+                        <input type="text" id="despNombre" placeholder="Dr. John Doe" class="w-full input-ems px-3 py-2 rounded-xl font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Último Rango</label>
+                        <select id="despRango" class="w-full input-ems px-3 py-2 rounded-xl font-semibold"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Departamento</label>
+                        <select id="despJefatura" class="w-full input-ems px-3 py-2 rounded-xl font-semibold">
+                            <option value="enfermeria">Enfermería & Básica</option>
+                            <option value="medicina">Medicina</option>
+                            <option value="cirugia">Cirugía</option>
+                            <option value="coordinacion">Coordinación</option>
+                            <option value="direccion">Dirección</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-zinc-400 mb-1 text-[11px] uppercase">Motivo / Observaciones</label>
+                        <input type="text" id="despMotivo" placeholder="Inactividad, Faltas, Baja voluntaria..." class="w-full input-ems px-3 py-2 rounded-xl">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="guardarDespidoManual()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl uppercase text-xs tracking-wider shadow-lg shadow-rose-600/30">
+                            + ARCHIVAR BAJA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BUSCADOR DE DESPIDOS -->
+                <div class="bg-black/40 p-3 rounded-2xl border border-zinc-800 flex items-center gap-3">
+                    <span class="text-rose-400 text-base">🔍</span>
+                    <input type="text" id="filtroBuscadorDespidos" oninput="filtrarTablaDespidos()" placeholder="Buscar antecedentes por Nombre IC, Discord ID o motivo de baja..." class="bg-transparent w-full text-white text-xs outline-none font-bold">
+                </div>
+
+                <div class="rounded-2xl border border-zinc-800 overflow-hidden shadow-2xl">
+                    <table class="fluid-table">
+                        <thead>
+                            <tr class="bg-rose-950/50 text-rose-200">
+                                <th class="fluid-th text-center w-12">#</th>
+                                <th class="fluid-th text-left w-36">DISCORD ID</th>
+                                <th class="fluid-th text-left w-1/5">NOMBRE COMPLETO (IC)</th>
+                                <th class="fluid-th text-left w-44">RANGO ANTERIOR</th>
+                                <th class="fluid-th text-left w-36">DEPARTAMENTO</th>
+                                <th class="fluid-th text-center w-32">FECHA DE BAJA</th>
+                                <th class="fluid-th text-left w-1/4">MOTIVO DE DESPIDO / ANTECEDENTES</th>
+                                <th class="fluid-th text-left w-36">REGISTRADO POR</th>
+                                <th class="fluid-th text-right w-20">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaDespidos"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <!-- PANEL ADMIN -->
         <div id="seccion-admin" class="card-ems p-6 rounded-3xl space-y-6 hidden border-l-4 border-rose-600">
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
-                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas y Asignación de Rangos</h2>
-                    <p class="text-xs text-zinc-400">Asigna cargos a las cuentas registradas, configura el Webhook de Discord y procesa el cierre semanal (reinicia horas y limpia los PDFs de Coordinación).</p>
+                    <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas, Permisos Personalizados y Cierre Semanal</h2>
+                    <p class="text-xs text-zinc-400">Asigna cargos, elige exactamente qué pestañas puede visualizar cada usuario y procesa el cierre semanal general.</p>
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
@@ -687,10 +771,11 @@
                         <tr class="bg-zinc-900 text-zinc-300">
                             <th class="fluid-th text-center w-12">#</th>
                             <th class="fluid-th text-left w-36">DISCORD ID</th>
-                            <th class="fluid-th text-left">CUENTA</th>
-                            <th class="fluid-th text-left">RANGO DE SISTEMA ASIGNADO</th>
-                            <th class="fluid-th text-left">PERMISOS</th>
-                            <th class="fluid-th text-right">ACCIÓN</th>
+                            <th class="fluid-th text-left w-48">CUENTA</th>
+                            <th class="fluid-th text-left w-48">RANGO DE SISTEMA</th>
+                            <th class="fluid-th text-left w-36">ROL BASE</th>
+                            <th class="fluid-th text-left w-1/3">PESTAÑAS HABILITADAS A GUSTO (PERMISOS EXTRA)</th>
+                            <th class="fluid-th text-right w-36">ACCIÓN</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaAdmin"></tbody>
@@ -726,7 +811,7 @@
                     <span class="text-xl">🔔</span>
                     <div>
                         <h3 class="font-black text-white text-sm uppercase tracking-wider">Dictamen Oficial de Cierre Semanal</h3>
-                        <p class="text-[11px] text-zinc-400">Edita el texto si deseas agregar un ascenso especial antes de publicarlo en Discord o descargar el Acta Oficial en PDF.</p>
+                        <p class="text-[11px] text-zinc-400">Edita el texto si deseas agregar detalles antes de publicarlo en Discord o descargar el Acta Oficial en PDF.</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalReporte()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-rose-600 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition">
@@ -764,6 +849,8 @@
         let esRegistro = false;
         let cachePagosGlobal = [];
         let cacheCensoGlobal = [];
+        let cacheAscensosGlobal = [];
+        let cacheDespidosGlobal = [];
         let ultimoReporteSemanal = null;
 
         // MAPEO DE ROLES DE DISCORD SEGÚN TU PLANTILLA OFICIAL
@@ -777,8 +864,21 @@
             "Interno/a": "<@&1485396134674301039>",
             "Residente": "<@&1485395892700971068>",
             "Subespecialista": "<@&1485395842599882904>",
-            "Especialista": "<@&1485395842599882904>"
+            "Especialista": "<@&1485395842599882904>",
+            "Supervisor": "<@&1485396737890713710>",
+            "Coordinador": "<@&1497740296463847555>"
         };
+
+        const LISTA_PERMISOS_MODULOS = [
+            { id: 'cirugia', label: '🏥 Cirugía' },
+            { id: 'medicina', label: '💊 Medicina' },
+            { id: 'enfermeria', label: '💉 Enfermería' },
+            { id: 'formaciones', label: '📚 Formaciones' },
+            { id: 'coordinacion', label: '🛡️ Coordinación' },
+            { id: 'pagos', label: '💰 Tesorería' },
+            { id: 'censo', label: '🩺 Censo' },
+            { id: 'despidos', label: '🚪 Despidos' }
+        ];
 
         async function apiFetch(url) {
             try {
@@ -867,7 +967,6 @@
         }
         aplicarFaviconCircular();
 
-        // RANGOS DEL SISTEMA COMPLETOS (Incluyendo Jefe y Jefa de Cirugía para evitar que caiga en Celador)
         const RANGOS_EMS = [
             "Sin Rango (Pendiente)",
             "Director (Admin)",
@@ -934,6 +1033,17 @@
             { id: "Director (Admin)", label: "🩺🏥 Director (Admin)", escala: "direccion" }
         ];
 
+        const RANGOS_POSTULAR_COORDINACION = [
+            { id: "Supervisor", label: "🛡️ Mantener Supervisor" },
+            { id: "Coordinador", label: "👑 Ascender a Coordinador" },
+            { id: "Jefe de Formaciones", label: "🥼📚 Ascender a Jefe de Formaciones" },
+            { id: "Director de Enfermería", label: "🥼💉 Ascender a Director de Enfermería" },
+            { id: "Jefe de Medicina", label: "🥼💊 Ascender a Jefe de Medicina" },
+            { id: "Jefe de Cirugía", label: "🥼✂️ Ascender a Jefe de Cirugía" },
+            { id: "Jefa de Cirugía", label: "🥼✂️ Ascender a Jefa de Cirugía" },
+            { id: "Subdirectora", label: "🩺🏢 Ascender a Subdirectora" }
+        ];
+
         const RANGOS_ESCALA_BASICA = [
             { id: "Celador/a", label: "『👀』Celador/a" },
             { id: "Auxiliar de Enfermería", label: "『🧴』Auxiliar de Enfermería" }
@@ -975,6 +1085,22 @@
             }
         ];
 
+        function tienePermisoModulo(moduloId) {
+            if (!usuarioActual) return false;
+            if (esDirector()) return true;
+
+            const customArr = (usuarioActual.permisos_custom || '').split(',').map(s => s.trim()).filter(Boolean);
+            if (customArr.includes(moduloId)) return true;
+
+            if (moduloId === 'cirugia' && ["Jefa de Cirugía", "Jefe de Cirugía", "Coordinador"].includes(usuarioActual.rango)) return true;
+            if (moduloId === 'medicina' && ["Jefe de Medicina", "Coordinador"].includes(usuarioActual.rango)) return true;
+            if (moduloId === 'enfermeria' && ["Director de Enfermería", "Coordinador"].includes(usuarioActual.rango)) return true;
+            if (moduloId === 'formaciones' && ["Jefe de Formaciones", "Formador"].includes(usuarioActual.rango)) return true;
+            if (moduloId === 'coordinacion' && ["Coordinador", "Supervisor"].includes(usuarioActual.rango)) return true;
+
+            return false;
+        }
+
         function calcularEstadoPrueba(fechaIngresoStr, descripcion) {
             const esNuevoAspirante = descripcion && descripcion.includes('PRUEBA_ACTIVA');
             if (!esNuevoAspirante || !fechaIngresoStr || fechaIngresoStr === '—' || fechaIngresoStr.trim() === '') return { enPrueba: false, diasPasados: 99, diasRestantes: 0 };
@@ -1011,7 +1137,7 @@
         }
 
         function esDirector() { return usuarioActual && (usuarioActual.rol === 'admin' || usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora'); }
-        function tieneAccesoTesoreria() { return usuarioActual && (usuarioActual.rango === 'Director (Admin)' || usuarioActual.rango === 'Subdirectora' || usuarioActual.rol === 'admin'); }
+        function tieneAccesoTesoreria() { return tienePermisoModulo('pagos'); }
 
         function parsearHorasNumericas(str) {
             if (!str) return 0;
@@ -1078,8 +1204,14 @@
                     );
                 }
             } else {
+                // Medicina y Cirugía: incluye ascenso a Supervisor y Coordinador (mueve a Coordinación)
                 lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
-                lista.push({ id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" }, { id: "Celador/a (Bajar)", label: "『👀』Bajar a Escala Básica" });
+                lista.push(
+                    { id: "Supervisor", label: "🛡️ Supervisor ➔ Mover a Coordinación" },
+                    { id: "Coordinador", label: "👑 Coordinador ➔ Mover a Coordinación" },
+                    { id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" },
+                    { id: "Celador/a (Bajar)", label: "『👀』Bajar a Escala Básica" }
+                );
             }
 
             if (!lista.some(r => r.id === postularSeleccionado) && postularSeleccionado) {
@@ -1224,18 +1356,36 @@
                         <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white uppercase tracking-wider">${j.titulo}</h2>
-                                <div class="flex items-center gap-2 mt-1">
+                                <div class="flex flex-wrap items-center gap-2 mt-1">
                                     <span id="badgeEstadoTabla_${j.id}" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
                                         🔴 Tabla No Lista / En Revisión
+                                    </span>
+                                    <span id="badgeEmsSemana_${j.id}" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-500/40">
+                                        🌟 EMS de la Semana: Sin designar
                                     </span>
                                 </div>
                             </div>
                             
                             <div class="flex flex-wrap items-center gap-3">
                                 <button onclick="toggleTablaLista('${j.id}')" id="btnTablaLista_${j.id}" class="bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
-                                    ✅ Marcar Tabla Lista
+                                    ✅ Marcar Tabla Lista (Enviar Bonos 25h/50h a Tesorería)
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- APARTADO DE SELECCIÓN MANUAL DE EMS DE LA SEMANA ($200,000 A TESORERÍA) -->
+                        <div class="bg-amber-950/20 p-4 rounded-2xl border border-amber-500/30 flex flex-wrap items-end justify-between gap-3 text-xs">
+                            <div class="flex-1 min-w-[260px]">
+                                <label class="block font-black text-amber-300 mb-1 text-[11px] uppercase flex items-center gap-1.5">
+                                    🌟 Designar EMS de la Semana Manualmente (Envía Bono de $200,000 a Tesorería)
+                                </label>
+                                <select id="selectEmsSemana_${j.id}" class="w-full input-ems px-3 py-2 rounded-xl font-bold text-white">
+                                    <option value="">-- Seleccionar Efectivo Destacado de esta Tabla --</option>
+                                </select>
+                            </div>
+                            <button onclick="designarEmsDeLaSemana('${j.id}')" class="bg-amber-500 hover:bg-amber-400 text-black font-black px-5 py-2.5 rounded-xl uppercase text-xs tracking-wider transition shadow-lg shadow-amber-500/20">
+                                🏆 Confirmar EMS de la Semana (+$200k)
+                            </button>
                         </div>
                         
                         <div class="bg-black/50 p-4 rounded-2xl border border-zinc-800 flex flex-wrap items-end gap-3 text-xs">
@@ -1352,6 +1502,11 @@
                 selFormRango.innerHTML = TODOS_LOS_RANGOS.filter(r => r.escala !== 'limbo').map(r => `<option value="${r.id}">${r.label}</option>`).join('');
             }
 
+            const selDespRango = document.getElementById('despRango');
+            if (selDespRango) {
+                selDespRango.innerHTML = TODOS_LOS_RANGOS.filter(r => r.escala !== 'limbo').map(r => `<option value="${r.id}">${r.label}</option>`).join('');
+            }
+
             const elAspFecha = document.getElementById('aspFecha');
             if (elAspFecha) elAspFecha.value = hoy;
         }
@@ -1465,13 +1620,17 @@
             const medRes = rep.ascensosMedica["Residente"].map(x => formatoTagUsuario(x)).join('\n') || '—';
             const medSubEsp = [...rep.ascensosMedica["Subespecialista"], ...rep.ascensosMedica["Especialista"]].map(x => formatoTagUsuario(x)).join('\n') || '—';
 
-            const emsEnf = rep.emsSemana.enfermeria ? formatoTagUsuario(rep.emsSemana.enfermeria) : 'Sin definir';
-            const emsMed = rep.emsSemana.medicina ? formatoTagUsuario(rep.emsSemana.medicina) : 'Sin definir';
-            const emsCir = rep.emsSemana.cirugia ? formatoTagUsuario(rep.emsSemana.cirugia) : 'Sin definir';
+            const emsEnf = rep.emsSemana && rep.emsSemana.enfermeria ? formatoTagUsuario(rep.emsSemana.enfermeria) : 'Sin definir';
+            const emsMed = rep.emsSemana && rep.emsSemana.medicina ? formatoTagUsuario(rep.emsSemana.medicina) : 'Sin definir';
+            const emsCir = rep.emsSemana && rep.emsSemana.cirugia ? formatoTagUsuario(rep.emsSemana.cirugia) : 'Sin definir';
 
-            const bonos100Txt = rep.bonos100k.map(x => `${formatoTagUsuario(x)} (50+ hrs ➔ $100,000)`).join('\n');
-            const bonos50Txt = rep.bonos50k.map(x => `${formatoTagUsuario(x)} (25+ hrs ➔ $50,000)`).join('\n');
-            const bloqueBonos = [bonos100Txt, bonos50Txt].filter(Boolean).join('\n\n') || 'Ninguno esta semana';
+            const espTxt = (rep.ascensosEspeciales && rep.ascensosEspeciales.length > 0)
+                ? rep.ascensosEspeciales.map(x => `${formatoTagUsuario(x)} - ${DISCORD_ROLES_MAP[x.rango_nuevo] || `**${x.rango_nuevo}**`}`).join('\n')
+                : '—';
+
+            const bonos100Txt = rep.bonos100k.map(x => `${formatoTagUsuario(x)}`).join('\n');
+            const bonos50Txt = rep.bonos50k.map(x => `${formatoTagUsuario(x)}`).join('\n');
+            const bloqueBonos = [bonos50Txt, bonos100Txt].filter(Boolean).join('\n\n') || 'Ninguno esta semana';
 
             return `# 🔔 ASCENSOS / DESCENSOS 🔔
 
@@ -1522,7 +1681,7 @@ ${medSubEsp}
 # 🌟 EMS DE LA SEMANA CIRUGIA: ${emsCir}
 
 # 🔔 ASCENSOS ESPECIALES 🔔
-—
+${espTxt}
 
 ## 🔔 BONOS POR HORAS 🔔
 
@@ -1580,16 +1739,14 @@ ${bloqueBonos}
             const folioOficial = `EMS-ORG-${(rep.fecha || '').replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`;
             const emisor = usuarioActual ? `${usuarioActual.nombre} (${usuarioActual.rango})` : 'Dirección General EMS';
 
-            function dibujarMarcoInstitucional( numPagina ) {
-                // Marco doble solemne
-                doc.setDrawColor(136, 19, 55); // Vino / Carmesí médico
+            function dibujarMarcoInstitucional(numPagina) {
+                doc.setDrawColor(136, 19, 55);
                 doc.setLineWidth(0.8);
                 doc.rect(8, 8, 194, 281);
                 doc.setDrawColor(180, 185, 195);
                 doc.setLineWidth(0.25);
                 doc.rect(10, 10, 190, 277);
 
-                // Pie de página institucional
                 doc.setFont("times", "italic");
                 doc.setFontSize(8);
                 doc.setTextColor(110, 115, 125);
@@ -1597,20 +1754,17 @@ ${bloqueBonos}
                 doc.text(`Página ${numPagina}`, 195, 283, { align: 'right' });
             }
 
-            // Membrete Superior Oficial
             doc.setFillColor(14, 17, 26);
             doc.rect(10, 10, 190, 34, 'F');
             doc.setFillColor(190, 24, 93);
             doc.rect(10, 44, 190, 2, 'F');
 
-            // Emblema Cruz Médica Vectorial en el Membrete
             doc.setFillColor(236, 72, 153);
             doc.circle(26, 27, 10, 'F');
             doc.setFillColor(255, 255, 255);
             doc.rect(24.2, 20.5, 3.6, 13, 'F');
             doc.rect(19.5, 25.2, 13, 3.6, 'F');
 
-            // Títulos Gubernamentales / Hospitalarios
             doc.setTextColor(255, 255, 255);
             doc.setFont("times", "bold");
             doc.setFontSize(14);
@@ -1629,32 +1783,31 @@ ${bloqueBonos}
 
             let currentY = 53;
 
-            // Párrafo de Declaración Institucional
             doc.setTextColor(30, 35, 45);
             doc.setFont("times", "normal");
             doc.setFontSize(9.5);
-            const introTexto = "Por medio de la presente Acta Oficial, la Dirección General y el Consejo de Jefaturas del Cuerpo Médico de San Andreas (EMS Origen) certifican los resultados de la auditoría semanal de desempeño operativo, cumplimiento de horas de guardia, promociones escalafonarias, asignaciones académicas y liquidación de bonificaciones por mérito.";
+            const introTexto = "Por medio de la presente Acta Oficial, la Dirección General y el Consejo de Jefaturas del Cuerpo Médico de San Andreas (EMS Origen) certifican los resultados de la auditoría semanal de desempeño operativo, cumplimiento de horas de guardia, promociones escalafonarias, designaciones de mando y liquidación de bonificaciones por mérito.";
             const lineasIntro = doc.splitTextToSize(introTexto, 182);
             doc.text(lineasIntro, 14, currentY);
             currentY += (lineasIntro.length * 4.5) + 4;
 
-            // SECCIÓN I: CUADRO DE HONOR
+            // SECCIÓN I: CUADRO DE HONOR ($200k)
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
             doc.setTextColor(136, 19, 55);
-            doc.text("I. MENCIONES HONORÍFICAS · CUADRO DE HONOR SEMANAL", 14, currentY);
+            doc.text("I. MENCIONES HONORÍFICAS · EMS DE LA SEMANA (BONO $200,000 USD)", 14, currentY);
             currentY += 2;
 
             const emsRows = [
-                ["Dirección de Enfermería & Escala Básica", rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.nombre : "Declarado Desierto", rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.discord_id : "—", rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.horas : "—"],
-                ["Jefatura de Medicina Interna", rep.emsSemana.medicina ? rep.emsSemana.medicina.nombre : "Declarado Desierto", rep.emsSemana.medicina ? rep.emsSemana.medicina.discord_id : "—", rep.emsSemana.medicina ? rep.emsSemana.medicina.horas : "—"],
-                ["Jefatura de Cirugía Especializada", rep.emsSemana.cirugia ? rep.emsSemana.cirugia.nombre : "Declarado Desierto", rep.emsSemana.cirugia ? rep.emsSemana.cirugia.discord_id : "—", rep.emsSemana.cirugia ? rep.emsSemana.cirugia.horas : "—"]
+                ["Dirección de Enfermería & Escala Básica", rep.emsSemana && rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.nombre : "Sin designar", rep.emsSemana && rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.discord_id : "—", "$200,000 USD"],
+                ["Jefatura de Medicina Interna", rep.emsSemana && rep.emsSemana.medicina ? rep.emsSemana.medicina.nombre : "Sin designar", rep.emsSemana && rep.emsSemana.medicina ? rep.emsSemana.medicina.discord_id : "—", "$200,000 USD"],
+                ["Jefatura de Cirugía Especializada", rep.emsSemana && rep.emsSemana.cirugia ? rep.emsSemana.cirugia.nombre : "Sin designar", rep.emsSemana && rep.emsSemana.cirugia ? rep.emsSemana.cirugia.discord_id : "—", "$200,000 USD"]
             ];
 
             doc.autoTable({
                 startY: currentY,
                 margin: { left: 14, right: 14 },
-                head: [["DIVISIÓN DEPARTAMENTAL", "FACULTATIVO CONDECORADO (IC)", "EXPEDIENTE DISCORD", " CÓMPUTO HORARIO"]],
+                head: [["DIVISIÓN DEPARTAMENTAL", "FACULTATIVO CONDECORADO (IC)", "EXPEDIENTE DISCORD", "BONO OTORGADO"]],
                 body: emsRows,
                 theme: 'grid',
                 headStyles: { fillColor: [24, 28, 42], textColor: 255, fontStyle: 'bold', fontSize: 8 },
@@ -1663,11 +1816,11 @@ ${bloqueBonos}
             });
             currentY = doc.lastAutoTable.finalY + 7;
 
-            // SECCIÓN II: PROMOCIONES ESCALAFONARIAS
+            // SECCIÓN II: PROMOCIONES ESCALAFONARIAS Y ESPECIALES
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
             doc.setTextColor(136, 19, 55);
-            doc.text("II. DICTAMEN DE PROMOCIONES Y ASCENSOS ESCALAFONARIOS", 14, currentY);
+            doc.text("II. DICTAMEN DE PROMOCIONES, ASCENSOS MÉDICOS Y NOMBRAMIENTOS DE MANDO", 14, currentY);
             currentY += 2;
 
             const ascRows = [];
@@ -1677,6 +1830,9 @@ ${bloqueBonos}
             Object.entries(rep.ascensosMedica).forEach(([rangoDest, lista]) => {
                 lista.forEach(p => ascRows.push(["ESCALA FACULTATIVA MÉDICA", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
             });
+            if (rep.ascensosEspeciales) {
+                rep.ascensosEspeciales.forEach(p => ascRows.push(["ASCENSO ESPECIAL / MANDO", p.nombre, p.discord_id, p.rango_anterior, p.rango_nuevo]));
+            }
 
             if (ascRows.length === 0) ascRows.push(["—", "Sin promociones registradas en el presente ciclo", "—", "—", "—"]);
 
@@ -1696,13 +1852,13 @@ ${bloqueBonos}
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
             doc.setTextColor(136, 19, 55);
-            doc.text("III. RESOLUCIÓN DE TESORERÍA · BONIFICACIONES POR MÉRITO HORARIO", 14, currentY);
+            doc.text("III. RESOLUCIÓN DE TESORERÍA · BONIFICACIONES POR HORAS DE GUARDIA", 14, currentY);
             currentY += 2;
 
             const bonosRows = [];
             rep.bonos100k.forEach(b => bonosRows.push([b.nombre, b.discord_id, b.rango, b.horas, "$100,000 USD (Rango >= 50 Hrs)"]));
             rep.bonos50k.forEach(b => bonosRows.push([b.nombre, b.discord_id, b.rango, b.horas, "$50,000 USD (Rango >= 25 Hrs)"]));
-            if (bonosRows.length === 0) bonosRows.push(["Sin bonificaciones extraordinarias devengadas", "—", "—", "—", "$0 USD"]);
+            if (bonosRows.length === 0) bonosRows.push(["Sin bonificaciones horarias devengadas", "—", "—", "—", "$0 USD"]);
 
             doc.autoTable({
                 startY: currentY,
@@ -1716,7 +1872,7 @@ ${bloqueBonos}
             });
             currentY = doc.lastAutoTable.finalY + 7;
 
-            // SECCIÓN IV: RÉGIMEN DISCIPLINARIO (BAJAS Y DESCENSOS)
+            // SECCIÓN IV: RÉGIMEN DISCIPLINARIO
             if (currentY > 225) {
                 doc.addPage();
                 currentY = 20;
@@ -1728,7 +1884,7 @@ ${bloqueBonos}
             currentY += 2;
 
             const bajasRows = [];
-            rep.expulsados.forEach(x => bajasRows.push(["CESE DEFINITIVO (BAJA)", x.nombre, x.discord_id, x.rango_anterior, "DESVINCULACIÓN INSTITUCIONAL"]));
+            rep.expulsados.forEach(x => bajasRows.push(["CESE DEFINITIVO (BAJA)", x.nombre, x.discord_id, x.rango_anterior, "ARCHIVADO EN DESPIDOS"]));
             rep.descensos.forEach(x => bajasRows.push(["REDUCCIÓN DE GRADO", x.nombre, x.discord_id, x.rango_anterior, x.rango_nuevo]));
             if (bajasRows.length === 0) bajasRows.push(["—", "Sin sanciones disciplinarias ni bajas registradas", "—", "—", "—"]);
 
@@ -1744,7 +1900,6 @@ ${bloqueBonos}
             });
             currentY = doc.lastAutoTable.finalY + 18;
 
-            // BLOQUE DE FIRMAS Y SELLO OFICIAL
             if (currentY > 245) {
                 doc.addPage();
                 currentY = 40;
@@ -1767,7 +1922,6 @@ ${bloqueBonos}
             doc.text("Firma y Sello de Autorización Ejecutiva", 57.5, currentY + 21, { align: 'center' });
             doc.text("Ratificación de Auditoría Horaria y Académica", 152.5, currentY + 21, { align: 'center' });
 
-            // Sello Circular Institucional en el centro
             doc.setDrawColor(190, 24, 93);
             doc.setLineWidth(0.6);
             doc.circle(105, currentY + 12, 11);
@@ -1791,7 +1945,7 @@ ${bloqueBonos}
         async function aplicarTodosLosAscensosGlobal() {
             const confirmar = await Notif.confirmar(
                 "⚡ ¿Aplicar Ascensos y Reiniciar Ciclo Semanal?",
-                "Se aplicarán los ascensos en Enfermería, Cirugía y Medicina, se eliminarán los despedidos, se reiniciarán las horas en todas las tablas (incluyendo Censo y Coordinación), se borrarán los PDFs semanales de Supervisión para la nueva entrega y se generará el Acta Oficial."
+                "Se aplicarán los ascensos en Enfermería, Cirugía, Medicina y Coordinación, se archivarán los despedidos en el Historial de Despidos, se liquidarán formadores a 0, se limpiarán los PDFs de Coordinación y se generará el Acta Oficial."
             );
             if (!confirmar) return;
 
@@ -1800,8 +1954,11 @@ ${bloqueBonos}
                 const data = await res.json();
                 if (res.ok) {
                     await cargarTablas();
+                    await cargarFormaciones();
                     await cargarCoordinacion();
+                    await cargarEstadosTablasListas();
                     await cargarCensoGeneral();
+                    await cargarDespidos();
                     if (tieneAccesoTesoreria()) await cargarPagos();
                     if (data.reporte) {
                         mostrarModalReporteAscensos(data.reporte);
@@ -1816,6 +1973,7 @@ ${bloqueBonos}
             }
         }
 
+        // MARCAR TABLA LISTA (Cirugía, Medicina, Enfermería y Formaciones -> Envía pagos a Tesorería)
         async function toggleTablaLista(jefaturaId) {
             try {
                 const res = await fetch('/api/control-tablas/toggle', {
@@ -1826,12 +1984,60 @@ ${bloqueBonos}
                         marcado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
                     })
                 });
+                const data = await res.json();
                 if (res.ok) {
                     await cargarEstadosTablasListas();
-                    Notif.exito("Estado de tabla actualizado.");
+                    if (jefaturaId === 'formaciones') await cargarFormaciones();
+                    if (tieneAccesoTesoreria()) await cargarPagos();
+                    await cargarCensoGeneral();
+                    Notif.exito(data.message || "Estado de tabla actualizado.");
                 }
             } catch (e) {
                 Notif.error("Error al actualizar estado de tabla.");
+            }
+        }
+
+        // DESIGNAR MANUALMENTE EL EMS DE LA SEMANA ($200,000 A TESORERÍA)
+        async function designarEmsDeLaSemana(jefaturaId) {
+            const sel = document.getElementById(`selectEmsSemana_${jefaturaId}`);
+            if (!sel || !sel.value) {
+                return Notif.error("Por favor selecciona a un miembro de la lista antes de confirmar.");
+            }
+
+            const idSeleccionado = Number(sel.value);
+            const persona = cacheAscensosGlobal.find(x => x.id === idSeleccionado);
+            if (!persona) return Notif.error("No se encontró el registro seleccionado.");
+
+            const confirmar = await Notif.confirmar(
+                `🌟 ¿Designar a ${persona.nombre} como EMS de la Semana?`,
+                "Se enviará automáticamente su bono de $200,000 a Tesorería & Pagos y quedará registrado para el anuncio de Discord y PDF."
+            );
+            if (!confirmar) return;
+
+            try {
+                const res = await fetch('/api/control-tablas/ems-semana', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jefatura: jefaturaId,
+                        nombre: persona.nombre,
+                        discord_id: persona.discord_id || 'N/A',
+                        rango: persona.rango_actual,
+                        horas_semana: persona.horas_semana || 'Destacado',
+                        registrado_por: usuarioActual ? usuarioActual.nombre : 'Jefatura'
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    Notif.exito(data.message);
+                    await cargarEstadosTablasListas();
+                    if (tieneAccesoTesoreria()) await cargarPagos();
+                    await cargarCensoGeneral();
+                } else {
+                    Notif.error(data.error || "No se pudo designar al EMS de la Semana.");
+                }
+            } catch (e) {
+                Notif.error("Error de red al designar EMS de la Semana.");
             }
         }
 
@@ -1842,6 +2048,18 @@ ${bloqueBonos}
                     data.forEach(item => {
                         const badge = document.getElementById(`badgeEstadoTabla_${item.jefatura}`);
                         const btn = document.getElementById(`btnTablaLista_${item.jefatura}`);
+                        const badgeEms = document.getElementById(`badgeEmsSemana_${item.jefatura}`);
+
+                        if (badgeEms) {
+                            if (item.ems_semana_nombre && item.ems_semana_nombre.trim() !== '') {
+                                badgeEms.className = "px-2.5 py-0.5 rounded-lg text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/50";
+                                badgeEms.innerText = `🌟 EMS de la Semana: ${item.ems_semana_nombre} (+$200k en Tesorería)`;
+                            } else {
+                                badgeEms.className = "px-2.5 py-0.5 rounded-lg text-xs font-bold bg-zinc-900 text-zinc-400 border border-zinc-700";
+                                badgeEms.innerText = `🌟 EMS de la Semana: Sin designar`;
+                            }
+                        }
+
                         if (!badge) return;
 
                         if (item.esta_lista === 1) {
@@ -1856,7 +2074,9 @@ ${bloqueBonos}
                             badge.innerText = "🔴 Tabla No Lista / En Revisión";
                             if (btn) {
                                 btn.className = "bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md";
-                                btn.innerText = "✅ Marcar Tabla Lista";
+                                btn.innerText = item.jefatura === 'formaciones' 
+                                    ? "✅ Marcar Tabla Lista (Enviar Pagos a Tesorería y Reiniciar a 0)"
+                                    : "✅ Marcar Tabla Lista (Enviar Bonos 25h/50h a Tesorería)";
                             }
                         }
                     });
@@ -2074,7 +2294,8 @@ ${bloqueBonos}
             if (!usuarioActual) return;
             document.getElementById('seccion-auth').classList.add('hidden');
 
-            if (usuarioActual.rango === 'Sin Rango (Pendiente)') {
+            const customPermisos = (usuarioActual.permisos_custom || '').trim();
+            if (usuarioActual.rango === 'Sin Rango (Pendiente)' && !customPermisos && usuarioActual.rol !== 'admin') {
                 document.getElementById('navBarContenedor').classList.add('hidden');
                 document.getElementById('seccion-pendiente').classList.remove('hidden');
                 document.getElementById('lblUsuarioPendiente').innerText = `@${usuarioActual.usuario}`;
@@ -2101,44 +2322,44 @@ ${bloqueBonos}
                 <button onclick="location.reload()" class="text-pink-400 hover:text-pink-300 font-bold ml-2">Salir</button>
             `;
 
-            const esAdmin = esDirector();
-            const esSoloFormador = usuarioActual.rango === 'Formador';
             let pestanaAInicializar = null;
             let navBotonesHTML = '';
 
-            if (esSoloFormador) {
+            JEFATURAS.forEach(j => {
+                if (tienePermisoModulo(j.id)) {
+                    navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
+                    if (!pestanaAInicializar) pestanaAInicializar = j.id;
+                }
+            });
+
+            if (tienePermisoModulo('formaciones')) {
                 navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
-                pestanaAInicializar = 'formaciones';
-            } else {
-                JEFATURAS.forEach(j => {
-                    const tieneAcceso = esAdmin || j.rangosPermitidos.includes(usuarioActual.rango);
-                    if (tieneAcceso) {
-                        navBotonesHTML += `<button onclick="cambiarPestana('${j.id}')" id="tab-${j.id}" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive">${j.tituloNav}</button>`;
-                        if (!pestanaAInicializar) pestanaAInicializar = j.id;
-                    }
-                });
+                if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
+            }
 
-                const esFormador = esAdmin || usuarioActual.rango === 'Jefe de Formaciones' || usuarioActual.rango === 'Formador';
-                if (esFormador) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('formaciones')" id="tab-formaciones" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-amber-400">📚 FORMACIONES</button>`;
-                    if (!pestanaAInicializar) pestanaAInicializar = 'formaciones';
-                }
+            if (tienePermisoModulo('coordinacion')) {
+                navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-300">🛡️ COORDINACIÓN</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
+            }
 
-                const esCoordinador = esAdmin || usuarioActual.rango === 'Coordinador' || usuarioActual.rango === 'Supervisor';
-                if (esCoordinador) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('coordinacion')" id="tab-coordinacion" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-pink-300">🛡️ COORDINACIÓN</button>`;
-                    if (!pestanaAInicializar) pestanaAInicializar = 'coordinacion';
-                }
+            if (tienePermisoModulo('pagos')) {
+                navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
+            }
 
-                if (tieneAccesoTesoreria()) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('pagos')" id="tab-pagos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-emerald-400">💰 TESORERÍA & PAGOS</button>`;
-                    if (!pestanaAInicializar) pestanaAInicializar = 'pagos';
-                }
+            if (tienePermisoModulo('censo')) {
+                navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">🩺 CENSO GENERAL</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'censo';
+            }
 
-                if (esAdmin) {
-                    navBotonesHTML += `<button onclick="cambiarPestana('censo')" id="tab-censo" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-rose-400">🩺 CENSO GENERAL</button>`;
-                    navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">⚙️ PANEL CUENTAS</button>`;
-                }
+            if (tienePermisoModulo('despidos')) {
+                navBotonesHTML += `<button onclick="cambiarPestana('despidos')" id="tab-despidos" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">🚪 HISTORIAL DESPIDOS</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'despidos';
+            }
+
+            if (esDirector()) {
+                navBotonesHTML += `<button onclick="cambiarPestana('admin')" id="tab-admin" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-xs btn-tab-inactive text-red-400">⚙️ PANEL CUENTAS</button>`;
+                if (!pestanaAInicializar) pestanaAInicializar = 'admin';
             }
 
             nav.innerHTML = navBotonesHTML;
@@ -2149,6 +2370,7 @@ ${bloqueBonos}
             cargarCoordinacion();
             cargarEstadosTablasListas();
             cargarCensoGeneral();
+            cargarDespidos();
             if (tieneAccesoTesoreria()) cargarPagos();
             if (pestanaAInicializar) cambiarPestana(pestanaAInicializar);
 
@@ -2156,7 +2378,7 @@ ${bloqueBonos}
         }
 
         function cambiarPestana(pestana) {
-            const todas = [...JEFATURAS.map(j => j.id), 'formaciones', 'coordinacion', 'pagos', 'censo', 'admin'];
+            const todas = [...JEFATURAS.map(j => j.id), 'formaciones', 'coordinacion', 'pagos', 'censo', 'despidos', 'admin'];
             todas.forEach(p => {
                 const sec = document.getElementById(`seccion-${p}`);
                 if (sec) {
@@ -2183,6 +2405,7 @@ ${bloqueBonos}
             if (pestana === 'coordinacion') cargarCoordinacion();
             if (pestana === 'pagos' && tieneAccesoTesoreria()) cargarPagos();
             if (pestana === 'censo') cargarCensoGeneral();
+            if (pestana === 'despidos') cargarDespidos();
             if (pestana === 'admin') {
                 cargarGestionAdmin();
                 cargarWebhookConfig();
@@ -2253,9 +2476,10 @@ ${bloqueBonos}
         async function cargarTablas() {
             try {
                 const data = await apiFetch('/api/ascensos');
+                cacheAscensosGlobal = Array.isArray(data) ? data : [];
 
                 JEFATURAS.forEach(j => {
-                    let filtrados = Array.isArray(data) ? data.filter(x => x.jefatura === j.id) : [];
+                    let filtrados = cacheAscensosGlobal.filter(x => x.jefatura === j.id);
 
                     filtrados.sort((a, b) => {
                         const pesoA = JERARQUIA_MENOR_A_MAYOR[a.rango_actual] || 99;
@@ -2263,6 +2487,15 @@ ${bloqueBonos}
                         if (pesoA !== pesoB) return pesoA - pesoB;
                         return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                     });
+
+                    // Poblar selector manual de EMS de la Semana para cada jefatura
+                    const selEms = document.getElementById(`selectEmsSemana_${j.id}`);
+                    if (selEms) {
+                        const prevVal = selEms.value;
+                        selEms.innerHTML = `<option value="">-- Seleccionar Efectivo Destacado de ${j.id.toUpperCase()} --</option>` +
+                            filtrados.map(p => `<option value="${p.id}">${p.nombre} (${p.rango_actual} · ${p.horas_semana || '00:00 HRS'})</option>`).join('');
+                        if (prevVal) selEms.value = prevVal;
+                    }
 
                     if (j.id === 'enfermeria') {
                         const basica = filtrados.filter(x => x.rango_actual === 'Celador/a' || x.rango_actual === 'Auxiliar de Enfermería');
@@ -2366,7 +2599,8 @@ ${bloqueBonos}
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-            }, 300);
+                await cargarFormaciones();
+            }, 400);
         }
 
         async function editarFormacionEnTabla(id, campo, valor) {
@@ -2384,16 +2618,23 @@ ${bloqueBonos}
 
         async function ejecutarCorteSemanalFormaciones() {
             const confirmar = await Notif.confirmar(
-                "⚠️ ¿Realizar Corte Semanal de Nómina?",
-                "Se reiniciarán a 0 las instrucciones semanales ($50,000 por instrucción), preservando el histórico total acumulado."
+                "⚠️ ¿Liquidar Nómina de Formadores y Reiniciar a 0?",
+                "Se enviarán los pagos semanales ($50,000 c/u) a Tesorería & Pagos y las instrucciones semanales quedarán en 0, conservando el histórico de instrucciones totales."
             );
             if (!confirmar) return;
 
             try {
-                const res = await fetch('/api/formaciones/corte-semanal', { method: 'POST' });
+                const res = await fetch('/api/formaciones/corte-semanal', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ registrado_por: usuarioActual ? usuarioActual.nombre : 'Jefe de Formaciones' })
+                });
+                const data = await res.json();
                 if (res.ok) {
-                    Notif.exito("Corte semanal completado. Cuentas semanales reiniciadas a $0.");
+                    Notif.exito(data.message || "Corte semanal completado.");
                     await cargarFormaciones();
+                    if (tieneAccesoTesoreria()) await cargarPagos();
+                    await cargarCensoGeneral();
                 }
             } catch (e) {
                 Notif.error("Error al procesar el corte semanal.");
@@ -2457,7 +2698,7 @@ ${bloqueBonos}
         }
 
         // =========================================================================
-        // COORDINACIÓN & SUPERVISIÓN (COORDINADOR ARRIBA, DESEMPEÑO Y VISOR PDF)
+        // COORDINACIÓN & SUPERVISIÓN (COORDINADOR ARRIBA, ASCENSOS JEFATURA, VISOR PDF)
         // =========================================================================
         function abrirSelectorPdfCoordinacion(id) {
             const fileInput = document.getElementById(`filePdfCoord_${id}`);
@@ -2565,6 +2806,7 @@ ${bloqueBonos}
                         discord_id: discord_id || 'N/A',
                         supervisor,
                         rango,
+                        rango_postular: rango,
                         horas_semana,
                         estado,
                         desempeno,
@@ -2611,11 +2853,10 @@ ${bloqueBonos}
                 if (!cuerpo) return;
 
                 if (!Array.isArray(data) || data.length === 0) {
-                    cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No hay coordinadores ni supervisores registrados en coordinación.</td></tr>`;
+                    cuerpo.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-zinc-500 italic text-sm">No hay coordinadores ni supervisores registrados en coordinación.</td></tr>`;
                     return;
                 }
 
-                // Ordenar garantizando que el Coordinador siempre esté hasta arriba
                 data.sort((a, b) => {
                     const esCoordA = a.rango === 'Coordinador' ? 0 : 1;
                     const esCoordB = b.rango === 'Coordinador' ? 0 : 1;
@@ -2634,6 +2875,12 @@ ${bloqueBonos}
                     const desempenoActual = c.desempeno || 'Excelente';
                     const semaforoDesempeno = obtenerClaseSemaforoDesempeno(desempenoActual);
                     const tienePdf = Number(c.tiene_pdf) === 1;
+                    const postularActual = c.rango_postular || c.rango;
+
+                    const opcionesPostCoord = [...RANGOS_POSTULAR_COORDINACION];
+                    if (postularActual && !opcionesPostCoord.some(x => x.id === postularActual)) {
+                        opcionesPostCoord.push({ id: postularActual, label: postularActual });
+                    }
 
                     return `
                     <tr class="fluid-row ${esCoordinadorJefe ? 'fila-coordinador-top' : 'hover:bg-zinc-900/40'} transition">
@@ -2652,8 +2899,12 @@ ${bloqueBonos}
                         </td>
                         <td class="fluid-td">
                             <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango', this.value)" class="cell-input font-bold ${esCoordinadorJefe ? 'text-pink-300' : 'text-fuchsia-300'}">
-                                <option value="Coordinador" ${c.rango === 'Coordinador' ? 'selected' : ''}>👑 Coordinador</option>
-                                <option value="Supervisor" ${c.rango === 'Supervisor' ? 'selected' : ''}>🛡️ Supervisor</option>
+                                ${opcionesPostCoord.map(r => `<option value="${r.id}" ${c.rango === r.id ? 'selected' : ''}>${r.id}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="fluid-td">
+                            <select onchange="editarCoordinacionEnTabla(${c.id}, 'rango_postular', this.value)" class="cell-input font-bold text-amber-300">
+                                ${opcionesPostCoord.map(r => `<option value="${r.id}" ${postularActual === r.id ? 'selected' : ''}>${r.label}</option>`).join('')}
                             </select>
                         </td>
                         <td class="fluid-td text-center">
@@ -2930,6 +3181,120 @@ ${bloqueBonos}
         }
 
         // =========================================================================
+        // HISTORIAL DE DESPIDOS Y BAJAS
+        // =========================================================================
+        async function guardarDespidoManual() {
+            const discord_id = document.getElementById('despDiscord').value.trim();
+            const nombre = document.getElementById('despNombre').value.trim();
+            const rango_anterior = document.getElementById('despRango').value;
+            const jefatura = document.getElementById('despJefatura').value;
+            const motivo = document.getElementById('despMotivo').value.trim();
+
+            if (!nombre) return Notif.error("Ingresa el nombre de la persona dada de baja.");
+
+            try {
+                const res = await fetch('/api/despidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        discord_id: discord_id || 'N/A',
+                        nombre,
+                        rango_anterior,
+                        jefatura,
+                        motivo: motivo || 'Baja administrativa',
+                        registrado_por: usuarioActual ? usuarioActual.nombre : 'Dirección'
+                    })
+                });
+                if (res.ok) {
+                    document.getElementById('despDiscord').value = '';
+                    document.getElementById('despNombre').value = '';
+                    document.getElementById('despMotivo').value = '';
+                    await cargarDespidos();
+                    Notif.exito("Baja archivada en el Historial de Despidos.");
+                }
+            } catch (e) {
+                Notif.error("Error al archivar despido.");
+            }
+        }
+
+        async function editarDespidoEnTabla(id, campo, valor) {
+            try {
+                await fetch(`/api/despidos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [campo]: valor })
+                });
+                await cargarDespidos();
+            } catch (e) {}
+        }
+
+        function filtrarTablaDespidos() {
+            const el = document.getElementById('filtroBuscadorDespidos');
+            const q = el ? el.value.toLowerCase().trim() : '';
+            const filtrados = cacheDespidosGlobal.filter(d => 
+                (d.nombre || '').toLowerCase().includes(q) ||
+                (d.discord_id || '').toLowerCase().includes(q) ||
+                (d.motivo || '').toLowerCase().includes(q)
+            );
+            renderizarDespidos(filtrados);
+        }
+
+        function renderizarDespidos(lista) {
+            const cuerpo = document.getElementById('cuerpoTablaDespidos');
+            const badge = document.getElementById('txtTotalDespidos');
+            if (badge) badge.innerText = `${lista.length} Bajas Archivadas`;
+            if (!cuerpo) return;
+
+            if (!lista || lista.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-zinc-500 italic text-sm">No hay despidos archivados con ese criterio.</td></tr>`;
+                return;
+            }
+
+            cuerpo.innerHTML = lista.map((d, index) => `
+                <tr class="fluid-row hover:bg-zinc-900/40 transition">
+                    <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
+                    <td class="fluid-td font-mono-code text-zinc-300 text-xs">
+                        <input type="text" value="${d.discord_id || 'N/A'}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onblur="editarDespidoEnTabla(${d.id}, 'discord_id', this.value)" class="cell-input font-mono-code text-xs">
+                    </td>
+                    <td class="fluid-td font-bold text-white text-sm">
+                        <input type="text" value="${d.nombre}" onblur="editarDespidoEnTabla(${d.id}, 'nombre', this.value)" class="cell-input font-bold text-white">
+                    </td>
+                    <td class="fluid-td">
+                        <input type="text" value="${d.rango_anterior || ''}" onblur="editarDespidoEnTabla(${d.id}, 'rango_anterior', this.value)" class="cell-input text-rose-300 font-semibold text-xs">
+                    </td>
+                    <td class="fluid-td text-zinc-300 text-xs uppercase font-bold">
+                        <input type="text" value="${d.jefatura || 'General'}" onblur="editarDespidoEnTabla(${d.id}, 'jefatura', this.value)" class="cell-input text-zinc-300 text-xs">
+                    </td>
+                    <td class="fluid-td text-center font-mono-code text-xs text-zinc-400">
+                        <input type="date" value="${d.fecha_despido || ''}" onchange="editarDespidoEnTabla(${d.id}, 'fecha_despido', this.value)" class="cell-input text-center font-mono-code text-xs text-zinc-400">
+                    </td>
+                    <td class="fluid-td">
+                        <textarea rows="2" onblur="editarDespidoEnTabla(${d.id}, 'motivo', this.value)" class="cell-input text-zinc-200 text-xs resize-y min-h-[42px] bg-black/40 border border-zinc-800 rounded-lg p-2">${d.motivo || ''}</textarea>
+                    </td>
+                    <td class="fluid-td text-zinc-400 text-xs">${d.registrado_por || 'Sistema'}</td>
+                    <td class="fluid-td text-right">
+                        <button onclick="eliminarDespido(${d.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2.5 py-1 rounded text-xs">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function cargarDespidos() {
+            try {
+                const data = await apiFetch('/api/despidos');
+                cacheDespidosGlobal = Array.isArray(data) ? data : [];
+                filtrarTablaDespidos();
+            } catch (e) {}
+        }
+
+        async function eliminarDespido(id) {
+            const confirmar = await Notif.confirmar("¿Eliminar antecedente de despido?", "Se borrará permanentemente del archivo histórico de bajas.");
+            if (!confirmar) return;
+            await fetch(`/api/despidos/${id}`, { method: 'DELETE' });
+            await cargarDespidos();
+        }
+
+        // =========================================================================
         // CENSO GENERAL DE DIRECCIÓN 1:1 (CORRECCIÓN DE JEFATURAS Y SINCRONIZACIÓN)
         // =========================================================================
         async function editarDesdeCenso(tipo, id, campo, valor) {
@@ -3034,7 +3399,6 @@ ${bloqueBonos}
                 if (r.estado === 'Excedencia') claseEstadoBadge = 'badge-estado-excedencia';
                 if (r.estado === 'Baja') claseEstadoBadge = 'badge-estado-baja';
 
-                // Asegurar que cualquier rango personalizado o de jefatura aparezca siempre seleccionado y nunca caiga en Celador por error
                 const opcionesRangoCenso = [...TODOS_LOS_RANGOS];
                 if (r.rango_actual && !opcionesRangoCenso.some(x => x.id === r.rango_actual)) {
                     opcionesRangoCenso.push({ id: r.rango_actual, label: `🩺 ${r.rango_actual}` });
@@ -3074,11 +3438,16 @@ ${bloqueBonos}
                                     ${generarOpcionesPostular(r.rango_actual, r.examen, r.departamento, r.rango_postular)}
                                 </select>
                             ` : r.tipo_origen === 'coordinacion' ? `
-                                <select onchange="editarDesdeCenso('coordinacion', ${r.id_original}, 'desempeno', this.value)" class="cell-input font-black text-center text-xs py-1 px-2 rounded-lg ${obtenerClaseSemaforoDesempeno(r.desempeno)}">
-                                    <option value="Excelente" ${r.desempeno === 'Excelente' ? 'selected' : ''}>🟢 Trabaja Bien</option>
-                                    <option value="Regular" ${r.desempeno === 'Regular' ? 'selected' : ''}>🟡 Regular</option>
-                                    <option value="Deficiente" ${r.desempeno === 'Deficiente' ? 'selected' : ''}>🔴 Bajo Rendimiento</option>
-                                </select>
+                                <div class="space-y-1">
+                                    <select onchange="editarDesdeCenso('coordinacion', ${r.id_original}, 'rango_postular', this.value)" class="cell-input font-bold text-amber-300 text-xs">
+                                        ${RANGOS_POSTULAR_COORDINACION.map(op => `<option value="${op.id}" ${r.rango_postular === op.id ? 'selected' : ''}>${op.label}</option>`).join('')}
+                                    </select>
+                                    <select onchange="editarDesdeCenso('coordinacion', ${r.id_original}, 'desempeno', this.value)" class="cell-input font-black text-center text-[11px] py-0.5 px-1 rounded ${obtenerClaseSemaforoDesempeno(r.desempeno)}">
+                                        <option value="Excelente" ${r.desempeno === 'Excelente' ? 'selected' : ''}>🟢 Trabaja Bien</option>
+                                        <option value="Regular" ${r.desempeno === 'Regular' ? 'selected' : ''}>🟡 Regular</option>
+                                        <option value="Deficiente" ${r.desempeno === 'Deficiente' ? 'selected' : ''}>🔴 Bajo Rendimiento</option>
+                                    </select>
+                                </div>
                             ` : `
                                 <span class="text-xs text-zinc-400 font-semibold">${obtenerBadgeRango(r.rango_postular)}</span>
                             `}
@@ -3164,7 +3533,6 @@ ${bloqueBonos}
                         : []
                 );
 
-                // Mapa de rangos de cuentas de Jefatura/Dirección para evitar que un Jefe salga como Celador si está duplicado
                 const mapaRangosCuentas = new Map();
                 if (Array.isArray(dataUsers)) {
                     dataUsers.forEach(u => {
@@ -3178,13 +3546,11 @@ ${bloqueBonos}
 
                 let listaUnificada = [];
 
-                // 1. Tablas de Evaluación (Enfermería, Cirugía, Medicina)
                 if (Array.isArray(dataAsc)) {
                     dataAsc.forEach(a => {
                         const nombreKey = (a.nombre || '').toLowerCase().trim();
                         const esForm = instructoresSet.has(nombreKey);
                         
-                        // Si la persona tiene un rango superior en su cuenta de sistema (ej. Jefa de Cirugía), priorizar el rango mayor
                         let rangoReal = a.rango_actual;
                         const rangoCuenta = mapaRangosCuentas.get(nombreKey) || (a.discord_id !== 'N/A' ? mapaRangosCuentas.get(a.discord_id) : null);
                         if (rangoCuenta && (JERARQUIA_MENOR_A_MAYOR[rangoCuenta] || 0) > (JERARQUIA_MENOR_A_MAYOR[rangoReal] || 0)) {
@@ -3212,7 +3578,6 @@ ${bloqueBonos}
                     });
                 }
 
-                // 2. Tabla de Coordinación y Supervisión
                 if (Array.isArray(dataCoord)) {
                     dataCoord.forEach(c => {
                         const nombreCoord = (c.supervisor || '').trim();
@@ -3229,7 +3594,7 @@ ${bloqueBonos}
                             nombre: nombreCoord,
                             departamento: 'coordinacion',
                             rango_actual: c.rango || 'Supervisor',
-                            rango_postular: c.rango || 'Supervisor',
+                            rango_postular: c.rango_postular || c.rango || 'Supervisor',
                             desempeno: c.desempeno || 'Excelente',
                             tiene_pdf: Number(c.tiene_pdf) === 1,
                             estado: c.estado || 'Activo',
@@ -3255,7 +3620,6 @@ ${bloqueBonos}
                     });
                 }
 
-                // 3. Cuentas Institucionales (Jefes de Cirugía, Medicina, Enfermería, Dirección)
                 if (Array.isArray(dataUsers)) {
                     dataUsers.forEach(u => {
                         const rangoLimpio = (u.rango || '').trim();
@@ -3302,7 +3666,6 @@ ${bloqueBonos}
                                     tienePagoPendiente: personasConPagoPendiente.has(nombreUser.toLowerCase())
                                 });
                             } else {
-                                // Si ya estaba en alguna tabla con un rango menor (ej. Celador), actualizarle su rango de Jefatura real
                                 const pesoExistente = JERARQUIA_MENOR_A_MAYOR[listaUnificada[indexExistente].rango_actual] || 0;
                                 const pesoCuenta = JERARQUIA_MENOR_A_MAYOR[rangoLimpio] || 0;
                                 if (pesoCuenta > pesoExistente) {
@@ -3315,7 +3678,6 @@ ${bloqueBonos}
                     });
                 }
 
-                // 4. Aspirantes en el Limbo de Formaciones (Pendientes de Instrucción IC)
                 if (Array.isArray(dataLimbo)) {
                     dataLimbo.forEach(l => {
                         const nombreLimbo = (l.nombre || '').trim();
@@ -3380,13 +3742,28 @@ ${bloqueBonos}
             if (tieneAccesoTesoreria()) cargarPagos();
         }
 
-        // PANEL ADMIN DE CUENTAS WEB
+        // =========================================================================
+        // PANEL ADMIN DE CUENTAS WEB + GESTOR DE PERMISOS PERSONALIZADOS POR USUARIO
+        // =========================================================================
         async function cargarGestionAdmin() {
             const data = await apiFetch('/api/usuarios');
             const cuerpo = document.getElementById('cuerpoTablaAdmin');
             if (!cuerpo) return;
 
-            cuerpo.innerHTML = data.map((u, index) => `
+            cuerpo.innerHTML = data.map((u, index) => {
+                const permisosActuales = (u.permisos_custom || '').split(',').map(s => s.trim()).filter(Boolean);
+
+                const checkboxesHTML = LISTA_PERMISOS_MODULOS.map(m => {
+                    const checked = permisosActuales.includes(m.id) ? 'checked' : '';
+                    return `
+                        <label class="inline-flex items-center gap-1 bg-black/50 border border-zinc-800 hover:border-pink-500/40 px-2 py-1 rounded-lg text-[10px] cursor-pointer select-none">
+                            <input type="checkbox" class="chk-permiso-${u.id} accent-pink-500" value="${m.id}" ${checked}>
+                            <span class="text-zinc-300 font-semibold">${m.label}</span>
+                        </label>
+                    `;
+                }).join('');
+
+                return `
                 <tr class="fluid-row hover:bg-zinc-900/40">
                     <td class="fluid-td text-center font-mono-code font-bold text-zinc-500">${index + 1}</td>
                     <td class="fluid-td font-mono-code text-zinc-400 text-xs">
@@ -3395,25 +3772,32 @@ ${bloqueBonos}
                                class="cell-input font-mono-code text-xs text-zinc-300">
                     </td>
                     <td class="fluid-td font-bold text-white text-sm">
-                        ${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-xs">(@${u.usuario})</span>
+                        ${u.nombre} <span class="text-zinc-500 font-normal font-mono-code text-xs block">(@${u.usuario})</span>
                     </td>
                     <td class="fluid-td">
-                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300">
+                        <select id="selRangoAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs font-bold text-pink-300 w-full">
                             ${RANGOS_EMS.map(r => `<option value="${r}" ${u.rango === r ? 'selected' : ''}>${r}</option>`).join('')}
                         </select>
                     </td>
                     <td class="fluid-td">
-                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs">
+                        <select id="selRolAdmin-${u.id}" class="input-ems px-3 py-1.5 rounded-xl text-xs w-full">
                             <option value="empleado" ${u.rol === 'empleado' ? 'selected' : ''}>Personal</option>
-                            <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador (Director)</option>
+                            <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>Administrador (Todo)</option>
                         </select>
                     </td>
-                    <td class="fluid-td text-right flex items-center justify-end gap-1.5 py-3">
-                        <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-4 py-1 rounded-xl text-xs">Guardar</button>
-                        <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1 rounded-xl text-xs">Eliminar</button>
+                    <td class="fluid-td">
+                        <div class="flex flex-wrap gap-1">
+                            ${checkboxesHTML}
+                        </div>
+                    </td>
+                    <td class="fluid-td text-right">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="guardarAdminUsuario(${u.id})" class="btn-origen px-3 py-1.5 rounded-xl text-xs">Guardar</button>
+                            <button onclick="eliminarAdminUsuario(${u.id})" class="text-rose-400 hover:text-rose-300 font-bold bg-rose-500/10 px-2 py-1.5 rounded-xl text-xs">✕</button>
+                        </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         async function guardarAdminUsuario(id) {
@@ -3421,12 +3805,23 @@ ${bloqueBonos}
             const rol = document.getElementById(`selRolAdmin-${id}`).value;
             const discord_id = document.getElementById(`discordAdmin-${id}`).value.trim();
 
+            const checks = document.querySelectorAll(`.chk-permiso-${id}:checked`);
+            const permisos_custom = Array.from(checks).map(c => c.value).join(',');
+
             await fetch(`/api/usuarios/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rango, rol, discord_id }) 
+                body: JSON.stringify({ rango, rol, discord_id, permisos_custom }) 
             });
-            Notif.exito("Cuenta actualizada y rango reflejado en el Censo General.");
+
+            if (usuarioActual && Number(usuarioActual.id) === Number(id)) {
+                usuarioActual.rango = rango;
+                usuarioActual.rol = rol;
+                usuarioActual.permisos_custom = permisos_custom;
+                actualizarUIUsuario();
+            }
+
+            Notif.exito("Cuenta, permisos personalizados y rango actualizados.");
             cargarCensoGeneral();
         }
 
@@ -3438,13 +3833,20 @@ ${bloqueBonos}
             cargarCensoGeneral();
         }
 
-        socket.on('db_update', () => {
+        socket.on('db_update', (payload) => {
+            if (payload && payload.evento === 'usuario_modificado' && usuarioActual && Number(payload.usuario_id) === Number(usuarioActual.id)) {
+                if (payload.rango) usuarioActual.rango = payload.rango;
+                if (payload.rol) usuarioActual.rol = payload.rol;
+                if (payload.permisos_custom !== undefined) usuarioActual.permisos_custom = payload.permisos_custom;
+                actualizarUIUsuario();
+            }
             cargarTablas();
             cargarFormaciones();
             cargarLimboFormaciones();
             cargarCoordinacion();
             cargarEstadosTablasListas();
             cargarCensoGeneral();
+            cargarDespidos();
             if (tieneAccesoTesoreria()) cargarPagos();
         });
 
@@ -3458,7 +3860,7 @@ ${bloqueBonos}
                         <p><strong class="text-pink-400">Usuario Sistema:</strong> <span class="text-zinc-300 font-mono-code">@${usuarioActual.usuario}</span></p>
                         <p><strong class="text-pink-400">Discord ID:</strong> <span class="text-zinc-300 font-mono-code">${usuarioActual.discord_id || 'No registrado'}</span></p>
                         <p><strong class="text-pink-400">Rango Asignado:</strong> <span class="text-white">${usuarioActual.rango}</span></p>
-                        <p><strong class="text-pink-400">Nivel de Permisos:</strong> <span class="text-emerald-300">${usuarioActual.rol === 'admin' ? 'Administración Global' : 'Personal Regular'}</span></p>
+                        <p><strong class="text-pink-400">Permisos Extra:</strong> <span class="text-indigo-300">${usuarioActual.permisos_custom || 'Estándar por rango'}</span></p>
                         <p><strong class="text-pink-400">Fecha Ingreso:</strong> <span class="text-zinc-300">${usuarioActual.fecha_ingreso || 'N/A'}</span></p>
                     </div>
                 `,

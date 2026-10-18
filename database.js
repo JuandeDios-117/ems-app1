@@ -15,7 +15,7 @@ const db = createClient({
 
 (async function initDB() {
   try {
-    // 1. USUARIOS
+    // 1. USUARIOS (Con permisos personalizados de pestañas)
     await db.execute(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +25,7 @@ const db = createClient({
         password TEXT NOT NULL,
         rango TEXT DEFAULT 'Sin Rango (Pendiente)',
         rol TEXT DEFAULT 'empleado',
+        permisos_custom TEXT DEFAULT '',
         horas_semana TEXT DEFAULT '',
         fecha_ingreso TEXT DEFAULT '',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -34,6 +35,7 @@ const db = createClient({
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN discord_id TEXT DEFAULT 'N/A'"); } catch (e) {}
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN horas_semana TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE usuarios ADD COLUMN fecha_ingreso TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE usuarios ADD COLUMN permisos_custom TEXT DEFAULT ''"); } catch (e) {}
 
     // 2. ASCENSOS & EVALUACIONES
     await db.execute(`
@@ -92,13 +94,14 @@ const db = createClient({
       )
     `);
 
-    // 4. COORDINACIÓN
+    // 4. COORDINACIÓN (Con rango_postular para ascensos a Coordinador y Jefaturas)
     await db.execute(`
       CREATE TABLE IF NOT EXISTS registro_coordinacion (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         discord_id TEXT DEFAULT 'N/A',
         supervisor TEXT NOT NULL,
         rango TEXT DEFAULT 'Supervisor',
+        rango_postular TEXT DEFAULT 'Supervisor',
         horas_semana TEXT DEFAULT '',
         estado TEXT DEFAULT 'Activo',
         desempeno TEXT DEFAULT 'Excelente',
@@ -114,6 +117,7 @@ const db = createClient({
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN desempeno TEXT DEFAULT 'Excelente'"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN pdf_feedback TEXT DEFAULT ''"); } catch (e) {}
     try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN nombre_pdf TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE registro_coordinacion ADD COLUMN rango_postular TEXT DEFAULT 'Supervisor'"); } catch (e) {}
 
     // 5. TESORERÍA & PAGOS
     await db.execute(`
@@ -131,25 +135,47 @@ const db = createClient({
       )
     `);
 
-    // 6. ESTADO DE TABLAS LISTAS
+    // 6. ESTADO DE TABLAS LISTAS + SELECCIÓN MANUAL DE EMS DE LA SEMANA
     await db.execute(`
       CREATE TABLE IF NOT EXISTS control_tablas_listas (
         jefatura TEXT PRIMARY KEY,
         esta_lista INTEGER DEFAULT 0,
         fecha_hora_mexico TEXT DEFAULT '',
-        marcado_por TEXT DEFAULT ''
+        marcado_por TEXT DEFAULT '',
+        ems_semana_nombre TEXT DEFAULT '',
+        ems_semana_discord TEXT DEFAULT '',
+        ems_semana_horas TEXT DEFAULT ''
       )
     `);
 
-    const jefaturas = ['cirugia', 'medicina', 'enfermeria'];
+    try { await db.execute("ALTER TABLE control_tablas_listas ADD COLUMN ems_semana_nombre TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE control_tablas_listas ADD COLUMN ems_semana_discord TEXT DEFAULT ''"); } catch (e) {}
+    try { await db.execute("ALTER TABLE control_tablas_listas ADD COLUMN ems_semana_horas TEXT DEFAULT ''"); } catch (e) {}
+
+    const jefaturas = ['cirugia', 'medicina', 'enfermeria', 'formaciones'];
     for (const j of jefaturas) {
       await db.execute({
-        sql: "INSERT OR IGNORE INTO control_tablas_listas (jefatura, esta_lista, fecha_hora_mexico, marcado_por) VALUES (?, 0, '', '')",
+        sql: "INSERT OR IGNORE INTO control_tablas_listas (jefatura, esta_lista, fecha_hora_mexico, marcado_por, ems_semana_nombre, ems_semana_discord, ems_semana_horas) VALUES (?, 0, '', '', '', '', '')",
         args: [j]
       });
     }
 
-    // 7. HISTORIAL DEL ÚLTIMO REPORTE SEMANAL
+    // 7. HISTORIAL DE DESPIDOS (Control de Bajas)
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS historial_despidos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        discord_id TEXT DEFAULT 'N/A',
+        nombre TEXT NOT NULL,
+        rango_anterior TEXT NOT NULL,
+        jefatura TEXT DEFAULT '',
+        fecha_despido TEXT NOT NULL,
+        motivo TEXT DEFAULT 'Baja por evaluación / Faltas',
+        registrado_por TEXT DEFAULT 'Sistema',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 8. HISTORIAL DEL ÚLTIMO REPORTE SEMANAL
     await db.execute(`
       CREATE TABLE IF NOT EXISTS historial_reportes (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -159,7 +185,7 @@ const db = createClient({
       )
     `);
 
-    // 8. CONFIGURACIÓN DEL SISTEMA (WEBHOOK DISCORD)
+    // 9. CONFIGURACIÓN DEL SISTEMA (WEBHOOK DISCORD)
     await db.execute(`
       CREATE TABLE IF NOT EXISTS configuracion_sistema (
         clave TEXT PRIMARY KEY,
@@ -172,7 +198,7 @@ const db = createClient({
       args: [process.env.DISCORD_WEBHOOK_URL || '']
     });
 
-    console.log("[DB] Base de datos verificada y sincronizada al 100%.");
+    console.log("[DB] Base de datos verificada y sincronizada al 100% con todas las expansiones.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }
