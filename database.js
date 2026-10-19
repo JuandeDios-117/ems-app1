@@ -198,7 +198,7 @@ const db = createClient({
       args: [process.env.DISCORD_WEBHOOK_URL || '']
     });
 
-    console.log("[DB] Base de datos verificada y sincronizada al 100% con todas las expansiones.");
+    console.log("[DB] Base de datos verificada y sincronizada al 100%.");
   } catch (err) {
     console.error("[DB ERROR]:", err.message);
   }

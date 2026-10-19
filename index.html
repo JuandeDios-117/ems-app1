@@ -211,7 +211,7 @@
                 </div>
             </div>
 
-            <!-- RELOJES CON BANDERAS EN GRANDE (SIN TEXTO) -->
+            <!-- RELOJES CON BANDERAS EN GRANDE -->
             <div class="flex flex-wrap items-center gap-3 bg-black/70 p-2.5 rounded-2xl border border-zinc-800 text-xs font-mono-code">
                 <div class="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center gap-2 shadow-inner" title="Hora Ciudad de México">
                     <span class="text-xl">🇲🇽</span>
@@ -293,7 +293,7 @@
                         <h2 class="text-xl font-black text-white uppercase flex items-center gap-2">
                             🎓 Registro de Aspirantes / Nuevos Celadores
                         </h2>
-                        <p class="text-xs text-zinc-400">Puedes enviar al aspirante directo a <strong class="text-emerald-400">Enfermería Básica</strong> (suma +1 instrucción al instante) o dejarlo en el <strong class="text-indigo-400">Limbo de Formaciones (Pendiente IC)</strong> hasta que finalice su instrucción.</p>
+                        <p class="text-xs text-zinc-400">Puedes enviar al aspirante directo a <strong class="text-emerald-400">Enfermería Básica</strong> (suma +1 instrucción semanal al instante) o dejarlo en el <strong class="text-indigo-400">Limbo de Formaciones (Pendiente IC)</strong> hasta que finalice su instrucción.</p>
                     </div>
                     <span class="text-xs font-black uppercase px-3 py-1.5 rounded-xl border bg-emerald-500/15 text-emerald-300 border-emerald-500/30">
                         Suma +1 Automático al Formador al Completar
@@ -364,16 +364,16 @@
                             <span id="badgeEstadoTabla_formaciones" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
                                 🔴 Tabla No Lista / En Revisión
                             </span>
-                            <span class="text-xs text-zinc-400">· Al marcar lista o hacer corte, envía pagos a Tesorería y reinicia semanales a 0.</span>
+                            <span class="text-xs text-zinc-400">· Al marcar lista o liquidar, envía los pagos a Tesorería, suma las semanales a las totales y reinicia semanales a 0.</span>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-3">
                         <span class="text-xs font-black uppercase px-3 py-2 rounded-xl border bg-amber-500/15 text-amber-300 border-amber-500/30 font-mono-code">$50,000 / Inst.</span>
                         <button onclick="toggleTablaLista('formaciones')" id="btnTablaLista_formaciones" class="bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md">
-                            ✅ Marcar Tabla Lista (Enviar Pagos a Tesorería y Reiniciar a 0)
+                            ✅ Marcar Tabla Lista (Enviar a Tesorería y Sumar a Totales)
                         </button>
                         <button onclick="ejecutarCorteSemanalFormaciones()" class="bg-rose-600 hover:bg-rose-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-rose-600/30">
-                            🔄 Liquidar y Reiniciar ($0)
+                            🔄 Liquidar y Sumar a Totales ($0)
                         </button>
                     </div>
                 </div>
@@ -495,7 +495,7 @@
                         <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
                             💰 TESORERÍA DEPARTAMENTAL · REGISTRO DE PAGOS Y BONOS
                         </h2>
-                        <p class="text-xs text-zinc-400">Recibe automáticamente los bonos de 25h ($50k), 50h ($100k), EMS de la Semana ($200k) y nómina de Formadores cuando las tablas se marcan listas.</p>
+                        <p class="text-xs text-zinc-400">Los bonos de 25h ($50k), 50h ($100k), EMS de la Semana ($200k) y nómina de Formadores se cargan aquí únicamente cuando las Jefaturas marcan sus tablas como listas.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button onclick="ejecutarCorteSemanalPagos()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
@@ -712,14 +712,14 @@
             <div class="flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
                 <div>
                     <h2 class="text-xl font-black text-white uppercase">🩺 Panel de Cuentas, Permisos Personalizados y Cierre Semanal</h2>
-                    <p class="text-xs text-zinc-400">Asigna cargos, elige exactamente qué pestañas puede visualizar cada usuario y procesa el cierre semanal general.</p>
+                    <p class="text-xs text-zinc-400">Asigna cargos, elige qué pestañas puede ver cada usuario y aplica el cierre semanal (sin duplicar los bonos ya enviados por las Jefaturas).</p>
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
                     <button onclick="verUltimoReporteGuardado()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-indigo-600/30">
                         📄 Ver Último Reporte (Discord / PDF)
                     </button>
-                    <button onclick="aplicarTodosLosAscensosGlobal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
+                    <button onclick="aplicarTodosLosAscensosGlobal()" id="btnAplicarGlobalAdmin" class="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/30">
                         ⚡ Aplicar Todos los Ascensos y Reiniciar Ciclo Semanal
                     </button>
                 </div>
@@ -853,20 +853,27 @@
         let cacheDespidosGlobal = [];
         let ultimoReporteSemanal = null;
 
-        // MAPEO DE ROLES DE DISCORD SEGÚN TU PLANTILLA OFICIAL
+        // MAPEO DE ROLES DE DISCORD SEGÚN TU PLANTILLA OFICIAL ACTUALIZADA
         const DISCORD_ROLES_MAP = {
             "Celador/a": "<@&1485396855419441333>",
             "Auxiliar de Enfermería": "<@&1485396855419441333>",
             "Enfermero": "<@&1485396487021134107>",
             "Enfermero/a General": "<@&1485396822363996381>",
             "Enfermero/a Especialista": "<@&1485396789086392494>",
-            "Estudiante": "<@&1485396051861962812>",
+            "Estudiante (En Espera)": "<@&1485396051861962812>",
+            "Estudiante": "<@&1485396205126156428>",
             "Interno/a": "<@&1485396134674301039>",
             "Residente": "<@&1485395892700971068>",
             "Subespecialista": "<@&1485395842599882904>",
             "Especialista": "<@&1485395842599882904>",
             "Supervisor": "<@&1485396737890713710>",
-            "Coordinador": "<@&1497740296463847555>"
+            "Coordinador": "<@&1497740296463847555>",
+            "Jefe de Cirugía": "<@&1485395756264329286>",
+            "Jefa de Cirugía": "<@&1485395756264329286>",
+            "Jefe de Medicina": "<@&1485395756264329286>",
+            "Director de Enfermería": "<@&1485395756264329286>",
+            "Jefe de Formaciones": "<@&1485395756264329286>",
+            "Subdirectora": "<@&1485395756264329286>"
         };
 
         const LISTA_PERMISOS_MODULOS = [
@@ -1141,7 +1148,7 @@
 
         function parsearHorasNumericas(str) {
             if (!str) return 0;
-            const limpio = str.toUpperCase().replace('HRS', '').replace('HR', '').trim();
+            const limpio = String(str).toUpperCase().replace('HRS', '').replace('HR', '').trim();
             const partes = limpio.split(':');
             const h = parseFloat(partes[0]) || 0;
             const m = partes[1] ? (parseFloat(partes[1]) || 0) / 60 : 0;
@@ -1150,7 +1157,7 @@
 
         function formatearTextoHoras(valorRaw) {
             if (!valorRaw) return '';
-            let val = valorRaw.toUpperCase().replace(/[^0-9:]/g, '').trim();
+            let val = String(valorRaw).toUpperCase().replace(/[^0-9:]/g, '').trim();
             if (!val) return '';
             if (!val.includes(':')) {
                 const num = Math.max(0, parseInt(val));
@@ -1165,7 +1172,7 @@
         }
 
         function obtenerClaseSemaforoCasilla(str) {
-            if (!str || str.trim() === '') return 'border border-zinc-800 text-zinc-400';
+            if (!str || String(str).trim() === '') return 'border border-zinc-800 text-zinc-400';
             const h = parsearHorasNumericas(str);
             if (h < 6) return 'semaforo-horas-rojo';
             if (h < 8) return 'semaforo-horas-amarillo';
@@ -1204,11 +1211,17 @@
                     );
                 }
             } else {
-                // Medicina y Cirugía: incluye ascenso a Supervisor y Coordinador (mueve a Coordinación)
+                // Medicina y Cirugía: incluye ascenso a Supervisor, Coordinador y Jefaturas (se borra de la tabla médica y pasa a su nuevo cargo/tabla)
                 lista = RANGOS_EVALUACION.filter(r => r.escala === 'medica');
                 lista.push(
                     { id: "Supervisor", label: "🛡️ Supervisor ➔ Mover a Coordinación" },
                     { id: "Coordinador", label: "👑 Coordinador ➔ Mover a Coordinación" },
+                    { id: "Jefe de Cirugía", label: "🥼✂️ Ascender a Jefe de Cirugía (Jefatura)" },
+                    { id: "Jefa de Cirugía", label: "🥼✂️ Ascender a Jefa de Cirugía (Jefatura)" },
+                    { id: "Jefe de Medicina", label: "🥼💊 Ascender a Jefe de Medicina (Jefatura)" },
+                    { id: "Director de Enfermería", label: "🥼💉 Ascender a Director de Enfermería (Jefatura)" },
+                    { id: "Jefe de Formaciones", label: "🥼📚 Ascender a Jefe de Formaciones (Jefatura)" },
+                    { id: "Subdirectora", label: "🩺🏢 Ascender a Subdirectora (Dirección)" },
                     { id: "Enfermero/a Especialista (Bajar)", label: "『🧵』Bajar a Enfermería Especialista" },
                     { id: "Celador/a (Bajar)", label: "『👀』Bajar a Escala Básica" }
                 );
@@ -1592,45 +1605,81 @@
         }
 
         // =========================================================================
-        // GENERADOR DE PLANTILLA DISCORD Y ACTA OFICIAL PDF DE ALTA FORMALIDAD
+        // GENERADOR BLINDADO DE PLANTILLA DISCORD Y ACTA OFICIAL PDF
         // =========================================================================
         function formatoTagUsuario(persona) {
-            if (persona.discord_id && persona.discord_id !== 'N/A' && persona.discord_id.trim() !== '') {
-                return `<@${persona.discord_id.trim()}>`;
+            if (!persona) return '—';
+            if (persona.discord_id && persona.discord_id !== 'N/A' && String(persona.discord_id).trim() !== '') {
+                return `<@${String(persona.discord_id).trim()}>`;
             }
-            return `**${persona.nombre}**`;
+            return `**${persona.nombre || 'Personal EMS'}**`;
         }
 
-        function construirTextoPlantillaDiscord(rep) {
+        function normalizarObjetoReporte(repRaw) {
+            const hoy = new Date().toISOString().split('T')[0];
+            const r = repRaw || {};
+            return {
+                fecha: r.fecha || hoy,
+                expulsados: Array.isArray(r.expulsados) ? r.expulsados : [],
+                descensos: Array.isArray(r.descensos) ? r.descensos : [],
+                ascensosOperativa: {
+                    "Auxiliar de Enfermería": Array.isArray(r.ascensosOperativa?.["Auxiliar de Enfermería"]) ? r.ascensosOperativa["Auxiliar de Enfermería"] : [],
+                    "Enfermero": Array.isArray(r.ascensosOperativa?.["Enfermero"]) ? r.ascensosOperativa["Enfermero"] : [],
+                    "Enfermero/a General": Array.isArray(r.ascensosOperativa?.["Enfermero/a General"]) ? r.ascensosOperativa["Enfermero/a General"] : [],
+                    "Enfermero/a Especialista": Array.isArray(r.ascensosOperativa?.["Enfermero/a Especialista"]) ? r.ascensosOperativa["Enfermero/a Especialista"] : []
+                },
+                ascensosMedica: {
+                    "Estudiante (En Espera)": Array.isArray(r.ascensosMedica?.["Estudiante (En Espera)"]) ? r.ascensosMedica["Estudiante (En Espera)"] : [],
+                    "Estudiante": Array.isArray(r.ascensosMedica?.["Estudiante"]) ? r.ascensosMedica["Estudiante"] : [],
+                    "Interno/a": Array.isArray(r.ascensosMedica?.["Interno/a"]) ? r.ascensosMedica["Interno/a"] : [],
+                    "Residente": Array.isArray(r.ascensosMedica?.["Residente"]) ? r.ascensosMedica["Residente"] : [],
+                    "Subespecialista": Array.isArray(r.ascensosMedica?.["Subespecialista"]) ? r.ascensosMedica["Subespecialista"] : [],
+                    "Especialista": Array.isArray(r.ascensosMedica?.["Especialista"]) ? r.ascensosMedica["Especialista"] : []
+                },
+                ascensosEspeciales: Array.isArray(r.ascensosEspeciales) ? r.ascensosEspeciales : [],
+                emsSemana: {
+                    enfermeria: r.emsSemana?.enfermeria || null,
+                    medicina: r.emsSemana?.medicina || null,
+                    cirugia: r.emsSemana?.cirugia || null
+                },
+                bonos50k: Array.isArray(r.bonos50k) ? r.bonos50k : [],
+                bonos100k: Array.isArray(r.bonos100k) ? r.bonos100k : []
+            };
+        }
+
+        function construirTextoPlantillaDiscord(repRaw) {
+            const rep = normalizarObjetoReporte(repRaw);
+
             const expTxt = rep.expulsados.length > 0 
                 ? rep.expulsados.map(x => formatoTagUsuario(x)).join('\n') 
-                : 'Ninguno';
+                : '—';
 
             const descTxt = rep.descensos.length > 0 
                 ? rep.descensos.map(x => `${formatoTagUsuario(x)} - ${DISCORD_ROLES_MAP[x.rango_nuevo] || x.rango_nuevo}`).join('\n') 
-                : 'Ninguno';
+                : '';
 
             const opAux = rep.ascensosOperativa["Auxiliar de Enfermería"].map(x => formatoTagUsuario(x)).join('\n') || '—';
             const opEnf = rep.ascensosOperativa["Enfermero"].map(x => formatoTagUsuario(x)).join('\n') || '—';
             const opGen = rep.ascensosOperativa["Enfermero/a General"].map(x => formatoTagUsuario(x)).join('\n') || '—';
             const opEsp = rep.ascensosOperativa["Enfermero/a Especialista"].map(x => formatoTagUsuario(x)).join('\n') || '—';
 
-            const medEst = rep.ascensosMedica["Estudiante"].map(x => formatoTagUsuario(x)).join('\n') || '—';
-            const medInt = rep.ascensosMedica["Interno/a"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const medEstEspera = rep.ascensosMedica["Estudiante (En Espera)"].map(x => formatoTagUsuario(x)).join('\n') || '—';
+            const medEstRama = rep.ascensosMedica["Estudiante"].map(x => formatoTagUsuario(x)).join('\n') || '-';
+            const medInt = rep.ascensosMedica["Interno/a"].map(x => formatoTagUsuario(x)).join('\n') || '-';
             const medRes = rep.ascensosMedica["Residente"].map(x => formatoTagUsuario(x)).join('\n') || '—';
             const medSubEsp = [...rep.ascensosMedica["Subespecialista"], ...rep.ascensosMedica["Especialista"]].map(x => formatoTagUsuario(x)).join('\n') || '—';
 
-            const emsEnf = rep.emsSemana && rep.emsSemana.enfermeria ? formatoTagUsuario(rep.emsSemana.enfermeria) : 'Sin definir';
-            const emsMed = rep.emsSemana && rep.emsSemana.medicina ? formatoTagUsuario(rep.emsSemana.medicina) : 'Sin definir';
-            const emsCir = rep.emsSemana && rep.emsSemana.cirugia ? formatoTagUsuario(rep.emsSemana.cirugia) : 'Sin definir';
+            const emsEnf = rep.emsSemana.enfermeria ? formatoTagUsuario(rep.emsSemana.enfermeria) : 'Sin definir';
+            const emsMed = rep.emsSemana.medicina ? formatoTagUsuario(rep.emsSemana.medicina) : 'Sin definir';
+            const emsCir = rep.emsSemana.cirugia ? formatoTagUsuario(rep.emsSemana.cirugia) : 'Sin definir';
 
-            const espTxt = (rep.ascensosEspeciales && rep.ascensosEspeciales.length > 0)
-                ? rep.ascensosEspeciales.map(x => `${formatoTagUsuario(x)} - ${DISCORD_ROLES_MAP[x.rango_nuevo] || `**${x.rango_nuevo}**`}`).join('\n')
+            const espTxt = rep.ascensosEspeciales.length > 0
+                ? rep.ascensosEspeciales.map(x => `${formatoTagUsuario(x)} ------ ${DISCORD_ROLES_MAP[x.rango_nuevo] || `**${x.rango_nuevo}**`}`).join('\n')
                 : '—';
 
-            const bonos100Txt = rep.bonos100k.map(x => `${formatoTagUsuario(x)}`).join('\n');
             const bonos50Txt = rep.bonos50k.map(x => `${formatoTagUsuario(x)}`).join('\n');
-            const bloqueBonos = [bonos50Txt, bonos100Txt].filter(Boolean).join('\n\n') || 'Ninguno esta semana';
+            const bonos100Txt = rep.bonos100k.map(x => `${formatoTagUsuario(x)}`).join('\n');
+            const bloqueBonos = [bonos50Txt, bonos100Txt].filter(Boolean).join('\n \n') || '—';
 
             return `# 🔔 ASCENSOS / DESCENSOS 🔔
 
@@ -1663,9 +1712,11 @@ ${opEsp}
 
 ** ASCENSO A <@&1485396051861962812>   **
 *Recuerden hacer sus selecciones de <@&1489804255672926272> / <@&1485395813965238362>  abriendo un ticket en #🎫・contactar-jefatura *
-${medEst}
+${medEstEspera}
 
-** ASCENSO A <@&1485396134674301039>   **
+** ASCENSO A <@&1485396205126156428>    **
+${medEstRama}
+**ASCENSO A <@&1485396134674301039> **
 ${medInt}
 
 ** ASCENSO A <@&1485395892700971068>   **
@@ -1695,7 +1746,8 @@ ${bloqueBonos}
 # CUALQUIER DUDA SOBRE SU ASCENSO POR FAVOR ABRAN TICKET EN DIRECCION <#1495794084009349394>`;
         }
 
-        function mostrarModalReporteAscensos(rep) {
+        function mostrarModalReporteAscensos(repRaw) {
+            const rep = normalizarObjetoReporte(repRaw);
             ultimoReporteSemanal = rep;
             const texto = construirTextoPlantillaDiscord(rep);
             document.getElementById('txtPlantillaDiscord').value = texto;
@@ -1706,7 +1758,7 @@ ${bloqueBonos}
             try {
                 const res = await fetch('/api/ascensos/ultimo-reporte');
                 if (!res.ok) {
-                    const err = await res.json();
+                    const err = await res.json().catch(() => ({}));
                     return Notif.error(err.error || "Aún no hay ningún reporte semanal guardado.");
                 }
                 const data = await res.json();
@@ -1732,7 +1784,7 @@ ${bloqueBonos}
         // GENERADOR DE PDF INSTITUCIONAL SOLEMNE DE ALTA FORMALIDAD MÉDICA
         function descargarPdfReporteSemanal() {
             if (!ultimoReporteSemanal) return;
-            const rep = ultimoReporteSemanal;
+            const rep = normalizarObjetoReporte(ultimoReporteSemanal);
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
 
@@ -1799,9 +1851,9 @@ ${bloqueBonos}
             currentY += 2;
 
             const emsRows = [
-                ["Dirección de Enfermería & Escala Básica", rep.emsSemana && rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.nombre : "Sin designar", rep.emsSemana && rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.discord_id : "—", "$200,000 USD"],
-                ["Jefatura de Medicina Interna", rep.emsSemana && rep.emsSemana.medicina ? rep.emsSemana.medicina.nombre : "Sin designar", rep.emsSemana && rep.emsSemana.medicina ? rep.emsSemana.medicina.discord_id : "—", "$200,000 USD"],
-                ["Jefatura de Cirugía Especializada", rep.emsSemana && rep.emsSemana.cirugia ? rep.emsSemana.cirugia.nombre : "Sin designar", rep.emsSemana && rep.emsSemana.cirugia ? rep.emsSemana.cirugia.discord_id : "—", "$200,000 USD"]
+                ["Dirección de Enfermería & Escala Básica", rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.nombre : "Sin designar", rep.emsSemana.enfermeria ? rep.emsSemana.enfermeria.discord_id : "—", "$200,000 USD"],
+                ["Jefatura de Medicina Interna", rep.emsSemana.medicina ? rep.emsSemana.medicina.nombre : "Sin designar", rep.emsSemana.medicina ? rep.emsSemana.medicina.discord_id : "—", "$200,000 USD"],
+                ["Jefatura de Cirugía Especializada", rep.emsSemana.cirugia ? rep.emsSemana.cirugia.nombre : "Sin designar", rep.emsSemana.cirugia ? rep.emsSemana.cirugia.discord_id : "—", "$200,000 USD"]
             ];
 
             doc.autoTable({
@@ -1825,14 +1877,12 @@ ${bloqueBonos}
 
             const ascRows = [];
             Object.entries(rep.ascensosOperativa).forEach(([rangoDest, lista]) => {
-                lista.forEach(p => ascRows.push(["ESCALA OPERATIVA", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
+                (lista || []).forEach(p => ascRows.push(["ESCALA OPERATIVA", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
             });
             Object.entries(rep.ascensosMedica).forEach(([rangoDest, lista]) => {
-                lista.forEach(p => ascRows.push(["ESCALA FACULTATIVA MÉDICA", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
+                (lista || []).forEach(p => ascRows.push(["ESCALA FACULTATIVA MÉDICA", p.nombre, p.discord_id, p.rango_anterior, rangoDest]));
             });
-            if (rep.ascensosEspeciales) {
-                rep.ascensosEspeciales.forEach(p => ascRows.push(["ASCENSO ESPECIAL / MANDO", p.nombre, p.discord_id, p.rango_anterior, p.rango_nuevo]));
-            }
+            (rep.ascensosEspeciales || []).forEach(p => ascRows.push(["ASCENSO ESPECIAL / MANDO", p.nombre, p.discord_id, p.rango_anterior, p.rango_nuevo]));
 
             if (ascRows.length === 0) ascRows.push(["—", "Sin promociones registradas en el presente ciclo", "—", "—", "—"]);
 
@@ -1945,31 +1995,50 @@ ${bloqueBonos}
         async function aplicarTodosLosAscensosGlobal() {
             const confirmar = await Notif.confirmar(
                 "⚡ ¿Aplicar Ascensos y Reiniciar Ciclo Semanal?",
-                "Se aplicarán los ascensos en Enfermería, Cirugía, Medicina y Coordinación, se archivarán los despedidos en el Historial de Despidos, se liquidarán formadores a 0, se limpiarán los PDFs de Coordinación y se generará el Acta Oficial."
+                "Se aplicarán los ascensos en Enfermería, Cirugía, Medicina y Coordinación (transfiriendo Supervisores y Jefaturas a sus tablas/permisos), se archivarán los despedidos, se sumarán las instrucciones de formadores al histórico total, se limpiarán los PDFs de Coordinación y se generará el reporte (sin duplicar bonos en Tesorería)."
             );
             if (!confirmar) return;
 
+            const btn = document.getElementById('btnAplicarGlobalAdmin');
+            const txtOrig = btn ? btn.innerText : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "⏳ Procesando Cierre Semanal...";
+            }
+
             try {
-                const res = await fetch('/api/ascensos/aplicar-todos-global', { method: 'POST' });
+                const res = await fetch('/api/ascensos/aplicar-todos-global', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 const data = await res.json();
+
                 if (res.ok) {
-                    await cargarTablas();
-                    await cargarFormaciones();
-                    await cargarCoordinacion();
-                    await cargarEstadosTablasListas();
-                    await cargarCensoGeneral();
-                    await cargarDespidos();
-                    if (tieneAccesoTesoreria()) await cargarPagos();
-                    if (data.reporte) {
+                    await Promise.all([
+                        cargarTablas(),
+                        cargarFormaciones(),
+                        cargarCoordinacion(),
+                        cargarEstadosTablasListas(),
+                        cargarCensoGeneral(),
+                        cargarDespidos(),
+                        tieneAccesoTesoreria() ? cargarPagos() : Promise.resolve()
+                    ]);
+
+                    if (data && data.reporte) {
                         mostrarModalReporteAscensos(data.reporte);
                     } else {
-                        Notif.exito(data.message);
+                        Notif.exito(data.message || "Ascensos aplicados correctamente.");
                     }
                 } else {
-                    Notif.error(data.error || "No se pudo procesar");
+                    Notif.error(data.error || "No se pudo procesar el cierre semanal.");
                 }
             } catch (e) {
-                Notif.error("Error de conexión al aplicar ascensos globales.");
+                Notif.error("Error de conexión al aplicar ascensos globales: " + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = txtOrig;
+                }
             }
         }
 
@@ -2075,7 +2144,7 @@ ${bloqueBonos}
                             if (btn) {
                                 btn.className = "bg-zinc-800 hover:bg-zinc-700 text-emerald-300 border border-emerald-500/40 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition shadow-md";
                                 btn.innerText = item.jefatura === 'formaciones' 
-                                    ? "✅ Marcar Tabla Lista (Enviar Pagos a Tesorería y Reiniciar a 0)"
+                                    ? "✅ Marcar Tabla Lista (Enviar a Tesorería y Sumar a Totales)"
                                     : "✅ Marcar Tabla Lista (Enviar Bonos 25h/50h a Tesorería)";
                             }
                         }
@@ -2135,7 +2204,7 @@ ${bloqueBonos}
 
                     const data = await res.json();
                     if (res.ok) {
-                        Notif.exito(`Se integró a ${nombre} directamente como Celador/a en Enfermería Básica y se sumó +1 instrucción al formador.`);
+                        Notif.exito(`Se integró a ${nombre} directamente como Celador/a en Enfermería Básica y se sumó +1 instrucción semanal al formador.`);
                         document.getElementById('aspDiscord').value = '';
                         document.getElementById('aspNombre').value = '';
                         await cargarTablas();
@@ -2215,7 +2284,7 @@ ${bloqueBonos}
         async function aprobarAspiranteLimbo(id, nombreAsp) {
             const confirmar = await Notif.confirmar(
                 `🎓 ¿Finalizar Instrucción IC de ${nombreAsp}?`,
-                "El aspirante saldrá del limbo, pasará automáticamente a Enfermería Básica como Celador en pruebas y se sumará +1 instrucción realizada."
+                "El aspirante saldrá del limbo, pasará automáticamente a Enfermería Básica como Celador en pruebas y se sumará +1 instrucción semanal realizada."
             );
             if (!confirmar) return;
 
@@ -2488,7 +2557,6 @@ ${bloqueBonos}
                         return (a.fecha_ingreso || '').localeCompare(b.fecha_ingreso || '');
                     });
 
-                    // Poblar selector manual de EMS de la Semana para cada jefatura
                     const selEms = document.getElementById(`selectEmsSemana_${j.id}`);
                     if (selEms) {
                         const prevVal = selEms.value;
@@ -2549,7 +2617,7 @@ ${bloqueBonos}
             cargarCensoGeneral();
         }
 
-        // FORMACIONES
+        // FORMACIONES (Suma exacta sin duplicar hasta que se marque lista o se haga el corte)
         async function guardarNuevoInstructor() {
             const instructor = document.getElementById('formInstructor').value.trim();
             const rango = document.getElementById('formRango').value;
@@ -2599,8 +2667,7 @@ ${bloqueBonos}
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                await cargarFormaciones();
-            }, 400);
+            }, 350);
         }
 
         async function editarFormacionEnTabla(id, campo, valor) {
@@ -2618,8 +2685,8 @@ ${bloqueBonos}
 
         async function ejecutarCorteSemanalFormaciones() {
             const confirmar = await Notif.confirmar(
-                "⚠️ ¿Liquidar Nómina de Formadores y Reiniciar a 0?",
-                "Se enviarán los pagos semanales ($50,000 c/u) a Tesorería & Pagos y las instrucciones semanales quedarán en 0, conservando el histórico de instrucciones totales."
+                "⚠️ ¿Liquidar Nómina de Formadores y Sumar a Totales?",
+                "Se enviarán los pagos semanales ($50,000 c/u) a Tesorería, las instrucciones semanales se sumarán a las instrucciones totales y el contador semanal quedará en 0."
             );
             if (!confirmar) return;
 
@@ -2670,7 +2737,7 @@ ${bloqueBonos}
                             <input type="number" min="0" value="${f.instrucciones_totales || 0}" 
                                    onblur="editarFormacionEnTabla(${f.id}, 'instrucciones_totales', this.value)"
                                    class="cell-input text-center font-mono-code font-black text-sky-400 text-sm bg-black/40 border border-zinc-800 rounded-lg py-1"
-                                   title="Histórico total de formaciones (editable)">
+                                   title="Histórico total acumulado de formaciones">
                         </td>
                         <td class="fluid-td text-center font-mono-code font-black text-emerald-400 text-base" id="totalPagoForm_${f.id}">
                             $${(f.total_pago || 0).toLocaleString('en-US')}
